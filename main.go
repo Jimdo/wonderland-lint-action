@@ -13,6 +13,8 @@ import (
 
 	"github.com/Jimdo/wonderland-cron/api/v1"
 	"github.com/Jimdo/wonderland-cron/cron"
+	"github.com/Jimdo/wonderland-cron/service"
+	"github.com/Jimdo/wonderland-cron/validation"
 )
 
 var (
@@ -46,15 +48,18 @@ func main() {
 	})
 
 	v1.New(&v1.Config{
-		CronStore: cron.NewNomadCronStore(&cron.NomadCronStoreConfig{
-			CronPrefix:    config.nomadCronPrefix,
-			Datacenters:   []string{os.Getenv("AWS_REGION")},
-			Client:        nomadClient,
-			WLDockerImage: config.nomadWLDockerImage,
-			WLEnvironment: os.Getenv("WONDERLAND_ENV"),
-			WLUser:        config.nomadUser,
-			WLPass:        config.nomadPass,
-		}),
+		Service: &service.CronService{
+			Store: cron.NewNomadCronStore(&cron.NomadCronStoreConfig{
+				CronPrefix:    config.nomadCronPrefix,
+				Datacenters:   []string{os.Getenv("AWS_REGION")},
+				Client:        nomadClient,
+				WLDockerImage: config.nomadWLDockerImage,
+				WLEnvironment: os.Getenv("WONDERLAND_ENV"),
+				WLUser:        config.nomadUser,
+				WLPass:        config.nomadPass,
+			}),
+			Validator: validation.New(),
+		},
 		Router: router.PathPrefix("/v1").Subrouter(),
 	}).Register()
 

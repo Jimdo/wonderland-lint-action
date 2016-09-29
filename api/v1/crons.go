@@ -10,6 +10,7 @@ import (
 
 	"github.com/Jimdo/wonderland-cron/api"
 	"github.com/Jimdo/wonderland-cron/cron"
+	"github.com/Jimdo/wonderland-cron/service"
 )
 
 func New(c *Config) *API {
@@ -19,8 +20,8 @@ func New(c *Config) *API {
 }
 
 type Config struct {
-	CronStore cron.CronStore
-	Router    *mux.Router
+	Service *service.CronService
+	Router  *mux.Router
 }
 
 type API struct {
@@ -42,7 +43,7 @@ func (a *API) Register() {
 func (a *API) StatusHandler(w http.ResponseWriter, req *http.Request) {}
 
 func (a *API) ListCrons(ctx context.Context, w http.ResponseWriter, req *http.Request) {
-	crons, err := a.config.CronStore.List()
+	crons, err := a.config.Service.List()
 	if err != nil {
 		sendError(w, fmt.Errorf("Unable to list crons: %s", err), http.StatusInternalServerError)
 		return
@@ -55,7 +56,7 @@ func (a *API) CronStatus(ctx context.Context, w http.ResponseWriter, req *http.R
 	vars := mux.Vars(req)
 	cronName := vars["name"]
 
-	status, err := a.config.CronStore.Status(cronName)
+	status, err := a.config.Service.Status(cronName)
 	if err != nil {
 		if err == cron.ErrCronNotFound {
 			sendError(w, err, http.StatusNotFound)
@@ -73,7 +74,7 @@ func (a *API) StopCron(ctx context.Context, w http.ResponseWriter, req *http.Req
 	vars := mux.Vars(req)
 	cronName := vars["name"]
 
-	if err := a.config.CronStore.Stop(cronName); err != nil {
+	if err := a.config.Service.Stop(cronName); err != nil {
 		if err == cron.ErrCronNotFound {
 			sendError(w, err, http.StatusNotFound)
 			return
@@ -96,7 +97,7 @@ func (a *API) RunCron(ctx context.Context, w http.ResponseWriter, req *http.Requ
 		return
 	}
 
-	if err := a.config.CronStore.Run(desc); err != nil {
+	if err := a.config.Service.Run(desc); err != nil {
 		sendError(w, fmt.Errorf("Unable to run cron: %s", err), http.StatusInternalServerError)
 		return
 	}
@@ -106,7 +107,7 @@ func (a *API) CronAllocations(ctx context.Context, w http.ResponseWriter, req *h
 	vars := mux.Vars(req)
 	cronName := vars["name"]
 
-	allocs, err := a.config.CronStore.Allocations(cronName)
+	allocs, err := a.config.Service.Allocations(cronName)
 	if err != nil {
 		if err == cron.ErrCronNotFound {
 			sendError(w, err, http.StatusNotFound)
@@ -124,7 +125,7 @@ func (a *API) AllocationStatus(ctx context.Context, w http.ResponseWriter, req *
 	vars := mux.Vars(req)
 	allocID := vars["id"]
 
-	status, err := a.config.CronStore.AllocationStatus(allocID)
+	status, err := a.config.Service.AllocationStatus(allocID)
 	if err != nil {
 		if err == cron.ErrInvalidAllocationID {
 			sendError(w, err, http.StatusBadRequest)
@@ -150,7 +151,7 @@ func (a *API) AllocationLogs(ctx context.Context, w http.ResponseWriter, req *ht
 		logType = req.URL.Query().Get("log-type")
 	}
 
-	status, err := a.config.CronStore.AllocationLogs(allocID, logType)
+	status, err := a.config.Service.AllocationLogs(allocID, logType)
 	if err != nil {
 		if err == cron.ErrAllocationNotFound {
 			sendError(w, err, http.StatusNotFound)

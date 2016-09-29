@@ -1,0 +1,7 @@
+#!/bin/sh
+# Test driver used to test code inside Docker
+# Note: Alpine has no /bin/bash
+set -e
+packages=$(go list ./... | grep -v /vendor/)
+echo $packages | xargs go vet
+echo $packages | xargs go test -tags=$TEST_TAGS -v
