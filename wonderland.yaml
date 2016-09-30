@@ -1,0 +1,26 @@
+---
+scale: 2
+components:
+  - name: cron
+    image: {{env `CRON_IMAGE`}}
+    env:
+      $ref_secrets: vault+secret://vault.{{env `ZONE`}}/wonderland/cron
+  - name: auth-proxy
+    image: {{env `AUTH_PROXY_IMAGE`}}
+    links:
+      - component: cron
+        alias: app
+    env:
+      APP_PORT: '8000'
+      APP_HEALTHCHECK: /v1/status
+      $ref_secrets: vault+secret://vault.{{env `ZONE`}}/wonderland/cron/proxy
+endpoint:
+  component: auth-proxy
+  domain: cron.{{env `ZONE`}}
+  healthcheck: /v1/status
+  port: 80
+notifications:
+{{if eq (env `WONDERLAND_ENV`) "prod"}}
+  pagerduty: https://events.pagerduty.com/adapter/cloudwatch_sns/v1/33046cc63c3d4e6dafda9c336be58ae8
+{{end}}
+  slack: '#werkzeugschmiede-bot'
