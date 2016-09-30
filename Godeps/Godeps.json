@@ -1,0 +1,124 @@
+{
+	"ImportPath": "github.com/Jimdo/wonderland-crons",
+	"GoVersion": "go1.7",
+	"GodepVersion": "v74",
+	"Packages": [
+		"./..."
+	],
+	"Deps": [
+		{
+			"ImportPath": "github.com/Luzifer/rconfig",
+			"Comment": "v1.1.0-2-g31d785f",
+			"Rev": "31d785fa79c95e7b92c955689c5b0feed4fc0c7d"
+		},
+		{
+			"ImportPath": "github.com/gorhill/cronexpr",
+			"Comment": "1.0.0-3-gf098431",
+			"Rev": "f0984319b44273e83de132089ae42b1810f4933b"
+		},
+		{
+			"ImportPath": "github.com/gorilla/context",
+			"Rev": "1c83b3eabd45b6d76072b66b746c20815fb2872d"
+		},
+		{
+			"ImportPath": "github.com/gorilla/mux",
+			"Rev": "49c024275504f0341e5a9971eb7ba7fa3dc7af40"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/consul/api",
+			"Comment": "v0.6.4-36-ge3f6c6a",
+			"Rev": "e3f6c6a7987ff879a1c138abcc4d14d8b65fc13f"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/errwrap",
+			"Rev": "7554cd9344cec97297fa6649b055a8c98c2a1e55"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/go-cleanhttp",
+			"Rev": "ad28ea4487f05916463e2423a55166280e8254b5"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/go-msgpack/codec",
+			"Rev": "fa3f63826f7c23912c15263591e65d54d080b458"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/go-multierror",
+			"Rev": "8c5f0ad9360406a3807ce7de6bc73269a91a6e51"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/go-version",
+			"Rev": "deeb027c13a95d56c7585df3fe29207208c6706e"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/nomad/api",
+			"Comment": "v0.4.1",
+			"Rev": "d1ed8950bde3ae6838abb5109e564bcf4d1b0dd7"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/nomad/helper/args",
+			"Comment": "v0.4.1",
+			"Rev": "d1ed8950bde3ae6838abb5109e564bcf4d1b0dd7"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/nomad/helper/flatmap",
+			"Comment": "v0.4.1",
+			"Rev": "d1ed8950bde3ae6838abb5109e564bcf4d1b0dd7"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/nomad/nomad/structs",
+			"Comment": "v0.4.1",
+			"Rev": "d1ed8950bde3ae6838abb5109e564bcf4d1b0dd7"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/serf/coordinate",
+			"Comment": "v0.7.0-97-g9432bc0",
+			"Rev": "9432bc08aa8d486e497e27f84878ebbe8c1eab66"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/copystructure",
+			"Rev": "6871c41ca9148d368715dedcda473f396f205df5"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/hashstructure",
+			"Rev": "b098c52ef6beab8cd82bc4a32422cf54b890e8fa"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/reflectwalk",
+			"Rev": "eecf4c70c626c7cfbb95c90195bc34d386c74ac6"
+		},
+		{
+			"ImportPath": "github.com/spf13/pflag",
+			"Rev": "c7e63cf4530bcd3ba943729cee0efeff2ebea63f"
+		},
+		{
+			"ImportPath": "github.com/ugorji/go/codec",
+			"Rev": "5cd0f2b3b6cca8e3a0a4101821e41a73cb59bed6"
+		},
+		{
+			"ImportPath": "golang.org/x/net/context",
+			"Rev": "024ed629fd292398cfd43c9678a5bf004f7defdc"
+		},
+		{
+			"ImportPath": "golang.org/x/net/netutil",
+			"Rev": "024ed629fd292398cfd43c9678a5bf004f7defdc"
+		},
+		{
+			"ImportPath": "golang.org/x/sync/errgroup",
+			"Rev": "316e794f7b5e3df4e95175a45a5fb8b12f85cb4f"
+		},
+		{
+			"ImportPath": "gopkg.in/oleiade/lane.v1",
+			"Comment": "v1.0.0",
+			"Rev": "28f7c3f09254f12b51e620fa4db136ba58804762"
+		},
+		{
+			"ImportPath": "gopkg.in/tylerb/graceful.v1",
+			"Comment": "v1.2.5",
+			"Rev": "9a3d4236b03bb5d26f7951134d248f9d5510d599"
+		},
+		{
+			"ImportPath": "gopkg.in/yaml.v2",
+			"Rev": "53feefa2559fb8dfa8d81baad31be332c97d6c77"
+		}
+	]
+}
