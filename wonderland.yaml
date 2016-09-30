@@ -1,22 +1,22 @@
 ---
 scale: 2
 components:
-  - name: cron
-    image: {{env `CRON_IMAGE`}}
+  - name: crons
+    image: {{env `CRONS_IMAGE`}}
     env:
-      $ref_secrets: vault+secret://vault.{{env `ZONE`}}/wonderland/cron
+      $ref_secrets: vault+secret://vault.{{env `ZONE`}}/wonderland/crons
   - name: auth-proxy
     image: {{env `AUTH_PROXY_IMAGE`}}
     links:
-      - component: cron
+      - component: crons
         alias: app
     env:
       APP_PORT: '8000'
       APP_HEALTHCHECK: /v1/status
-      $ref_secrets: vault+secret://vault.{{env `ZONE`}}/wonderland/cron/proxy
+      $ref_secrets: vault+secret://vault.{{env `ZONE`}}/wonderland/crons/proxy
 endpoint:
   component: auth-proxy
-  domain: cron.{{env `ZONE`}}
+  domain: crons.{{env `ZONE`}}
   healthcheck: /v1/status
   port: 80
 notifications:

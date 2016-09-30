@@ -1,8 +1,8 @@
 package service
 
 import (
-	"github.com/Jimdo/wonderland-cron/cron"
-	"github.com/Jimdo/wonderland-cron/validation"
+	"github.com/Jimdo/wonderland-crons/cron"
+	"github.com/Jimdo/wonderland-crons/validation"
 )
 
 type CronService struct {

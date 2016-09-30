@@ -11,10 +11,10 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/hashicorp/nomad/api"
 
-	"github.com/Jimdo/wonderland-cron/api/v1"
-	"github.com/Jimdo/wonderland-cron/cron"
-	"github.com/Jimdo/wonderland-cron/service"
-	"github.com/Jimdo/wonderland-cron/validation"
+	"github.com/Jimdo/wonderland-crons/api/v1"
+	"github.com/Jimdo/wonderland-crons/cron"
+	"github.com/Jimdo/wonderland-crons/service"
+	"github.com/Jimdo/wonderland-crons/validation"
 )
 
 var (

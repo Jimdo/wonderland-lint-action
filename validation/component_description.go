@@ -3,7 +3,7 @@ package validation
 import (
 	"fmt"
 
-	"github.com/Jimdo/wonderland-cron/cron"
+	"github.com/Jimdo/wonderland-crons/cron"
 )
 
 type containerDescription struct{}

@@ -8,9 +8,9 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/Jimdo/wonderland-cron/api"
-	"github.com/Jimdo/wonderland-cron/cron"
-	"github.com/Jimdo/wonderland-cron/service"
+	"github.com/Jimdo/wonderland-crons/api"
+	"github.com/Jimdo/wonderland-crons/cron"
+	"github.com/Jimdo/wonderland-crons/service"
 )
 
 func New(c *Config) *API {

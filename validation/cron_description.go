@@ -5,7 +5,7 @@ import (
 
 	"github.com/gorhill/cronexpr"
 
-	"github.com/Jimdo/wonderland-cron/cron"
+	"github.com/Jimdo/wonderland-crons/cron"
 )
 
 const (

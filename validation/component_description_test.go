@@ -3,7 +3,7 @@ package validation
 import (
 	"testing"
 
-	"github.com/Jimdo/wonderland-cron/cron"
+	"github.com/Jimdo/wonderland-crons/cron"
 )
 
 func TestValidateCapacityDescription_Valid(t *testing.T) {

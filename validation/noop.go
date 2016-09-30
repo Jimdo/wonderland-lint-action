@@ -1,6 +1,6 @@
 package validation
 
-import "github.com/Jimdo/wonderland-cron/cron"
+import "github.com/Jimdo/wonderland-crons/cron"
 
 func NewNoopValidator() Validator {
 	return &noopValidator{}
