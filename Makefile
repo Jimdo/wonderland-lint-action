@@ -7,8 +7,15 @@ AUTH_PROXY_IMAGE=auth-proxy
 JIMDO_ENVIRONMENT=stage
 ZONE=jimdo-platform-stage.net
 
+NOMAD_API=https://nomad.jimdo-platform-stage.net
+NOMAD_WL_DOCKER_IMAGE=quay.io/jimdo_wonderland_stage/wl
+NOMAD_USER=$(WONDERLAND_USER)
+NOMAD_PASS=$(WONDERLAND_PASS)
+
 prod: JIMDO_ENVIRONMENT=prod
 prod: ZONE=jimdo-platform.net
+prod: NOMAD_API=https://nomad.jimdo-platform.net
+prod: NOMAD_WL_DOCKER_IMAGE=quay.io/jimdo_wonderland_prod/wl
 prod: deploy
 
 stage: deploy
@@ -26,6 +33,10 @@ set-credentials:
 deploy: set-credentials dinah
 	AUTH_PROXY_IMAGE=$(shell WONDERLAND_ENV=$(JIMDO_ENVIRONMENT) dinah docker image $(AUTH_PROXY_IMAGE)) \
 	CRONS_IMAGE=$(shell WONDERLAND_ENV=$(JIMDO_ENVIRONMENT) dinah docker image --branch $(BRANCH) $(CRONS_IMAGE)) \
+	NOMAD_API=$(NOMAD_API) \
+	NOMAD_WL_DOCKER_IMAGE=$(NOMAD_WL_DOCKER_IMAGE) \
+	NOMAD_USER=$(NOMAD_USER) \
+	NOMAD_PASS=$(NOMAD_PASS) \
 	WONDERLAND_ENV=$(JIMDO_ENVIRONMENT) \
 	ZONE=$(ZONE) \
 		wl deploy $(PROJECT_NAME) -f wonderland.yaml

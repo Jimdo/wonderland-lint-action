@@ -4,6 +4,10 @@ components:
   - name: crons
     image: {{env `CRONS_IMAGE`}}
     env:
+      NOMAD_API: '{{env `NOMAD_API`}}'
+      NOMAD_USER: '{{env `NOMAD_USER`}}'
+      NOMAD_PASS: '{{env `NOMAD_PASS`}}'
+      NOMAD_WL_DOCKER_IMAGE: '{{ env `NOMAD_WL_DOCKER_IMAGE`}}'
       $ref_secrets: vault+secret://vault.{{env `ZONE`}}/wonderland/crons
   - name: auth-proxy
     image: {{env `AUTH_PROXY_IMAGE`}}
