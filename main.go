@@ -32,11 +32,11 @@ var (
 	}
 )
 
-func init() {
-	rconfig.Parse(&config)
-}
-
 func main() {
+	if err := rconfig.Parse(&config); err != nil {
+		abort("Could not parse config: %s", err)
+	}
+
 	router := mux.NewRouter()
 
 	nomadClient, _ := api.NewClient(&api.Config{
@@ -66,7 +66,7 @@ func main() {
 	graceful.Run(config.Addr, config.ShutdownTimeout, router)
 }
 
-func abort(err error) {
-	fmt.Fprintf(os.Stderr, "%s", err)
+func abort(format string, a ...interface{}) {
+	fmt.Fprintf(os.Stderr, "error: "+format+"\n", a...)
 	os.Exit(1)
 }
