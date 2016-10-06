@@ -29,7 +29,7 @@ var (
 const (
 	NomadCronTaskGroup        = "default"
 	NomadCronTask             = "default"
-	NomadParallelRequestLimit = 10
+	NomadParallelRequestLimit = 5
 )
 
 type NomadCronStoreConfig struct {
