@@ -53,26 +53,26 @@ type CapacityDescription struct {
 	CPU    string `json:"cpu"`
 }
 
-func (cd CapacityDescription) MemoryIsTShirtSize() bool {
+func (cd CapacityDescription) memoryIsTShirtSize() bool {
 	_, err := strconv.Atoi(cd.Memory)
 	return err != nil
 }
 
 func (cd CapacityDescription) MemoryLimit() uint {
-	if cd.MemoryIsTShirtSize() {
+	if cd.memoryIsTShirtSize() {
 		return MemoryTShirtSizeToUInt(cd.Memory)
 	}
 	i, _ := strconv.Atoi(cd.Memory)
 	return uint(i)
 }
 
-func (cd CapacityDescription) CPUIsTShirtSize() bool {
+func (cd CapacityDescription) cpuIsTShirtSize() bool {
 	_, err := strconv.Atoi(cd.CPU)
 	return err != nil
 }
 
 func (cd CapacityDescription) CPULimit() uint {
-	if cd.CPUIsTShirtSize() {
+	if cd.cpuIsTShirtSize() {
 		return CPUTShirtSizeToUInt(cd.CPU)
 	}
 	i, _ := strconv.Atoi(cd.CPU)
