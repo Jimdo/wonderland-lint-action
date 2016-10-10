@@ -58,7 +58,7 @@ func main() {
 				WLUser:        config.NomadUser,
 				WLPass:        config.NomadPass,
 			}),
-			Validator: validation.New(),
+			Validator: validation.NewNoopValidator(),
 		},
 		Router: router.PathPrefix("/v1").Subrouter(),
 	}).Register()
