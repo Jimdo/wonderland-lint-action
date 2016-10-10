@@ -11,6 +11,9 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/hashicorp/nomad/api"
 
+	"github.com/Jimdo/wonderland-validator/docker/registry"
+	wonderlandValidator "github.com/Jimdo/wonderland-validator/validator"
+
 	"github.com/Jimdo/wonderland-crons/api/v1"
 	"github.com/Jimdo/wonderland-crons/cron"
 	"github.com/Jimdo/wonderland-crons/service"
@@ -58,7 +61,21 @@ func main() {
 				WLUser:        config.NomadUser,
 				WLPass:        config.NomadPass,
 			}),
-			Validator: validation.NewNoopValidator(),
+			Validator: validation.New(validation.Configuration{
+				WonderlandNameValidator: &wonderlandValidator.WonderlandName{},
+				DockerImageValidator: &wonderlandValidator.DockerImage{
+					DockerImageService: registry.NewImageService(nil),
+				},
+				CapacityValidator: &wonderlandValidator.ContainerCapacity{
+					CPUCapacitySpecifications: cron.CPUCapacitySpecifications,
+					CPUMinCapacity:            cron.MinCPUCapacity,
+					CPUMaxCapacity:            cron.MaxCPUCapacity,
+
+					MemoryCapacitySpecifications: cron.MemoryCapacitySpecifications,
+					MemoryMinCapacity:            cron.MinMemoryCapacity,
+					MemoryMaxCapacity:            cron.MaxMemoryCapacity,
+				},
+			}),
 		},
 		Router: router.PathPrefix("/v1").Subrouter(),
 	}).Register()

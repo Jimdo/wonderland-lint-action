@@ -7,7 +7,7 @@ import (
 
 type CronService struct {
 	Store     cron.CronStore
-	Validator validation.Validator
+	Validator *validation.Validator
 }
 
 func (s *CronService) List() ([]*cron.Cron, error) {
