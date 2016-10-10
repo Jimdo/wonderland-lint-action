@@ -12,11 +12,10 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/sync/errgroup"
-	lane "gopkg.in/oleiade/lane.v1"
-
 	"github.com/hashicorp/nomad/api"
 	"github.com/hashicorp/nomad/nomad/structs"
+	"golang.org/x/sync/errgroup"
+	lane "gopkg.in/oleiade/lane.v1"
 )
 
 var (
@@ -30,6 +29,8 @@ const (
 	NomadCronTaskGroup        = "default"
 	NomadCronTask             = "default"
 	NomadParallelRequestLimit = 5
+	NomadMaxJobInvocations    = 100
+	NomadLongQueryTime        = 5 * time.Second
 )
 
 type NomadCronStoreConfig struct {
@@ -254,23 +255,21 @@ func (s *nomadCronStore) deleteJobs(jobs []*api.JobListStub) []string {
 }
 
 func (s *nomadCronStore) aggregateChildJobSummary(cronName string) (*CronSummary, error) {
-	// Generate the prefix that matches launched jobs from the periodic job.
-	prefix := s.config.CronPrefix + cronName + structs.PeriodicLaunchSuffix
-	children, _, err := s.config.Client.Jobs().PrefixList(prefix)
+	invocations, err := s.jobInvocations(cronName)
 	if err != nil {
 		return nil, err
 	}
 
 	cronSummary := &CronSummary{}
-	if len(children) == 0 {
+	if len(invocations) == 0 {
 		return cronSummary, nil
 	}
 
 	jobsQueue := lane.NewQueue()
 	summariesQueue := lane.NewQueue()
 
-	for _, child := range children {
-		jobsQueue.Enqueue(child)
+	for _, i := range invocations {
+		jobsQueue.Enqueue(i)
 	}
 
 	err = s.executeAsync(func() error {
@@ -308,11 +307,11 @@ func (s *nomadCronStore) aggregateChildJobSummary(cronName string) (*CronSummary
 }
 
 func (s *nomadCronStore) getJobSummary(job *api.JobListStub) (*api.TaskGroupSummary, error) {
-	childSummaries, _, err := s.config.Client.Jobs().Summary(job.ID, nil)
+	childSummaries, queryMeta, err := s.config.Client.Jobs().Summary(job.ID, nil)
 	if err != nil {
 		return nil, fmt.Errorf("Error querying job summary of invocation %q: %s", job.ID, err)
 	}
-
+	logSlowQuery(queryMeta.RequestTime, "Jobs.Summary", job.ID)
 	childSummary, ok := childSummaries.Summary[NomadCronTaskGroup]
 	if !ok {
 		return nil, fmt.Errorf("Could not find task group %q for invocation %q", NomadCronTaskGroup, job.ID)
@@ -328,17 +327,21 @@ func (s *nomadCronStore) Allocations(cronName string) ([]*CronAllocation, error)
 		return nil, err
 	}
 
-	prefix := s.config.CronPrefix + cronName + structs.PeriodicLaunchSuffix
-	children, _, err := s.config.Client.Jobs().PrefixList(prefix)
+	invocations, err := s.jobInvocations(cronName)
 	if err != nil {
 		return nil, err
+	}
+
+	cronAllocs := []*CronAllocation{}
+	if len(invocations) == 0 {
+		return cronAllocs, nil
 	}
 
 	jobsQueue := lane.NewQueue()
 	allocsQueue := lane.NewQueue()
 
-	for _, child := range children {
-		jobsQueue.Enqueue(child)
+	for _, i := range invocations {
+		jobsQueue.Enqueue(i)
 	}
 
 	err = s.executeAsync(func() error {
@@ -350,11 +353,12 @@ func (s *nomadCronStore) Allocations(cronName string) ([]*CronAllocation, error)
 			}
 			job := queueItem.(*api.JobListStub)
 
-			allocs, _, err := s.config.Client.Jobs().Allocations(job.ID, nil)
+			allocs, queryMeta, err := s.config.Client.Jobs().Allocations(job.ID, nil)
 			if err != nil {
 				log.Printf("Error while getting allocations of job %q: %s", job.ID, err)
 				return err
 			}
+			logSlowQuery(queryMeta.RequestTime, "Jobs.Allocations", job.ID)
 			for _, alloc := range allocs {
 				cronAlloc := CronAllocation{
 					ID:     alloc.ID,
@@ -379,7 +383,6 @@ func (s *nomadCronStore) Allocations(cronName string) ([]*CronAllocation, error)
 		return nil, err
 	}
 
-	cronAllocs := []*CronAllocation{}
 	for allocsQueue.Head() != nil {
 		alloc := allocsQueue.Dequeue().(CronAllocation)
 		cronAllocs = append(cronAllocs, &alloc)
@@ -471,6 +474,22 @@ func (s *nomadCronStore) AllocationLogs(allocID, logType string) (*CronAllocatio
 		Type: logType,
 		Data: logBuffer.Bytes(),
 	}, nil
+}
+
+// Returns the Nomad jobs that are the most recent invocations of the cron job.
+// (Those with "periodic-" in the name.)
+func (s *nomadCronStore) jobInvocations(cronName string) ([]*api.JobListStub, error) {
+	prefix := s.config.CronPrefix + cronName + structs.PeriodicLaunchSuffix
+	jobs, queryMeta, err := s.config.Client.Jobs().PrefixList(prefix)
+	if err != nil {
+		return nil, err
+	}
+	logSlowQuery(queryMeta.RequestTime, "Jobs.PrefixList", prefix)
+	// Cap the maximum number of jobs we return
+	if len(jobs) > NomadMaxJobInvocations {
+		jobs = jobs[len(jobs)-NomadMaxJobInvocations:]
+	}
+	return jobs, nil
 }
 
 func (s *nomadCronStore) executeAsync(f func() error) error {
@@ -587,4 +606,10 @@ func validateUUID(uuid string) error {
 	}
 
 	return nil
+}
+
+func logSlowQuery(d time.Duration, op string, args ...string) {
+	if d > NomadLongQueryTime {
+		log.Printf("Slow Nomad query: %s(%v) took %s", op, args, d)
+	}
 }
