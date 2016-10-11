@@ -30,7 +30,8 @@ set-credentials:
 	WONDERLAND_ENV=$(JIMDO_ENVIRONMENT) \
 		wl vault write secret/wonderland/crons \
 			NOMAD_USER=$(NOMAD_USER) \
-			NOMAD_PASS=$(NOMAD_PASS)
+			NOMAD_PASS=$(NOMAD_PASS) \
+			VAULT_TOKEN=$(VAULT_TOKEN)
 	WONDERLAND_ENV=$(JIMDO_ENVIRONMENT) \
 		wl vault write secret/wonderland/crons/proxy \
 			HTTP_USER="$(AUTH_USER)" \
