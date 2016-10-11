@@ -1,18 +1,38 @@
 package validation
 
-import "github.com/Jimdo/wonderland-crons/cron"
+import (
+	"github.com/Jimdo/wonderland-crons/cron"
 
-type Validator interface {
-	ValidateCronDescription(*cron.CronDescription) error
+	wonderlandValidator "github.com/Jimdo/wonderland-validator/validator"
+)
+
+type Validator struct {
+	cron *cronDescription
 }
 
-func NewNoopValidator() Validator {
-	return &noopValidator{}
+type Configuration struct {
+	CapacityValidator       *wonderlandValidator.ContainerCapacity
+	DockerImageValidator    *wonderlandValidator.DockerImage
+	WonderlandNameValidator *wonderlandValidator.WonderlandName
+	EnvironmentVariables    *wonderlandValidator.EnvironmentVariables
 }
 
-type noopValidator struct {
+func New(cfg Configuration) *Validator {
+	cron := &cronDescription{
+		Container: &containerDescription{
+			Capacity:             cfg.CapacityValidator,
+			Image:                cfg.DockerImageValidator,
+			Name:                 cfg.WonderlandNameValidator,
+			EnvironmentVariables: cfg.EnvironmentVariables,
+		},
+		Name: cfg.WonderlandNameValidator,
+	}
+
+	return &Validator{
+		cron: cron,
+	}
 }
 
-func (v *noopValidator) ValidateCronDescription(*cron.CronDescription) error {
-	return nil
+func (v *Validator) ValidateCronDescription(cd *cron.CronDescription) error {
+	return v.cron.validate(cd)
 }

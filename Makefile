@@ -1,5 +1,7 @@
 PROJECT_NAME=wonderland-crons
 
+TEST_TAGS=integration
+
 BRANCH ?= master
 CRONS_IMAGE  = $(PROJECT_NAME)
 AUTH_PROXY_IMAGE=auth-proxy
@@ -44,8 +46,15 @@ deploy: set-credentials dinah
 	ZONE=$(ZONE) \
 		wl deploy $(PROJECT_NAME) -f wonderland.yaml
 
+unit-test: TEST_TAGS=""
+unit-test: test
+
 test: container
-	docker run -i --rm --entrypoint ./test.sh $(CRONS_IMAGE)
+	docker run --rm \
+		-i \
+		-e TEST_TAGS=$(TEST_TAGS) \
+		--entrypoint ./test.sh \
+		$(CRONS_IMAGE)
 
 container:
 	docker build -t $(CRONS_IMAGE) .

@@ -11,10 +11,14 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/hashicorp/nomad/api"
 
+	"github.com/Jimdo/wonderland-validator/docker/registry"
+	wonderlandValidator "github.com/Jimdo/wonderland-validator/validator"
+
 	"github.com/Jimdo/wonderland-crons/api/v1"
 	"github.com/Jimdo/wonderland-crons/cron"
 	"github.com/Jimdo/wonderland-crons/service"
 	"github.com/Jimdo/wonderland-crons/validation"
+	"github.com/Jimdo/wonderland-crons/vault"
 )
 
 var (
@@ -29,6 +33,9 @@ var (
 		NomadPass          string `flag:"nomad-pass" env:"NOMAD_PASS" default:"" description:"The password to use for the nomad API"`
 		NomadCronPrefix    string `flag:"nomad-cron-prefix" env:"NOMAD_CRON_PREFIX" default:"wlc-" description:"The prefix to use for cron jobs in nomad"`
 		NomadWLDockerImage string `flag:"nomad-wl-docker-image" env:"NOMAD_WL_DOCKER_IMAGE" default:"" description:"The Docker image to use for running wl commands in Nomad"`
+
+		// Vault
+		VaultAccessToken string `flag:"vault-token" env:"VAULT_TOKEN" default:"" description:"Token to read variables and IAM credentials from Vault with"`
 	}
 )
 
@@ -58,7 +65,26 @@ func main() {
 				WLUser:        config.NomadUser,
 				WLPass:        config.NomadPass,
 			}),
-			Validator: validation.NewNoopValidator(),
+			Validator: validation.New(validation.Configuration{
+				WonderlandNameValidator: &wonderlandValidator.WonderlandName{},
+				DockerImageValidator: &wonderlandValidator.DockerImage{
+					DockerImageService: registry.NewImageService(nil),
+				},
+				CapacityValidator: &wonderlandValidator.ContainerCapacity{
+					CPUCapacitySpecifications: cron.CPUCapacitySpecifications,
+					CPUMinCapacity:            cron.MinCPUCapacity,
+					CPUMaxCapacity:            cron.MaxCPUCapacity,
+
+					MemoryCapacitySpecifications: cron.MemoryCapacitySpecifications,
+					MemoryMinCapacity:            cron.MinMemoryCapacity,
+					MemoryMaxCapacity:            cron.MaxMemoryCapacity,
+				},
+				EnvironmentVariables: &wonderlandValidator.EnvironmentVariables{
+					VaultSecretProvider: &vault.SecretProvider{
+						VaultAccessToken: config.VaultAccessToken,
+					},
+				},
+			}),
 		},
 		Router: router.PathPrefix("/v1").Subrouter(),
 	}).Register()
