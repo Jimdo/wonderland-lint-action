@@ -1,0 +1,12 @@
+sudo: required
+
+services:
+    - docker
+
+script: make test push BRANCH=$TRAVIS_BRANCH
+
+deploy:
+  provider: script
+  script: make notify-jenkins BRANCH=$TRAVIS_BRANCH
+  on:
+    branch: master

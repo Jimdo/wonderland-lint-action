@@ -1,0 +1,30 @@
+---
+scale: 2
+components:
+  - name: crons
+    image: {{env `CRONS_IMAGE`}}
+    env:
+      NOMAD_API: '{{env `NOMAD_API`}}'
+      NOMAD_WL_DOCKER_IMAGE: '{{ env `NOMAD_WL_DOCKER_IMAGE`}}'
+      AWS_REGION: '{{env `NOMAD_AWS_REGION`}}'
+      WONDERLAND_ENV: '{{env `WONDERLAND_ENV`}}'
+      $ref_secrets: vault+secret://vault.{{env `ZONE`}}/wonderland/crons
+  - name: auth-proxy
+    image: {{env `AUTH_PROXY_IMAGE`}}
+    links:
+      - component: crons
+        alias: app
+    env:
+      APP_PORT: '8000'
+      APP_HEALTHCHECK: /v1/status
+      $ref_secrets: vault+secret://vault.{{env `ZONE`}}/wonderland/crons/proxy
+endpoint:
+  component: auth-proxy
+  domain: crons.{{env `ZONE`}}
+  healthcheck: /v1/status
+  port: 80
+notifications:
+{{if eq (env `WONDERLAND_ENV`) "prod"}}
+  pagerduty: https://events.pagerduty.com/adapter/cloudwatch_sns/v1/33046cc63c3d4e6dafda9c336be58ae8
+{{end}}
+  slack: '#werkzeugschmiede-bot'
