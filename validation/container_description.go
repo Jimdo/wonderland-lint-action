@@ -9,9 +9,10 @@ import (
 )
 
 type containerDescription struct {
-	Capacity *wonderlandValidator.ContainerCapacity
-	Image    *wonderlandValidator.DockerImage
-	Name     *wonderlandValidator.WonderlandName
+	Capacity             *wonderlandValidator.ContainerCapacity
+	Image                *wonderlandValidator.DockerImage
+	Name                 *wonderlandValidator.WonderlandName
+	EnvironmentVariables *wonderlandValidator.EnvironmentVariables
 }
 
 func (v *containerDescription) validate(container *cron.ContainerDescription) error {
@@ -20,6 +21,9 @@ func (v *containerDescription) validate(container *cron.ContainerDescription) er
 	}
 	if err := v.validateCapacityDescription(container.Capacity); err != nil {
 		return err
+	}
+	if err := v.EnvironmentVariables.Validate(container.Environment); err != nil {
+		return Error{err.Error()}
 	}
 	if err := v.Image.Validate(container.Image); err != nil {
 		return Error{err.Error()}

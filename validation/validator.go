@@ -14,14 +14,16 @@ type Configuration struct {
 	CapacityValidator       *wonderlandValidator.ContainerCapacity
 	DockerImageValidator    *wonderlandValidator.DockerImage
 	WonderlandNameValidator *wonderlandValidator.WonderlandName
+	EnvironmentVariables    *wonderlandValidator.EnvironmentVariables
 }
 
 func New(cfg Configuration) *Validator {
 	cron := &cronDescription{
 		Container: &containerDescription{
-			Capacity: cfg.CapacityValidator,
-			Image:    cfg.DockerImageValidator,
-			Name:     cfg.WonderlandNameValidator,
+			Capacity:             cfg.CapacityValidator,
+			Image:                cfg.DockerImageValidator,
+			Name:                 cfg.WonderlandNameValidator,
+			EnvironmentVariables: cfg.EnvironmentVariables,
 		},
 		Name: cfg.WonderlandNameValidator,
 	}
