@@ -36,6 +36,14 @@ var (
 
 		// Vault
 		VaultAccessToken string `flag:"vault-token" env:"VAULT_TOKEN" default:"" description:"Token to read variables and IAM credentials from Vault with"`
+
+		// Docker registries
+		WonderlandRegistryAddress string `flag:"wonderland-registry-address" env:"WONDERLAND_REGISTRY_ADDRESS" description:"The address of the Wonderland registry"`
+		WonderlandRegistryUser    string `flag:"wonderland-registry-user" env:"WONDERLAND_REGISTRY_USER" description:"The username for the Wonderland registry"`
+		WonderlandRegistryPass    string `flag:"wonderland-registry-pass" env:"WONDERLAND_REGISTRY_PASS" description:"The password for the Wonderland registry"`
+		QuayRegistryAddress       string `flag:"query-registry-address" env:"QUAY_REGISTRY_ADDRESS" default:"quay.io" description:"The address of the Quay registry"`
+		QuayRegistryUser          string `flag:"query-registry-user" env:"QUAY_REGISTRY_USER" description:"The username for the Quay registry"`
+		QuayRegistryPass          string `flag:"query-registry-pass" env:"QUAY_REGISTRY_PASS" description:"The passwordfor the Quay registry"`
 	}
 )
 
@@ -68,7 +76,15 @@ func main() {
 			Validator: validation.New(validation.Configuration{
 				WonderlandNameValidator: &wonderlandValidator.WonderlandName{},
 				DockerImageValidator: &wonderlandValidator.DockerImage{
-					DockerImageService: registry.NewImageService(nil),
+					DockerImageService: registry.NewImageService([]registry.Credential{{
+						Host:     config.QuayRegistryAddress,
+						Username: config.QuayRegistryUser,
+						Password: config.QuayRegistryPass,
+					}, {
+						Host:     config.WonderlandRegistryAddress,
+						Username: config.WonderlandRegistryUser,
+						Password: config.WonderlandRegistryPass,
+					}}),
 				},
 				CapacityValidator: &wonderlandValidator.ContainerCapacity{
 					CPUCapacitySpecifications: cron.CPUCapacitySpecifications,

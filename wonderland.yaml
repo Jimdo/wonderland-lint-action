@@ -4,6 +4,7 @@ components:
   - name: crons
     image: {{env `CRONS_IMAGE`}}
     env:
+      WONDERLAND_REGISTRY_ADDRESS: '{{env `WONDERLAND_REGISTRY` }}'
       NOMAD_API: '{{env `NOMAD_API`}}'
       NOMAD_WL_DOCKER_IMAGE: '{{ env `NOMAD_WL_DOCKER_IMAGE`}}'
       AWS_REGION: '{{env `NOMAD_AWS_REGION`}}'
