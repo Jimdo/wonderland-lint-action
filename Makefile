@@ -9,6 +9,8 @@ AUTH_PROXY_IMAGE=auth-proxy
 JIMDO_ENVIRONMENT=stage
 ZONE=jimdo-platform-stage.net
 
+WONDERLAND_REGISTRY=registry.jimdo-platform-stage.net
+
 NOMAD_API=https://nomad.jimdo-platform-stage.net
 NOMAD_WL_DOCKER_IMAGE=quay.io/jimdo_wonderland_stage/wl
 NOMAD_AWS_REGION=$(AWS_REGION)
@@ -20,6 +22,7 @@ AUTH_PASS=$(WONDERLAND_PASS)
 
 prod: JIMDO_ENVIRONMENT=prod
 prod: ZONE=jimdo-platform.net
+prod: WONDERLAND_REGISTRY=registry.jimdo-platform.net
 prod: NOMAD_API=https://nomad.jimdo-platform.net
 prod: NOMAD_WL_DOCKER_IMAGE=quay.io/jimdo_wonderland_prod/wl
 prod: deploy
@@ -31,6 +34,10 @@ set-credentials:
 		wl vault write secret/wonderland/crons \
 			NOMAD_USER=$(NOMAD_USER) \
 			NOMAD_PASS=$(NOMAD_PASS) \
+			WONDERLAND_REGISTRY_USER=$(WONDERLAND_USER) \
+			WONDERLAND_REGISTRY_PASS=$(WONDERLAND_PASS) \
+			QUAY_REGISTRY_USER=$(QUAY_USER) \
+			QUAY_REGISTRY_PASS=$(QUAY_PASS) \
 			VAULT_TOKEN=$(VAULT_TOKEN)
 	WONDERLAND_ENV=$(JIMDO_ENVIRONMENT) \
 		wl vault write secret/wonderland/crons/proxy \
@@ -40,6 +47,7 @@ set-credentials:
 deploy: set-credentials dinah
 	AUTH_PROXY_IMAGE=$(shell WONDERLAND_ENV=$(JIMDO_ENVIRONMENT) dinah docker image $(AUTH_PROXY_IMAGE)) \
 	CRONS_IMAGE=$(shell WONDERLAND_ENV=$(JIMDO_ENVIRONMENT) dinah docker image --branch $(BRANCH) $(CRONS_IMAGE)) \
+	WONDERLAND_REGISTRY=$(WONDERLAND_REGISTRY) \
 	NOMAD_API=$(NOMAD_API) \
 	NOMAD_WL_DOCKER_IMAGE=$(NOMAD_WL_DOCKER_IMAGE) \
 	NOMAD_AWS_REGION=$(NOMAD_AWS_REGION) \
