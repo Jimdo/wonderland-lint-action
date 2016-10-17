@@ -22,7 +22,6 @@ func New(cfg Configuration) *Validator {
 		Container: &containerDescription{
 			Capacity:             cfg.CapacityValidator,
 			Image:                cfg.DockerImageValidator,
-			Name:                 cfg.WonderlandNameValidator,
 			EnvironmentVariables: cfg.EnvironmentVariables,
 		},
 		Name: cfg.WonderlandNameValidator,

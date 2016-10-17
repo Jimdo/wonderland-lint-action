@@ -16,7 +16,6 @@ func TestValidateCronDescription_Valid(t *testing.T) {
 		Name:     "test-cron",
 		Schedule: "* * * * *",
 		Description: &cron.ContainerDescription{
-			Name:  "test-container",
 			Image: "perl",
 			Capacity: &cron.CapacityDescription{
 				CPU:    "S",
@@ -27,7 +26,6 @@ func TestValidateCronDescription_Valid(t *testing.T) {
 
 	v := &cronDescription{
 		Container: &containerDescription{
-			Name: &wonderlandValidator.WonderlandName{},
 			Image: &wonderlandValidator.DockerImage{
 				DockerImageService: registry.NewImageService(nil),
 			},

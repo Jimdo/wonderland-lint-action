@@ -36,7 +36,6 @@ var MinCPUCapacity = CPUTShirtSizeToUInt("XS")
 var MaxCPUCapacity = CPUTShirtSizeToUInt("3XL")
 
 type ContainerDescription struct {
-	Name        string               `json:"name"`
 	Image       string               `json:"image"`
 	Arguments   []string             `json:"arguments,omitempty"`
 	Environment map[string]string    `json:"env,omitempty"`
