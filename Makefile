@@ -45,7 +45,7 @@ set-credentials:
 			HTTP_PASSWORD="$(AUTH_PASS)"
 
 deploy: set-credentials dinah
-	AUTH_PROXY_IMAGE=$(shell WONDERLAND_ENV=$(JIMDO_ENVIRONMENT) dinah docker image $(AUTH_PROXY_IMAGE)) \
+	AUTH_PROXY_IMAGE=$(shell WONDERLAND_ENV=$(JIMDO_ENVIRONMENT) dinah docker image --branch nginx-tune $(AUTH_PROXY_IMAGE)) \
 	CRONS_IMAGE=$(shell WONDERLAND_ENV=$(JIMDO_ENVIRONMENT) dinah docker image --branch $(BRANCH) $(CRONS_IMAGE)) \
 	WONDERLAND_REGISTRY=$(WONDERLAND_REGISTRY) \
 	NOMAD_API=$(NOMAD_API) \
