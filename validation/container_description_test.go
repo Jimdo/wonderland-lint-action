@@ -10,28 +10,6 @@ import (
 	"github.com/Jimdo/wonderland-crons/cron"
 )
 
-func TestValidateContainerName_Valid(t *testing.T) {
-	name := "valid-container-name"
-
-	v := &containerDescription{
-		Name: &wonderlandValidator.WonderlandName{},
-	}
-	if err := v.validateContainerName(name); err != nil {
-		t.Errorf("%s should be a valid container name", name)
-	}
-}
-
-func TestValidateContainerName_Invalid(t *testing.T) {
-	name := "098_+baaaaz_"
-
-	v := &containerDescription{
-		Name: &wonderlandValidator.WonderlandName{},
-	}
-	if err := v.validateContainerName(name); err == nil {
-		t.Errorf("%s should not be a valid container name", name)
-	}
-}
-
 func TestValidateCapacityDescription_Valid(t *testing.T) {
 	valid := []cron.CapacityDescription{
 		{Memory: "XS", CPU: "XS"},
