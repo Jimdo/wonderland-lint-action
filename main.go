@@ -106,10 +106,10 @@ func main() {
 		Router: router.PathPrefix("/v1").Subrouter(),
 	}).Register()
 
-	router.HandleFunc("/debug/pprof/", pprof.Index)
 	router.HandleFunc("/debug/pprof/profile", pprof.Profile)
 	router.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
 	router.HandleFunc("/debug/pprof/trace", pprof.Trace)
+	router.PathPrefix("/debug/pprof/").HandlerFunc(pprof.Index)
 
 	graceful.Run(config.Addr, config.ShutdownTimeout, router)
 }
