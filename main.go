@@ -10,6 +10,7 @@ import (
 
 	"github.com/Luzifer/rconfig"
 	"github.com/gorilla/mux"
+	cleanhttp "github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/nomad/api"
 
 	"github.com/Jimdo/wonderland-validator/docker/registry"
@@ -56,7 +57,8 @@ func main() {
 	router := mux.NewRouter()
 
 	nomadClient, _ := api.NewClient(&api.Config{
-		Address: config.NomadURI,
+		Address:    config.NomadURI,
+		HttpClient: cleanhttp.DefaultPooledClient(),
 		HttpAuth: &api.HttpBasicAuth{
 			Username: config.NomadUser,
 			Password: config.NomadPass,
