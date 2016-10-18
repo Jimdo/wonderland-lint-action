@@ -60,6 +60,7 @@ func main() {
 	nomadClient, _ := api.NewClient(&api.Config{
 		Address: config.NomadURI,
 		HttpClient: &http.Client{
+			// Based on https://github.com/hashicorp/go-cleanhttp/blob/ad28ea4487f05916463e2423a55166280e8254b5/cleanhttp.go#L18-L34
 			Transport: &http.Transport{
 				Proxy: http.ProxyFromEnvironment,
 				Dial: (&net.Dialer{
