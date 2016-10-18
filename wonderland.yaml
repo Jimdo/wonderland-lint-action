@@ -10,6 +10,9 @@ components:
       AWS_REGION: '{{env `NOMAD_AWS_REGION`}}'
       WONDERLAND_ENV: '{{env `WONDERLAND_ENV`}}'
       $ref_secrets: vault+secret://vault.{{env `ZONE`}}/wonderland/crons
+    capacity:
+      memory: S
+      CPU: L
   - name: auth-proxy
     image: {{env `AUTH_PROXY_IMAGE`}}
     links:
