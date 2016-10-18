@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/http/pprof"
 	"os"
 	"time"
 
@@ -53,6 +54,11 @@ func main() {
 	}
 
 	router := mux.NewRouter()
+
+	router.HandleFunc("/debug/pprof/", pprof.Index)
+	router.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	router.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	router.HandleFunc("/debug/pprof/trace", pprof.Trace)
 
 	nomadClient, _ := api.NewClient(&api.Config{
 		Address: config.NomadURI,

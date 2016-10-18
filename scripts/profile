@@ -1,0 +1,58 @@
+#!/bin/bash
+#/ Profile crons service using pprof.
+#/
+#/ Usage: scripts/profile [options]
+#/
+#/     -h, --help               show help text
+#/     -s, --stage              switch to stage environment
+#/     -p, --path <path>        profiling endpoint ("heap" by default)
+#/     -o, --options <options>  options to be passed to "go tool pprof"
+#/
+#/ Examples:
+#/
+#/     $ scripts/profile --path profile
+#/     $ scripts/profile --path heap -o "-alloc_space -files"
+#/     $ scripts/profile --stage -o -top
+
+set -e
+set -o pipefail
+
+WONDERLAND_ENV=prod
+HOSTED_ZONE=jimdo-platform.net
+PPROF_PATH=heap
+PPROF_OPTS=-functions
+
+while test "$#" -ne 0; do
+    case "$1" in
+    -h|--help)
+        grep '^#/' <"$0" | cut -c4-; exit 0 ;;
+    -s|--stage)
+        WONDERLAND_ENV=stage
+        HOSTED_ZONE=jimdo-platform-stage.net
+        shift ;;
+    -p|--path)
+        test "$#" -ge 2 || { echo >&2 "error: $1 requires an argument"; exit 1; }
+        PPROF_PATH="$2"; shift 2 ;;
+    -o|--options)
+        test "$#" -ge 2 || { echo >&2 "error: $1 requires an argument"; exit 1; }
+        PPROF_OPTS="$2"; shift 2 ;;
+    --)
+        shift; break ;;
+    -|[!-]*)
+        break ;;
+    -*)
+        echo >&2 "error: invalid option '$1'"; exit 1 ;;
+    esac
+done
+
+DOCKER_IMAGE="quay.io/jimdo_wonderland_${WONDERLAND_ENV}/wonderland-crons:latest"
+ENDPOINT="https://$WONDERLAND_USER:$WONDERLAND_PASS@crons.$HOSTED_ZONE/debug/pprof/$PPROF_PATH"
+
+echo "Pulling $DOCKER_IMAGE ..."
+docker pull "$DOCKER_IMAGE" >/dev/null
+
+exec docker run -it --rm \
+    -v "$PWD:/workspace" -w /workspace \
+    -v "$HOME/pprof:/root/pprof" \
+    --entrypoint /usr/local/go/bin/go "$DOCKER_IMAGE" \
+    tool pprof $PPROF_OPTS /go/bin/wonderland-crons "$ENDPOINT"
