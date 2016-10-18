@@ -62,7 +62,7 @@ test: container
 	docker run --rm \
 		-i \
 		-e TEST_TAGS=$(TEST_TAGS) \
-		--entrypoint ./test.sh \
+		--entrypoint ./scripts/test \
 		$(CRONS_IMAGE)
 
 container:
