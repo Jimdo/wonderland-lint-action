@@ -55,11 +55,6 @@ func main() {
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/debug/pprof/", pprof.Index)
-	router.HandleFunc("/debug/pprof/profile", pprof.Profile)
-	router.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
-	router.HandleFunc("/debug/pprof/trace", pprof.Trace)
-
 	nomadClient, _ := api.NewClient(&api.Config{
 		Address: config.NomadURI,
 		HttpAuth: &api.HttpBasicAuth{
@@ -110,6 +105,11 @@ func main() {
 		},
 		Router: router.PathPrefix("/v1").Subrouter(),
 	}).Register()
+
+	router.HandleFunc("/debug/pprof/", pprof.Index)
+	router.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	router.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	router.HandleFunc("/debug/pprof/trace", pprof.Trace)
 
 	graceful.Run(config.Addr, config.ShutdownTimeout, router)
 }
