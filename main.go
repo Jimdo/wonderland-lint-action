@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"net"
+	"net/http"
 	"net/http/pprof"
 	"os"
 	"time"
@@ -10,7 +12,6 @@ import (
 
 	"github.com/Luzifer/rconfig"
 	"github.com/gorilla/mux"
-	cleanhttp "github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/nomad/api"
 
 	"github.com/Jimdo/wonderland-validator/docker/registry"
@@ -57,8 +58,19 @@ func main() {
 	router := mux.NewRouter()
 
 	nomadClient, _ := api.NewClient(&api.Config{
-		Address:    config.NomadURI,
-		HttpClient: cleanhttp.DefaultPooledClient(),
+		Address: config.NomadURI,
+		HttpClient: &http.Client{
+			Transport: &http.Transport{
+				Proxy: http.ProxyFromEnvironment,
+				Dial: (&net.Dialer{
+					Timeout:   30 * time.Second,
+					KeepAlive: 30 * time.Second,
+				}).Dial,
+				TLSHandshakeTimeout: 10 * time.Second,
+				DisableKeepAlives:   false,
+				MaxIdleConnsPerHost: 2,
+			},
+		},
 		HttpAuth: &api.HttpBasicAuth{
 			Username: config.NomadUser,
 			Password: config.NomadPass,
