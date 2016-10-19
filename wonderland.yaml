@@ -11,7 +11,7 @@ components:
       WONDERLAND_ENV: '{{env `WONDERLAND_ENV`}}'
       $ref_secrets: vault+secret://vault.{{env `ZONE`}}/wonderland/crons
     capacity:
-      memory: S
+      memory: M
       CPU: L
   - name: auth-proxy
     image: {{env `AUTH_PROXY_IMAGE`}}
