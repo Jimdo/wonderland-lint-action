@@ -26,7 +26,7 @@ func (v *DockerImage) Validate(image string) error {
 		return err
 	}
 	if err := v.validateImage(image); err != nil {
-		return err
+		return fmt.Errorf("could not validate existence of Docker image %q: %s", image, err)
 	}
 	return nil
 }
