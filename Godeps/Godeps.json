@@ -12,13 +12,13 @@
 		},
 		{
 			"ImportPath": "github.com/Jimdo/wonderland-validator/docker/registry",
-			"Comment": "0.3.0",
-			"Rev": "fd4a6960d70074878841dc3ff7b2ddb2e802c7d3"
+			"Comment": "0.3.1",
+			"Rev": "0a51c0ecf79d2a0a5e7f16b5b147bf35bae8071f"
 		},
 		{
 			"ImportPath": "github.com/Jimdo/wonderland-validator/validator",
-			"Comment": "0.3.0",
-			"Rev": "fd4a6960d70074878841dc3ff7b2ddb2e802c7d3"
+			"Comment": "0.3.1",
+			"Rev": "0a51c0ecf79d2a0a5e7f16b5b147bf35bae8071f"
 		},
 		{
 			"ImportPath": "github.com/Luzifer/rconfig",
