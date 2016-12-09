@@ -45,7 +45,7 @@ while test "$#" -ne 0; do
     esac
 done
 
-DOCKER_IMAGE="quay.io/jimdo_wonderland_${WONDERLAND_ENV}/wonderland-crons:latest"
+DOCKER_IMAGE="quay.io/jimdo/wonderland-crons:latest"
 ENDPOINT="https://$WONDERLAND_USER:$WONDERLAND_PASS@crons.$HOSTED_ZONE/debug/pprof/$PPROF_PATH"
 
 echo "Pulling $DOCKER_IMAGE ..."

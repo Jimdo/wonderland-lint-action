@@ -12,7 +12,7 @@ ZONE=jimdo-platform-stage.net
 WONDERLAND_REGISTRY=registry.jimdo-platform-stage.net
 
 NOMAD_API=https://nomad.jimdo-platform-stage.net
-NOMAD_WL_DOCKER_IMAGE=quay.io/jimdo_wonderland_stage/wl
+NOMAD_WL_DOCKER_IMAGE=quay.io/jimdo/wl
 NOMAD_AWS_REGION=$(AWS_REGION)
 NOMAD_USER=$(WONDERLAND_USER)
 NOMAD_PASS=$(WONDERLAND_PASS)
@@ -24,7 +24,6 @@ prod: JIMDO_ENVIRONMENT=prod
 prod: ZONE=jimdo-platform.net
 prod: WONDERLAND_REGISTRY=registry.jimdo-platform.net
 prod: NOMAD_API=https://nomad.jimdo-platform.net
-prod: NOMAD_WL_DOCKER_IMAGE=quay.io/jimdo_wonderland_prod/wl
 prod: deploy
 
 stage: deploy
@@ -45,8 +44,8 @@ set-credentials:
 			HTTP_PASSWORD="$(AUTH_PASS)"
 
 deploy: set-credentials dinah
-	AUTH_PROXY_IMAGE=$(shell WONDERLAND_ENV=$(JIMDO_ENVIRONMENT) dinah docker image $(AUTH_PROXY_IMAGE)) \
-	CRONS_IMAGE=$(shell WONDERLAND_ENV=$(JIMDO_ENVIRONMENT) dinah docker image --branch $(BRANCH) $(CRONS_IMAGE)) \
+	AUTH_PROXY_IMAGE=$(shell dinah docker image $(AUTH_PROXY_IMAGE)) \
+	CRONS_IMAGE=$(shell dinah docker image --branch $(BRANCH) $(CRONS_IMAGE)) \
 	WONDERLAND_REGISTRY=$(WONDERLAND_REGISTRY) \
 	NOMAD_API=$(NOMAD_API) \
 	NOMAD_WL_DOCKER_IMAGE=$(NOMAD_WL_DOCKER_IMAGE) \
@@ -70,7 +69,6 @@ container:
 
 push: container dinah
 	# Push Docker images
-	@dinah docker push --stage --user $(QUAY_USER_STAGE) --pass $(QUAY_PASS_STAGE) --branch $(BRANCH) $(CRONS_IMAGE)
 	@dinah docker push --user $(QUAY_USER_PROD) --pass $(QUAY_PASS_PROD) --branch $(BRANCH) $(CRONS_IMAGE)
 
 notify-jenkins: dinah
