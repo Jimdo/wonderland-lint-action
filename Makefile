@@ -12,7 +12,7 @@ ZONE=jimdo-platform-stage.net
 WONDERLAND_REGISTRY=registry.jimdo-platform-stage.net
 
 NOMAD_API=https://nomad.jimdo-platform-stage.net
-NOMAD_WL_DOCKER_IMAGE=quay.io/jimdo_wonderland_stage/wl
+NOMAD_WL_DOCKER_IMAGE=quay.io/jimdo/wl
 NOMAD_AWS_REGION=$(AWS_REGION)
 NOMAD_USER=$(WONDERLAND_USER)
 NOMAD_PASS=$(WONDERLAND_PASS)
@@ -24,7 +24,6 @@ prod: JIMDO_ENVIRONMENT=prod
 prod: ZONE=jimdo-platform.net
 prod: WONDERLAND_REGISTRY=registry.jimdo-platform.net
 prod: NOMAD_API=https://nomad.jimdo-platform.net
-prod: NOMAD_WL_DOCKER_IMAGE=quay.io/jimdo_wonderland_prod/wl
 prod: deploy
 
 stage: deploy
