@@ -11,6 +11,7 @@ import (
 	"github.com/Jimdo/wonderland-crons/api"
 	"github.com/Jimdo/wonderland-crons/cron"
 	"github.com/Jimdo/wonderland-crons/service"
+	"github.com/Jimdo/wonderland-crons/validation"
 )
 
 func New(c *Config) *API {
@@ -98,7 +99,11 @@ func (a *API) RunCron(ctx context.Context, w http.ResponseWriter, req *http.Requ
 	}
 
 	if err := a.config.Service.Run(desc); err != nil {
-		sendError(w, fmt.Errorf("Unable to run cron: %s", err), http.StatusInternalServerError)
+		statusCode := http.StatusInternalServerError
+		if _, ok := err.(validation.Error); ok {
+			statusCode = http.StatusBadRequest
+		}
+		sendError(w, fmt.Errorf("Unable to run cron: %s", err), statusCode)
 		return
 	}
 }
