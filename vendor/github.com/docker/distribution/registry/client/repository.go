@@ -301,20 +301,18 @@ func (t *tags) Get(ctx context.Context, tag string) (distribution.Descriptor, er
 		return distribution.Descriptor{}, err
 	}
 
-	newRequest := func(method string) (*http.Response, error) {
-		req, err := http.NewRequest(method, u, nil)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, t := range distribution.ManifestMediaTypes() {
-			req.Header.Add("Accept", t)
-		}
-		resp, err := t.client.Do(req)
-		return resp, err
+	req, err := http.NewRequest("HEAD", u, nil)
+	if err != nil {
+		return distribution.Descriptor{}, err
 	}
 
-	resp, err := newRequest("HEAD")
+	for _, t := range distribution.ManifestMediaTypes() {
+		req.Header.Add("Accept", t)
+	}
+
+	var attempts int
+	resp, err := t.client.Do(req)
+check:
 	if err != nil {
 		return distribution.Descriptor{}, err
 	}
@@ -323,20 +321,23 @@ func (t *tags) Get(ctx context.Context, tag string) (distribution.Descriptor, er
 	switch {
 	case resp.StatusCode >= 200 && resp.StatusCode < 400:
 		return descriptorFromResponse(resp)
-	default:
-		// if the response is an error - there will be no body to decode.
-		// Issue a GET request:
-		//   - for data from a server that does not handle HEAD
-		//   - to get error details in case of a failure
-		resp, err = newRequest("GET")
+	case resp.StatusCode == http.StatusMethodNotAllowed:
+		req, err = http.NewRequest("GET", u, nil)
 		if err != nil {
 			return distribution.Descriptor{}, err
 		}
-		defer resp.Body.Close()
 
-		if resp.StatusCode >= 200 && resp.StatusCode < 400 {
-			return descriptorFromResponse(resp)
+		for _, t := range distribution.ManifestMediaTypes() {
+			req.Header.Add("Accept", t)
 		}
+
+		resp, err = t.client.Do(req)
+		attempts++
+		if attempts > 1 {
+			return distribution.Descriptor{}, err
+		}
+		goto check
+	default:
 		return distribution.Descriptor{}, HandleErrorResponse(resp)
 	}
 }
@@ -679,6 +680,15 @@ func (bs *blobs) Put(ctx context.Context, mediaType string, p []byte) (distribut
 	return writer.Commit(ctx, desc)
 }
 
+// createOptions is a collection of blob creation modifiers relevant to general
+// blob storage intended to be configured by the BlobCreateOption.Apply method.
+type createOptions struct {
+	Mount struct {
+		ShouldMount bool
+		From        reference.Canonical
+	}
+}
+
 type optionFunc func(interface{}) error
 
 func (f optionFunc) Apply(v interface{}) error {
@@ -689,7 +699,7 @@ func (f optionFunc) Apply(v interface{}) error {
 // mounted from the given canonical reference.
 func WithMountFrom(ref reference.Canonical) distribution.BlobCreateOption {
 	return optionFunc(func(v interface{}) error {
-		opts, ok := v.(*distribution.CreateOptions)
+		opts, ok := v.(*createOptions)
 		if !ok {
 			return fmt.Errorf("unexpected options type: %T", v)
 		}
@@ -702,7 +712,7 @@ func WithMountFrom(ref reference.Canonical) distribution.BlobCreateOption {
 }
 
 func (bs *blobs) Create(ctx context.Context, options ...distribution.BlobCreateOption) (distribution.BlobWriter, error) {
-	var opts distribution.CreateOptions
+	var opts createOptions
 
 	for _, option := range options {
 		err := option.Apply(&opts)

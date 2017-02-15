@@ -169,7 +169,6 @@ func (s *nomadCronStore) Run(cron *CronDescription) error {
 						Resources: &structs.Resources{
 							CPU:      100,
 							MemoryMB: 64,
-							DiskMB:   300,
 							IOPS:     0,
 						},
 						LogConfig: structs.DefaultLogConfig(),
@@ -178,6 +177,11 @@ func (s *nomadCronStore) Run(cron *CronDescription) error {
 				RestartPolicy: &structs.RestartPolicy{
 					Attempts: 0,
 					Mode:     structs.RestartPolicyModeFail,
+				},
+				EphemeralDisk: &structs.EphemeralDisk{
+					Sticky:  false,
+					Migrate: false,
+					SizeMB:  300,
 				},
 			},
 		},
@@ -358,7 +362,7 @@ func (s *nomadCronStore) Allocations(cronName string) ([]*CronAllocation, error)
 			}
 			job := queueItem.(*api.JobListStub)
 
-			allocs, queryMeta, err := s.config.Client.Jobs().Allocations(job.ID, nil)
+			allocs, queryMeta, err := s.config.Client.Jobs().Allocations(job.ID, false, nil)
 			if err != nil {
 				log.Printf("Error while getting allocations of job %q: %s", job.ID, err)
 				return err

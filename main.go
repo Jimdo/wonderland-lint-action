@@ -1,7 +1,9 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
+	"net/http"
 	"net/http/pprof"
 	"os"
 	"time"
@@ -56,14 +58,27 @@ func main() {
 
 	router := mux.NewRouter()
 
-	nomadClient, _ := api.NewClient(&api.Config{
+	clientConfig := &api.Config{
 		Address:    config.NomadURI,
 		HttpClient: cleanhttp.DefaultPooledClient(),
 		HttpAuth: &api.HttpBasicAuth{
 			Username: config.NomadUser,
 			Password: config.NomadPass,
 		},
-	})
+		TLSConfig: &api.TLSConfig{},
+	}
+
+	// This is required for the client to work with a custom HttpClient
+	transport := clientConfig.HttpClient.Transport.(*http.Transport)
+	transport.TLSHandshakeTimeout = 10 * time.Second
+	transport.TLSClientConfig = &tls.Config{
+		MinVersion: tls.VersionTLS12,
+	}
+
+	nomadClient, err := api.NewClient(clientConfig)
+	if err != nil {
+		abort("Could not create Nomad client: %s", err)
+	}
 
 	v1.New(&v1.Config{
 		Service: &service.CronService{
