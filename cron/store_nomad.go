@@ -299,17 +299,12 @@ func (s *nomadCronStore) aggregateChildJobSummary(cronName string) (*CronSummary
 
 	for summariesQueue.Head() != nil {
 		childSummary := summariesQueue.Dequeue().(*api.TaskGroupSummary)
+		cronSummary.Queued += childSummary.Queued
 		cronSummary.Starting += childSummary.Starting
 		cronSummary.Running += childSummary.Running
 		cronSummary.Failed += childSummary.Failed
 		cronSummary.Complete += childSummary.Complete
 		cronSummary.Lost += childSummary.Lost
-		// FIXME: Nomad v0.4.1 has a bug and often reports an incorrect number of
-		// queued allocations. See https://github.com/hashicorp/nomad/issues/1835
-		// This workaround discards the value when the allocation is running or terminated.
-		if childSummary.Running+childSummary.Failed+childSummary.Complete+childSummary.Lost == 0 {
-			cronSummary.Queued += childSummary.Queued
-		}
 	}
 
 	return cronSummary, nil
