@@ -39,8 +39,7 @@ type NomadCronStoreConfig struct {
 	Client        *api.Client
 	WLDockerImage string
 	WLEnvironment string
-	WLUser        string
-	WLPass        string
+	WLGitHubToken string
 }
 
 func NewNomadCronStore(c *NomadCronStoreConfig) *nomadCronStore {
@@ -161,10 +160,9 @@ func (s *nomadCronStore) Run(cron *CronDescription) error {
 							"args":    args,
 						},
 						Env: map[string]string{
-							"WONDERLAND_ENV":   s.config.WLEnvironment,
-							"WONDERLAND_PASS":  s.config.WLPass,
-							"WONDERLAND_USER":  s.config.WLUser,
-							"WONDERLAND_DEBUG": "1",
+							"WONDERLAND_ENV":          s.config.WLEnvironment,
+							"WONDERLAND_GITHUB_TOKEN": s.config.WLGitHubToken,
+							"WONDERLAND_DEBUG":        "1",
 						},
 						Resources: &structs.Resources{
 							CPU:      100,
