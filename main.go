@@ -41,6 +41,9 @@ var (
 		// Vault
 		VaultAccessToken string `flag:"vault-token" env:"VAULT_TOKEN" default:"" description:"Token to read variables and IAM credentials from Vault with"`
 
+		// wl authentication
+		WonderlandGitHubToken string `flag:"wonderland-github-token" env:"WONDERLAND_GITHUB_TOKEN" default:"" description:"The GitHub token to use for wl authentication"`
+
 		// Docker registries
 		WonderlandRegistryAddress string `flag:"wonderland-registry-address" env:"WONDERLAND_REGISTRY_ADDRESS" description:"The address of the Wonderland registry"`
 		WonderlandRegistryUser    string `flag:"wonderland-registry-user" env:"WONDERLAND_REGISTRY_USER" description:"The username for the Wonderland registry"`
@@ -88,8 +91,7 @@ func main() {
 				Client:        nomadClient,
 				WLDockerImage: config.NomadWLDockerImage,
 				WLEnvironment: os.Getenv("WONDERLAND_ENV"),
-				WLUser:        config.NomadUser,
-				WLPass:        config.NomadPass,
+				WLGitHubToken: config.WonderlandGitHubToken,
 			}),
 			Validator: validation.New(validation.Configuration{
 				WonderlandNameValidator: &wonderlandValidator.WonderlandName{},
