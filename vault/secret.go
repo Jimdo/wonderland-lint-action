@@ -16,7 +16,7 @@ type SecretProvider struct {
 // GetValues reads key-value-pairs from Vault and returns a map of them as env variables
 func (v SecretProvider) GetValues(src *url.URL) (map[string]string, error) {
 	host := src.Host
-	path := src.Path
+	path := fmt.Sprintf("secret/%s", src.Path)
 
 	c, ok := v.VaultClients[host]
 	if !ok {
