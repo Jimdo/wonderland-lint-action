@@ -5,16 +5,14 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/pprof"
-	"net/url"
 	"os"
 	"time"
 
-	graceful "gopkg.in/tylerb/graceful.v1"
 	"github.com/Luzifer/rconfig"
 	"github.com/gorilla/mux"
 	cleanhttp "github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/nomad/api"
-	vaultapi "github.com/hashicorp/vault/api"
+	graceful "gopkg.in/tylerb/graceful.v1"
 
 	"github.com/Jimdo/wonderland-validator/docker/registry"
 	wonderlandValidator "github.com/Jimdo/wonderland-validator/validator"
@@ -60,11 +58,6 @@ var (
 func main() {
 	if err := rconfig.Parse(&config); err != nil {
 		abort("Could not parse config: %s", err)
-	}
-
-	vaultURL, err := url.Parse(config.VaultAddress)
-	if err != nil {
-		abort("Could not parse Vault address: %s", err)
 	}
 
 	rcm, err := rcm.NewWithDebug(config.VaultAddress, config.VaultRoleID)
@@ -130,9 +123,7 @@ func main() {
 				},
 				EnvironmentVariables: &wonderlandValidator.EnvironmentVariables{
 					VaultSecretProvider: &vault.SecretProvider{
-						VaultClients: map[string]*vaultapi.Client{
-							vaultURL.Host: rcm.VaultClient,
-						},
+						VaultClient: rcm.VaultClient,
 					},
 				},
 			}),

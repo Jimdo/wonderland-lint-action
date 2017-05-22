@@ -10,20 +10,14 @@ import (
 // SecretProvider implements an EnvProvider to access static key-value-pairs stored
 // in the /secret path of the Vault
 type SecretProvider struct {
-	VaultClients map[string]*api.Client
+	VaultClient *api.Client
 }
 
 // GetValues reads key-value-pairs from Vault and returns a map of them as env variables
 func (v SecretProvider) GetValues(src *url.URL) (map[string]string, error) {
-	host := src.Host
 	path := fmt.Sprintf("secret/%s", src.Path)
 
-	c, ok := v.VaultClients[host]
-	if !ok {
-		return nil, fmt.Errorf("Cannot access credentials in unknown Vault instance %s", host)
-	}
-
-	secret, err := c.Logical().Read(path)
+	secret, err := v.VaultClient.Logical().Read(path)
 	if err != nil {
 		return nil, fmt.Errorf("Error accessing credentials in Vault: %s", err)
 	}
