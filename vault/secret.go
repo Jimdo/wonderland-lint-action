@@ -21,7 +21,7 @@ func (v SecretProvider) GetValues(src *url.URL) (map[string]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Error accessing credentials in Vault: %s", err)
 	}
-	if secret == nil {
+	if secret == nil || secret.Data == nil {
 		return nil, fmt.Errorf("No credentials found in Vault at path %q", path)
 	}
 
