@@ -8,15 +8,15 @@ import (
 	"os"
 	"time"
 
-	graceful "gopkg.in/tylerb/graceful.v1"
-
 	"github.com/Luzifer/rconfig"
 	"github.com/gorilla/mux"
 	cleanhttp "github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/nomad/api"
+	graceful "gopkg.in/tylerb/graceful.v1"
 
 	"github.com/Jimdo/wonderland-validator/docker/registry"
 	wonderlandValidator "github.com/Jimdo/wonderland-validator/validator"
+	"github.com/Jimdo/wonderland-vault/lib/role-credential-manager"
 
 	"github.com/Jimdo/wonderland-crons/api/v1"
 	"github.com/Jimdo/wonderland-crons/cron"
@@ -39,7 +39,8 @@ var (
 		NomadWLDockerImage string `flag:"nomad-wl-docker-image" env:"NOMAD_WL_DOCKER_IMAGE" default:"" description:"The Docker image to use for running wl commands in Nomad"`
 
 		// Vault
-		VaultAccessToken string `flag:"vault-token" env:"VAULT_TOKEN" default:"" description:"Token to read variables and IAM credentials from Vault with"`
+		VaultAddress string `flag:"vault-address" env:"VAULT_ADDR" default:"http://127.0.0.1:8282" description:"Vault Address"`
+		VaultRoleID  string `flag:"vault-role-id" env:"VAULT_ROLE_ID" description:"RoleID with sufficient access"`
 
 		// wl authentication
 		WonderlandGitHubToken string `flag:"wonderland-github-token" env:"WONDERLAND_GITHUB_TOKEN" default:"" description:"The GitHub token to use for wl authentication"`
@@ -57,6 +58,11 @@ var (
 func main() {
 	if err := rconfig.Parse(&config); err != nil {
 		abort("Could not parse config: %s", err)
+	}
+
+	rcm, err := rcm.NewWithDebug(config.VaultAddress, config.VaultRoleID)
+	if err != nil {
+		abort("Could not set up role credential manager: %s", err)
 	}
 
 	router := mux.NewRouter()
@@ -117,7 +123,7 @@ func main() {
 				},
 				EnvironmentVariables: &wonderlandValidator.EnvironmentVariables{
 					VaultSecretProvider: &vault.SecretProvider{
-						VaultAccessToken: config.VaultAccessToken,
+						VaultClient: rcm.VaultClient,
 					},
 				},
 			}),
