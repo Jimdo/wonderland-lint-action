@@ -87,9 +87,9 @@ func (s *nomadCronStore) Status(cronName string) (*Cron, error) {
 	}
 
 	return &Cron{
-		Name:     j.Name,
-		Status:   j.Status,
-		Schedule: j.Periodic.Spec,
+		Name:     *j.Name,
+		Status:   *j.Status,
+		Schedule: *j.Periodic.Spec,
 		Summary:  cronSummary,
 	}, nil
 }
