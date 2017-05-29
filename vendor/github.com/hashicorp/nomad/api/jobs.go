@@ -6,6 +6,9 @@ import (
 	"sort"
 	"strconv"
 	"time"
+
+	"github.com/gorhill/cronexpr"
+	"github.com/hashicorp/nomad/helper"
 )
 
 const (
@@ -14,6 +17,9 @@ const (
 
 	// JobTypeBatch indicates a short-lived process
 	JobTypeBatch = "batch"
+
+	// PeriodicSpecCron is used for a cron spec.
+	PeriodicSpecCron = "cron"
 )
 
 const (
@@ -30,6 +36,16 @@ type Jobs struct {
 // Jobs returns a handle on the jobs endpoints.
 func (c *Client) Jobs() *Jobs {
 	return &Jobs{client: c}
+}
+
+func (j *Jobs) Validate(job *Job, q *WriteOptions) (*JobValidateResponse, *WriteMeta, error) {
+	var resp JobValidateResponse
+	req := &JobValidateRequest{Job: job}
+	if q != nil {
+		req.WriteRequest = WriteRequest{Region: q.Region}
+	}
+	wm, err := j.client.write("/v1/validate/job", req, &resp, q)
+	return &resp, wm, err
 }
 
 // Register is used to register a new job. It returns the ID
@@ -162,7 +178,7 @@ func (j *Jobs) Plan(job *Job, diff bool, q *WriteOptions) (*JobPlanResponse, *Wr
 		Job:  job,
 		Diff: diff,
 	}
-	wm, err := j.client.write("/v1/job/"+job.ID+"/plan", req, &resp, q)
+	wm, err := j.client.write("/v1/job/"+*job.ID+"/plan", req, &resp, q)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -202,33 +218,74 @@ type periodicForceResponse struct {
 // UpdateStrategy is for serializing update strategy for a job.
 type UpdateStrategy struct {
 	Stagger     time.Duration
-	MaxParallel int
+	MaxParallel int `mapstructure:"max_parallel"`
 }
 
 // PeriodicConfig is for serializing periodic config for a job.
 type PeriodicConfig struct {
-	Enabled         bool
-	Spec            string
-	SpecType        string
-	ProhibitOverlap bool
+	Enabled         *bool
+	Spec            *string
+	SpecType        *string
+	ProhibitOverlap *bool   `mapstructure:"prohibit_overlap"`
+	TimeZone        *string `mapstructure:"time_zone"`
+}
+
+func (p *PeriodicConfig) Canonicalize() {
+	if p.Enabled == nil {
+		p.Enabled = helper.BoolToPtr(true)
+	}
+	if p.Spec == nil {
+		p.Spec = helper.StringToPtr("")
+	}
+	if p.SpecType == nil {
+		p.SpecType = helper.StringToPtr(PeriodicSpecCron)
+	}
+	if p.ProhibitOverlap == nil {
+		p.ProhibitOverlap = helper.BoolToPtr(false)
+	}
+	if p.TimeZone == nil || *p.TimeZone == "" {
+		p.TimeZone = helper.StringToPtr("UTC")
+	}
+}
+
+// Next returns the closest time instant matching the spec that is after the
+// passed time. If no matching instance exists, the zero value of time.Time is
+// returned. The `time.Location` of the returned value matches that of the
+// passed time.
+func (p *PeriodicConfig) Next(fromTime time.Time) time.Time {
+	if *p.SpecType == PeriodicSpecCron {
+		if e, err := cronexpr.Parse(*p.Spec); err == nil {
+			return e.Next(fromTime)
+		}
+	}
+
+	return time.Time{}
+}
+
+func (p *PeriodicConfig) GetLocation() (*time.Location, error) {
+	if p.TimeZone == nil || *p.TimeZone == "" {
+		return time.UTC, nil
+	}
+
+	return time.LoadLocation(*p.TimeZone)
 }
 
 // ParameterizedJobConfig is used to configure the parameterized job.
 type ParameterizedJobConfig struct {
 	Payload      string
-	MetaRequired []string
-	MetaOptional []string
+	MetaRequired []string `mapstructure:"meta_required"`
+	MetaOptional []string `mapstructure:"meta_optional"`
 }
 
 // Job is used to serialize a job.
 type Job struct {
-	Region            string
-	ID                string
-	ParentID          string
-	Name              string
-	Type              string
-	Priority          int
-	AllAtOnce         bool
+	Region            *string
+	ID                *string
+	ParentID          *string
+	Name              *string
+	Type              *string
+	Priority          *int
+	AllAtOnce         *bool `mapstructure:"all_at_once"`
 	Datacenters       []string
 	Constraints       []*Constraint
 	TaskGroups        []*TaskGroup
@@ -237,12 +294,71 @@ type Job struct {
 	ParameterizedJob  *ParameterizedJobConfig
 	Payload           []byte
 	Meta              map[string]string
-	VaultToken        string
-	Status            string
-	StatusDescription string
-	CreateIndex       uint64
-	ModifyIndex       uint64
-	JobModifyIndex    uint64
+	VaultToken        *string `mapstructure:"vault_token"`
+	Status            *string
+	StatusDescription *string
+	CreateIndex       *uint64
+	ModifyIndex       *uint64
+	JobModifyIndex    *uint64
+}
+
+// IsPeriodic returns whether a job is periodic.
+func (j *Job) IsPeriodic() bool {
+	return j.Periodic != nil
+}
+
+// IsParameterized returns whether a job is parameterized job.
+func (j *Job) IsParameterized() bool {
+	return j.ParameterizedJob != nil
+}
+
+func (j *Job) Canonicalize() {
+	if j.ID == nil {
+		j.ID = helper.StringToPtr("")
+	}
+	if j.Name == nil {
+		j.Name = helper.StringToPtr(*j.ID)
+	}
+	if j.ParentID == nil {
+		j.ParentID = helper.StringToPtr("")
+	}
+	if j.Priority == nil {
+		j.Priority = helper.IntToPtr(50)
+	}
+	if j.Region == nil {
+		j.Region = helper.StringToPtr("global")
+	}
+	if j.Type == nil {
+		j.Type = helper.StringToPtr("service")
+	}
+	if j.AllAtOnce == nil {
+		j.AllAtOnce = helper.BoolToPtr(false)
+	}
+	if j.VaultToken == nil {
+		j.VaultToken = helper.StringToPtr("")
+	}
+	if j.Status == nil {
+		j.Status = helper.StringToPtr("")
+	}
+	if j.StatusDescription == nil {
+		j.StatusDescription = helper.StringToPtr("")
+	}
+	if j.CreateIndex == nil {
+		j.CreateIndex = helper.Uint64ToPtr(0)
+	}
+	if j.ModifyIndex == nil {
+		j.ModifyIndex = helper.Uint64ToPtr(0)
+	}
+	if j.JobModifyIndex == nil {
+		j.JobModifyIndex = helper.Uint64ToPtr(0)
+	}
+	if j.Periodic != nil {
+		j.Periodic.Canonicalize()
+	}
+
+	for _, tg := range j.TaskGroups {
+		tg.Canonicalize(j)
+	}
 }
 
 // JobSummary summarizes the state of the allocations of a job
@@ -330,11 +446,11 @@ func NewBatchJob(id, name, region string, pri int) *Job {
 // newJob is used to create a new Job struct.
 func newJob(id, name, region, typ string, pri int) *Job {
 	return &Job{
-		Region:   region,
-		ID:       id,
-		Name:     name,
-		Type:     typ,
-		Priority: pri,
+		Region:   &region,
+		ID:       &id,
+		Name:     &name,
+		Type:     &typ,
+		Priority: &pri,
 	}
 }
 
@@ -371,6 +487,42 @@ func (j *Job) AddPeriodicConfig(cfg *PeriodicConfig) *Job {
 	return j
 }
 
+type WriteRequest struct {
+	// The target region for this write
+	Region string
+}
+
+// JobValidateRequest is used to validate a job
+type JobValidateRequest struct {
+	Job *Job
+	WriteRequest
+}
+
+// JobValidateResponse is the response from validate request
+type JobValidateResponse struct {
+	// DriverConfigValidated indicates whether the agent validated the driver
+	// config
+	DriverConfigValidated bool
+
+	// ValidationErrors is a list of validation errors
+	ValidationErrors []string
+
+	// Error is a string version of any error that may have occured
+	Error string
+}
+
+// JobUpdateRequest is used to update a job
+type JobRegisterRequest struct {
+	Job *Job
+	// If EnforceIndex is set then the job will only be registered if the passed
+	// JobModifyIndex matches the current Jobs index. If the index is zero, the
+	// register only occurs if the job is new.
+	EnforceIndex   bool
+	JobModifyIndex uint64
+
+	WriteRequest
+}
+
 // RegisterJobRequest is used to serialize a job registration
 type RegisterJobRequest struct {
 	Job            *Job
@@ -391,6 +543,7 @@ type deregisterJobResponse struct {
 type JobPlanRequest struct {
 	Job  *Job
 	Diff bool
+	WriteRequest
 }
 
 type JobPlanResponse struct {
@@ -465,5 +618,5 @@ type JobDispatchResponse struct {
 	EvalID          string
 	EvalCreateIndex uint64
 	JobCreateIndex  uint64
-	QueryMeta
+	WriteMeta
 }
