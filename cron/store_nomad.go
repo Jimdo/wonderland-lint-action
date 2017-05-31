@@ -174,6 +174,7 @@ func (s *nomadCronStore) Run(cron *CronDescription) error {
 				},
 				RestartPolicy: &structs.RestartPolicy{
 					Attempts: 0,
+					Interval: 5 * time.Second,
 					Mode:     structs.RestartPolicyModeFail,
 				},
 				EphemeralDisk: &structs.EphemeralDisk{
