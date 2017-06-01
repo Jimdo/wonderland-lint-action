@@ -123,6 +123,21 @@ func (s *nomadCronStore) Stop(cronName string) error {
 }
 
 func (s *nomadCronStore) Run(cron *CronDescription) error {
+	job, err := s.createJob(cron)
+	if err != nil {
+		return err
+	}
+
+	apiJob, err := s.convertStructJob(job)
+	if err != nil {
+		return err
+	}
+
+	_, _, err = s.config.Client.Jobs().Register(apiJob, nil)
+	return err
+}
+
+func (s *nomadCronStore) createJob(cron *CronDescription) (*structs.Job, error) {
 	args := []string{"--name", cron.Name}
 	for env, value := range cron.Description.Environment {
 		args = append(args, "-e", fmt.Sprintf("%s=%s", env, value))
@@ -195,16 +210,10 @@ func (s *nomadCronStore) Run(cron *CronDescription) error {
 	job.Canonicalize()
 
 	if err := job.Validate(); err != nil {
-		return err
+		return nil, err
 	}
 
-	apiJob, err := s.convertStructJob(job)
-	if err != nil {
-		return err
-	}
-
-	_, _, err = s.config.Client.Jobs().Register(apiJob, nil)
-	return err
+	return job, nil
 }
 
 // convertStructJob is used to take a *structs.Job and convert it to an *api.Job.
