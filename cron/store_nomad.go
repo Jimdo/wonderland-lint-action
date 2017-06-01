@@ -138,7 +138,7 @@ func (s *nomadCronStore) Run(cron *CronDescription) error {
 	args = append(args, cron.Description.Image, "--")
 	args = append(args, cron.Description.Arguments...)
 
-	job := structs.Job{
+	job := &structs.Job{
 		Region:      "global",
 		ID:          s.config.CronPrefix + cron.Name,
 		Name:        cron.Name,
@@ -198,7 +198,7 @@ func (s *nomadCronStore) Run(cron *CronDescription) error {
 		return err
 	}
 
-	apiJob, err := s.convertStructJob(&job)
+	apiJob, err := s.convertStructJob(job)
 	if err != nil {
 		return err
 	}
