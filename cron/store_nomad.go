@@ -229,6 +229,10 @@ func (s *nomadCronStore) convertStructJob(in *structs.Job) (*api.Job, error) {
 	if err := gob.NewDecoder(buf).Decode(&apiJob); err != nil {
 		return nil, err
 	}
+
+	// Hack to check out if the conversion has errors
+	apiJob.TaskGroups[0].RestartPolicy.Attempts = &in.TaskGroups[0].RestartPolicy.Attempts
+
 	return apiJob, nil
 }
 
