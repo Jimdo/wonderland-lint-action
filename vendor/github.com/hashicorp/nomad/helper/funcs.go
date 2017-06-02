@@ -1,8 +1,46 @@
 package helper
 
+import (
+	"regexp"
+	"time"
+)
+
+// validUUID is used to check if a given string looks like a UUID
+var validUUID = regexp.MustCompile(`(?i)^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$`)
+
+// IsUUID returns true if the given string is a valid UUID.
+func IsUUID(str string) bool {
+	const uuidLen = 36
+	if len(str) != uuidLen {
+		return false
+	}
+
+	return validUUID.MatchString(str)
+}
+
 // boolToPtr returns the pointer to a boolean
 func BoolToPtr(b bool) *bool {
 	return &b
+}
+
+// IntToPtr returns the pointer to an int
+func IntToPtr(i int) *int {
+	return &i
+}
+
+// UintToPtr returns the pointer to an uint
+func Uint64ToPtr(u uint64) *uint64 {
+	return &u
+}
+
+// StringToPtr returns the pointer to a string
+func StringToPtr(str string) *string {
+	return &str
+}
+
+// TimeToPtr returns the pointer to a time stamp
+func TimeToPtr(t time.Duration) *time.Duration {
+	return &t
 }
 
 // MapStringStringSliceValueSet returns the set of values in a map[string][]string
@@ -138,4 +176,22 @@ func CopySliceInt(s []int) []int {
 		c[i] = v
 	}
 	return c
+}
+
+// CleanEnvVar replaces all occurrences of illegal characters in an environment
+// variable with the specified byte.
+func CleanEnvVar(s string, r byte) string {
+	b := []byte(s)
+	for i, c := range b {
+		switch {
+		case c == '_':
+		case c >= 'a' && c <= 'z':
+		case c >= 'A' && c <= 'Z':
+		case i > 0 && c >= '0' && c <= '9':
+		default:
+			// Replace!
+			b[i] = r
+		}
+	}
+	return string(b)
 }

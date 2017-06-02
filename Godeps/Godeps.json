@@ -196,28 +196,28 @@
 		},
 		{
 			"ImportPath": "github.com/hashicorp/nomad/api",
-			"Comment": "v0.5.4",
-			"Rev": "3b1bcc12d358e0de2a5b9e63569dbd90fb6d355d"
+			"Comment": "v0.5.6",
+			"Rev": "4cd2cf1c3c9ed6dbd0b8261f9bad0e375c182d7f"
 		},
 		{
 			"ImportPath": "github.com/hashicorp/nomad/helper",
-			"Comment": "v0.5.4",
-			"Rev": "3b1bcc12d358e0de2a5b9e63569dbd90fb6d355d"
+			"Comment": "v0.5.6",
+			"Rev": "4cd2cf1c3c9ed6dbd0b8261f9bad0e375c182d7f"
 		},
 		{
 			"ImportPath": "github.com/hashicorp/nomad/helper/args",
-			"Comment": "v0.5.4",
-			"Rev": "3b1bcc12d358e0de2a5b9e63569dbd90fb6d355d"
+			"Comment": "v0.5.6",
+			"Rev": "4cd2cf1c3c9ed6dbd0b8261f9bad0e375c182d7f"
 		},
 		{
 			"ImportPath": "github.com/hashicorp/nomad/helper/flatmap",
-			"Comment": "v0.5.4",
-			"Rev": "3b1bcc12d358e0de2a5b9e63569dbd90fb6d355d"
+			"Comment": "v0.5.6",
+			"Rev": "4cd2cf1c3c9ed6dbd0b8261f9bad0e375c182d7f"
 		},
 		{
 			"ImportPath": "github.com/hashicorp/nomad/nomad/structs",
-			"Comment": "v0.5.4",
-			"Rev": "3b1bcc12d358e0de2a5b9e63569dbd90fb6d355d"
+			"Comment": "v0.5.6",
+			"Rev": "4cd2cf1c3c9ed6dbd0b8261f9bad0e375c182d7f"
 		},
 		{
 			"ImportPath": "github.com/hashicorp/serf/coordinate",
@@ -324,6 +324,86 @@
 		{
 			"ImportPath": "gopkg.in/yaml.v2",
 			"Rev": "31c299268d302dd0aa9a0dcf765a3d58971ac83f"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/nomad/vendor/github.com/gorhill/cronexpr",
+			"Comment": "v0.5.6",
+			"Rev": "4cd2cf1c3c9ed6dbd0b8261f9bad0e375c182d7f"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/nomad/vendor/github.com/hashicorp/go-cleanhttp",
+			"Comment": "v0.5.6",
+			"Rev": "4cd2cf1c3c9ed6dbd0b8261f9bad0e375c182d7f"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/nomad/vendor/github.com/hashicorp/go-rootcerts",
+			"Comment": "v0.5.6",
+			"Rev": "4cd2cf1c3c9ed6dbd0b8261f9bad0e375c182d7f"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/nomad/vendor/github.com/mitchellh/go-homedir",
+			"Comment": "v0.5.6",
+			"Rev": "4cd2cf1c3c9ed6dbd0b8261f9bad0e375c182d7f"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/nomad/vendor/github.com/hashicorp/consul/api",
+			"Comment": "v0.5.6",
+			"Rev": "4cd2cf1c3c9ed6dbd0b8261f9bad0e375c182d7f"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/nomad/vendor/github.com/hashicorp/go-msgpack/codec",
+			"Comment": "v0.5.6",
+			"Rev": "4cd2cf1c3c9ed6dbd0b8261f9bad0e375c182d7f"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/nomad/vendor/github.com/hashicorp/go-multierror",
+			"Comment": "v0.5.6",
+			"Rev": "4cd2cf1c3c9ed6dbd0b8261f9bad0e375c182d7f"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/nomad/vendor/github.com/hashicorp/go-version",
+			"Comment": "v0.5.6",
+			"Rev": "4cd2cf1c3c9ed6dbd0b8261f9bad0e375c182d7f"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/nomad/vendor/github.com/hashicorp/raft",
+			"Comment": "v0.5.6",
+			"Rev": "4cd2cf1c3c9ed6dbd0b8261f9bad0e375c182d7f"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/nomad/vendor/github.com/mitchellh/copystructure",
+			"Comment": "v0.5.6",
+			"Rev": "4cd2cf1c3c9ed6dbd0b8261f9bad0e375c182d7f"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/nomad/vendor/github.com/mitchellh/hashstructure",
+			"Comment": "v0.5.6",
+			"Rev": "4cd2cf1c3c9ed6dbd0b8261f9bad0e375c182d7f"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/nomad/vendor/github.com/ugorji/go/codec",
+			"Comment": "v0.5.6",
+			"Rev": "4cd2cf1c3c9ed6dbd0b8261f9bad0e375c182d7f"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/nomad/vendor/github.com/hashicorp/serf/coordinate",
+			"Comment": "v0.5.6",
+			"Rev": "4cd2cf1c3c9ed6dbd0b8261f9bad0e375c182d7f"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/nomad/vendor/github.com/hashicorp/errwrap",
+			"Comment": "v0.5.6",
+			"Rev": "4cd2cf1c3c9ed6dbd0b8261f9bad0e375c182d7f"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/nomad/vendor/github.com/armon/go-metrics",
+			"Comment": "v0.5.6",
+			"Rev": "4cd2cf1c3c9ed6dbd0b8261f9bad0e375c182d7f"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/nomad/vendor/github.com/mitchellh/reflectwalk",
+			"Comment": "v0.5.6",
+			"Rev": "4cd2cf1c3c9ed6dbd0b8261f9bad0e375c182d7f"
 		}
 	]
 }

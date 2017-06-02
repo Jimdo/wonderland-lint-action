@@ -2,7 +2,6 @@ package cron
 
 import (
 	"bytes"
-	"encoding/gob"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -87,9 +86,9 @@ func (s *nomadCronStore) Status(cronName string) (*Cron, error) {
 	}
 
 	return &Cron{
-		Name:     j.Name,
-		Status:   j.Status,
-		Schedule: j.Periodic.Spec,
+		Name:     *j.Name,
+		Status:   *j.Status,
+		Schedule: *j.Periodic.Spec,
 		Summary:  cronSummary,
 	}, nil
 }
@@ -123,6 +122,21 @@ func (s *nomadCronStore) Stop(cronName string) error {
 }
 
 func (s *nomadCronStore) Run(cron *CronDescription) error {
+	job, err := s.createJob(cron)
+	if err != nil {
+		return err
+	}
+
+	apiJob, err := s.convertStructJob(job)
+	if err != nil {
+		return err
+	}
+
+	_, _, err = s.config.Client.Jobs().Register(apiJob, nil)
+	return err
+}
+
+func (s *nomadCronStore) createJob(cron *CronDescription) (*structs.Job, error) {
 	args := []string{"--name", cron.Name}
 	for env, value := range cron.Description.Environment {
 		args = append(args, "-e", fmt.Sprintf("%s=%s", env, value))
@@ -138,7 +152,10 @@ func (s *nomadCronStore) Run(cron *CronDescription) error {
 	args = append(args, cron.Description.Image, "--")
 	args = append(args, cron.Description.Arguments...)
 
-	job := structs.Job{
+	// Please make sure that fields added to this struct with problematic zero values
+	// (e.g. integer, float or boolean) are tested in TestConverStructJob().
+	// Fields that are added here, have to be specified in converStructJob as well.
+	job := &structs.Job{
 		Region:      "global",
 		ID:          s.config.CronPrefix + cron.Name,
 		Name:        cron.Name,
@@ -195,31 +212,65 @@ func (s *nomadCronStore) Run(cron *CronDescription) error {
 	job.Canonicalize()
 
 	if err := job.Validate(); err != nil {
-		return err
+		return nil, err
 	}
 
-	apiJob, err := s.convertStructJob(&job)
-	if err != nil {
-		return err
-	}
-
-	_, _, err = s.config.Client.Jobs().Register(apiJob, nil)
-	return err
+	return job, nil
 }
 
 // convertStructJob is used to take a *structs.Job and convert it to an *api.Job.
-// This function is just a hammer and probably needs to be revisited.
+// It does the conversion on a field base to ensure that nil values in *api.Job
+// are avoided and zero values are kept.
 func (s *nomadCronStore) convertStructJob(in *structs.Job) (*api.Job, error) {
-	gob.Register([]map[string]interface{}{})
-	gob.Register([]interface{}{})
-	var apiJob *api.Job
-	buf := new(bytes.Buffer)
-	if err := gob.NewEncoder(buf).Encode(in); err != nil {
-		return nil, err
+	apiJob := &api.Job{
+		Region:      &in.Region,
+		ID:          &in.ID,
+		Name:        &in.Name,
+		Type:        &in.Type,
+		Priority:    &in.Priority,
+		AllAtOnce:   &in.AllAtOnce,
+		Datacenters: in.Datacenters,
+		TaskGroups: []*api.TaskGroup{
+			{
+				Name:  &in.TaskGroups[0].Name,
+				Count: &in.TaskGroups[0].Count,
+				Tasks: []*api.Task{
+					{
+						Name:   in.TaskGroups[0].Tasks[0].Name,
+						Driver: in.TaskGroups[0].Tasks[0].Driver,
+						Config: in.TaskGroups[0].Tasks[0].Config,
+						Env:    in.TaskGroups[0].Tasks[0].Env,
+						Resources: &api.Resources{
+							CPU:      &in.TaskGroups[0].Tasks[0].Resources.CPU,
+							MemoryMB: &in.TaskGroups[0].Tasks[0].Resources.MemoryMB,
+							IOPS:     &in.TaskGroups[0].Tasks[0].Resources.IOPS,
+						},
+						LogConfig: &api.LogConfig{
+							MaxFiles:      &in.TaskGroups[0].Tasks[0].LogConfig.MaxFiles,
+							MaxFileSizeMB: &in.TaskGroups[0].Tasks[0].LogConfig.MaxFileSizeMB,
+						},
+					},
+				},
+				RestartPolicy: &api.RestartPolicy{
+					Attempts: &in.TaskGroups[0].RestartPolicy.Attempts,
+					Interval: &in.TaskGroups[0].RestartPolicy.Interval,
+					Mode:     &in.TaskGroups[0].RestartPolicy.Mode,
+				},
+				EphemeralDisk: &api.EphemeralDisk{
+					Sticky:  &in.TaskGroups[0].EphemeralDisk.Sticky,
+					Migrate: &in.TaskGroups[0].EphemeralDisk.Migrate,
+					SizeMB:  &in.TaskGroups[0].EphemeralDisk.SizeMB,
+				},
+			},
+		},
+		Periodic: &api.PeriodicConfig{
+			Enabled:         &in.Periodic.Enabled,
+			Spec:            &in.Periodic.Spec,
+			SpecType:        &in.Periodic.SpecType,
+			ProhibitOverlap: &in.Periodic.ProhibitOverlap,
+		},
 	}
-	if err := gob.NewDecoder(buf).Decode(&apiJob); err != nil {
-		return nil, err
-	}
+
 	return apiJob, nil
 }
 
