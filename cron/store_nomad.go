@@ -188,7 +188,7 @@ func (s *nomadCronStore) createJob(cron *CronDescription) (*structs.Job, error) 
 				},
 				RestartPolicy: &structs.RestartPolicy{
 					Attempts: 0,
-					Interval: 500 * time.Second,
+					Interval: 5 * time.Second,
 					Mode:     structs.RestartPolicyModeFail,
 				},
 				EphemeralDisk: &structs.EphemeralDisk{
