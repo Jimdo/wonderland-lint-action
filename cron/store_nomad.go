@@ -2,7 +2,6 @@ package cron
 
 import (
 	"bytes"
-	"encoding/gob"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -217,17 +216,56 @@ func (s *nomadCronStore) createJob(cron *CronDescription) (*structs.Job, error) 
 }
 
 // convertStructJob is used to take a *structs.Job and convert it to an *api.Job.
-// This function is just a hammer and probably needs to be revisited.
+// It does the conversion on a field base to ensure that nil values in *api.Job
+// are avoided and zero values are kept.
 func (s *nomadCronStore) convertStructJob(in *structs.Job) (*api.Job, error) {
-	gob.Register([]map[string]interface{}{})
-	gob.Register([]interface{}{})
-	var apiJob *api.Job
-	buf := new(bytes.Buffer)
-	if err := gob.NewEncoder(buf).Encode(in); err != nil {
-		return nil, err
-	}
-	if err := gob.NewDecoder(buf).Decode(&apiJob); err != nil {
-		return nil, err
+	apiJob := &api.Job{
+		Region:      &in.Region,
+		ID:          &in.ID,
+		Name:        &in.Name,
+		Type:        &in.Type,
+		Priority:    &in.Priority,
+		AllAtOnce:   &in.AllAtOnce,
+		Datacenters: in.Datacenters,
+		TaskGroups: []*api.TaskGroup{
+			{
+				Name:  &in.TaskGroups[0].Name,
+				Count: &in.TaskGroups[0].Count,
+				Tasks: []*api.Task{
+					{
+						Name:   in.TaskGroups[0].Tasks[0].Name,
+						Driver: in.TaskGroups[0].Tasks[0].Driver,
+						Config: in.TaskGroups[0].Tasks[0].Config,
+						Env:    in.TaskGroups[0].Tasks[0].Env,
+						Resources: &api.Resources{
+							CPU:      &in.TaskGroups[0].Tasks[0].Resources.CPU,
+							MemoryMB: &in.TaskGroups[0].Tasks[0].Resources.MemoryMB,
+							IOPS:     &in.TaskGroups[0].Tasks[0].Resources.IOPS,
+						},
+						LogConfig: &api.LogConfig{
+							MaxFiles:      &in.TaskGroups[0].Tasks[0].LogConfig.MaxFiles,
+							MaxFileSizeMB: &in.TaskGroups[0].Tasks[0].LogConfig.MaxFileSizeMB,
+						},
+					},
+				},
+				RestartPolicy: &api.RestartPolicy{
+					Attempts: &in.TaskGroups[0].RestartPolicy.Attempts,
+					Interval: &in.TaskGroups[0].RestartPolicy.Interval,
+					Mode:     &in.TaskGroups[0].RestartPolicy.Mode,
+				},
+				EphemeralDisk: &api.EphemeralDisk{
+					Sticky:  &in.TaskGroups[0].EphemeralDisk.Sticky,
+					Migrate: &in.TaskGroups[0].EphemeralDisk.Migrate,
+					SizeMB:  &in.TaskGroups[0].EphemeralDisk.SizeMB,
+				},
+			},
+		},
+		Periodic: &api.PeriodicConfig{
+			Enabled:         &in.Periodic.Enabled,
+			Spec:            &in.Periodic.Spec,
+			SpecType:        &in.Periodic.SpecType,
+			ProhibitOverlap: &in.Periodic.ProhibitOverlap,
+		},
 	}
 
 	return apiJob, nil
