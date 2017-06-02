@@ -152,6 +152,9 @@ func (s *nomadCronStore) createJob(cron *CronDescription) (*structs.Job, error) 
 	args = append(args, cron.Description.Image, "--")
 	args = append(args, cron.Description.Arguments...)
 
+	// Please make sure that fields added to this struct with problematic zero values
+	// (e.g. integer, float or boolean) are tested in TestConverStructJob().
+	// Fields that are added here, have to be specified in converStructJob as well.
 	job := &structs.Job{
 		Region:      "global",
 		ID:          s.config.CronPrefix + cron.Name,
