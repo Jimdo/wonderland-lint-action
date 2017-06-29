@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/pprof"
+	"net/url"
 	"os"
 	"time"
 
@@ -67,6 +68,11 @@ func main() {
 
 	router := mux.NewRouter()
 
+	nomadURI, err := url.Parse(config.NomadURI)
+	if err != nil {
+		abort("Could not parse Nomad URI: %s", err)
+	}
+
 	clientConfig := &api.Config{
 		Address:    config.NomadURI,
 		HttpClient: cleanhttp.DefaultPooledClient(),
@@ -74,7 +80,9 @@ func main() {
 			Username: config.NomadUser,
 			Password: config.NomadPass,
 		},
-		TLSConfig: &api.TLSConfig{},
+		TLSConfig: &api.TLSConfig{
+			TLSServerName: nomadURI.Hostname(),
+		},
 	}
 
 	// This is required for the client to work with a custom HttpClient
