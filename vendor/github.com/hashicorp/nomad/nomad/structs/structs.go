@@ -282,25 +282,6 @@ type JobDispatchRequest struct {
 	WriteRequest
 }
 
-// JobValidateRequest is used to validate a job
-type JobValidateRequest struct {
-	Job *Job
-	WriteRequest
-}
-
-// JobValidateResponse is the response from validate request
-type JobValidateResponse struct {
-	// DriverConfigValidated indicates whether the agent validated the driver
-	// config
-	DriverConfigValidated bool
-
-	// ValidationErrors is a list of validation errors
-	ValidationErrors []string
-
-	// Error is a string version of any error that may have occured
-	Error string
-}
-
 // NodeListRequest is used to parameterize a list request
 type NodeListRequest struct {
 	QueryOptions
@@ -559,7 +540,7 @@ type JobDispatchResponse struct {
 	EvalID          string
 	EvalCreateIndex uint64
 	JobCreateIndex  uint64
-	WriteMeta
+	QueryMeta
 }
 
 // JobListResponse is used for a list request
@@ -835,8 +816,8 @@ type NodeListStub struct {
 // on a client
 type Resources struct {
 	CPU      int
-	MemoryMB int
-	DiskMB   int
+	MemoryMB int `mapstructure:"memory"`
+	DiskMB   int `mapstructure:"disk"`
 	IOPS     int
 	Networks []*NetworkResource
 }
@@ -987,7 +968,7 @@ func (r *Resources) GoString() string {
 
 type Port struct {
 	Label string
-	Value int
+	Value int `mapstructure:"static"`
 }
 
 // NetworkResource is used to represent available network
@@ -1131,7 +1112,7 @@ type Job struct {
 	// AllAtOnce is used to control if incremental scheduling of task groups
 	// is allowed or if we must do a gang scheduling of the entire job. This
 	// can slow down larger jobs if resources are not available.
-	AllAtOnce bool
+	AllAtOnce bool `mapstructure:"all_at_once"`
 
 	// Datacenters contains all the datacenters this job is allowed to span
 	Datacenters []string
@@ -1164,7 +1145,7 @@ type Job struct {
 	// VaultToken is the Vault token that proves the submitter of the job has
 	// access to the specified Vault policies. This field is only used to
 	// transfer the token and is not stored after Job submission.
-	VaultToken string
+	VaultToken string `mapstructure:"vault_token"`
 
 	// Job status
 	Status string
@@ -1193,10 +1174,6 @@ func (j *Job) Canonicalize() {
 
 	if j.ParameterizedJob != nil {
 		j.ParameterizedJob.Canonicalize()
-	}
-
-	if j.Periodic != nil {
-		j.Periodic.Canonicalize()
 	}
 }
 
@@ -1228,7 +1205,6 @@ func (j *Job) Copy() *Job {
 // Validate is used to sanity check a job input
 func (j *Job) Validate() error {
 	var mErr multierror.Error
-
 	if j.Region == "" {
 		mErr.Errors = append(mErr.Errors, errors.New("Missing job region"))
 	}
@@ -1280,7 +1256,7 @@ func (j *Job) Validate() error {
 	// Validate the task group
 	for _, tg := range j.TaskGroups {
 		if err := tg.Validate(); err != nil {
-			outer := fmt.Errorf("Task group %s validation failed: %v", tg.Name, err)
+			outer := fmt.Errorf("Task group %s validation failed: %s", tg.Name, err)
 			mErr.Errors = append(mErr.Errors, outer)
 		}
 	}
@@ -1535,7 +1511,7 @@ type UpdateStrategy struct {
 	Stagger time.Duration
 
 	// MaxParallel is how many updates can be done in parallel
-	MaxParallel int
+	MaxParallel int `mapstructure:"max_parallel"`
 }
 
 // Rolling returns if a rolling strategy should be used
@@ -1565,17 +1541,7 @@ type PeriodicConfig struct {
 	SpecType string
 
 	// ProhibitOverlap enforces that spawned jobs do not run in parallel.
-	ProhibitOverlap bool
-
-	// TimeZone is the user specified string that determines the time zone to
-	// launch against. The time zones must be specified from IANA Time Zone
-	// database, such as "America/New_York".
-	// Reference: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-	// Reference: https://www.iana.org/time-zones
-	TimeZone string
-
-	// location is the time zone to evaluate the launch time against
-	location *time.Location
+	ProhibitOverlap bool `mapstructure:"prohibit_overlap"`
 }
 
 func (p *PeriodicConfig) Copy() *PeriodicConfig {
@@ -1592,41 +1558,23 @@ func (p *PeriodicConfig) Validate() error {
 		return nil
 	}
 
-	var mErr multierror.Error
 	if p.Spec == "" {
-		multierror.Append(&mErr, fmt.Errorf("Must specify a spec"))
-	}
-
-	// Check if we got a valid time zone
-	if p.TimeZone != "" {
-		if _, err := time.LoadLocation(p.TimeZone); err != nil {
-			multierror.Append(&mErr, fmt.Errorf("Invalid time zone %q: %v", p.TimeZone, err))
-		}
+		return fmt.Errorf("Must specify a spec")
 	}
 
 	switch p.SpecType {
 	case PeriodicSpecCron:
 		// Validate the cron spec
 		if _, err := cronexpr.Parse(p.Spec); err != nil {
-			multierror.Append(&mErr, fmt.Errorf("Invalid cron spec %q: %v", p.Spec, err))
+			return fmt.Errorf("Invalid cron spec %q: %v", p.Spec, err)
 		}
 	case PeriodicSpecTest:
 		// No-op
 	default:
-		multierror.Append(&mErr, fmt.Errorf("Unknown periodic specification type %q", p.SpecType))
+		return fmt.Errorf("Unknown periodic specification type %q", p.SpecType)
 	}
 
-	return mErr.ErrorOrNil()
-}
-
-func (p *PeriodicConfig) Canonicalize() {
-	// Load the location
-	l, err := time.LoadLocation(p.TimeZone)
-	if err != nil {
-		p.location = time.UTC
-	}
-
-	p.location = l
+	return nil
 }
 
 // Next returns the closest time instant matching the spec that is after the
@@ -1667,17 +1615,6 @@ func (p *PeriodicConfig) Next(fromTime time.Time) time.Time {
 	return time.Time{}
 }
 
-// GetLocation returns the location to use for determining the time zone to run
-// the periodic job against.
-func (p *PeriodicConfig) GetLocation() *time.Location {
-	// Jobs pre 0.5.5 will not have this
-	if p.location != nil {
-		return p.location
-	}
-
-	return time.UTC
-}
-
 const (
 	// PeriodicLaunchSuffix is the string appended to the periodic jobs ID
 	// when launching derived instances of it.
@@ -1710,10 +1647,10 @@ type ParameterizedJobConfig struct {
 	Payload string
 
 	// MetaRequired is metadata keys that must be specified by the dispatcher
-	MetaRequired []string
+	MetaRequired []string `mapstructure:"meta_required"`
 
 	// MetaOptional is metadata keys that may be specified by the dispatcher
-	MetaOptional []string
+	MetaOptional []string `mapstructure:"meta_optional"`
 }
 
 func (d *ParameterizedJobConfig) Validate() error {
@@ -1807,10 +1744,6 @@ const (
 	// RestartPolicyModeFail causes a job to fail if the specified number of
 	// attempts are reached within an interval.
 	RestartPolicyModeFail = "fail"
-
-	// RestartPolicyMinInterval is the minimum interval that is accepted for a
-	// restart policy.
-	RestartPolicyMinInterval = 5 * time.Second
 )
 
 // RestartPolicy configures how Tasks are restarted when they crash or fail.
@@ -1840,26 +1773,24 @@ func (r *RestartPolicy) Copy() *RestartPolicy {
 }
 
 func (r *RestartPolicy) Validate() error {
-	var mErr multierror.Error
 	switch r.Mode {
 	case RestartPolicyModeDelay, RestartPolicyModeFail:
 	default:
-		multierror.Append(&mErr, fmt.Errorf("Unsupported restart mode: %q", r.Mode))
+		return fmt.Errorf("Unsupported restart mode: %q", r.Mode)
 	}
 
 	// Check for ambiguous/confusing settings
 	if r.Attempts == 0 && r.Mode != RestartPolicyModeFail {
-		multierror.Append(&mErr, fmt.Errorf("Restart policy %q with %d attempts is ambiguous", r.Mode, r.Attempts))
+		return fmt.Errorf("Restart policy %q with %d attempts is ambiguous", r.Mode, r.Attempts)
 	}
 
-	if r.Interval.Nanoseconds() < RestartPolicyMinInterval.Nanoseconds() {
-		multierror.Append(&mErr, fmt.Errorf("Interval can not be less than %v (got %v)", RestartPolicyMinInterval, r.Interval))
+	if r.Interval == 0 {
+		return nil
 	}
 	if time.Duration(r.Attempts)*r.Delay > r.Interval {
-		multierror.Append(&mErr,
-			fmt.Errorf("Nomad can't restart the TaskGroup %v times in an interval of %v with a delay of %v", r.Attempts, r.Interval, r.Delay))
+		return fmt.Errorf("Nomad can't restart the TaskGroup %v times in an interval of %v with a delay of %v", r.Attempts, r.Interval, r.Delay)
 	}
-	return mErr.ErrorOrNil()
+	return nil
 }
 
 func NewRestartPolicy(jobType string) *RestartPolicy {
@@ -2000,9 +1931,8 @@ func (tg *TaskGroup) Validate() error {
 		mErr.Errors = append(mErr.Errors, fmt.Errorf("Task Group %v should have an ephemeral disk object", tg.Name))
 	}
 
-	// Check for duplicate tasks and that there is only leader task if any
+	// Check for duplicate tasks
 	tasks := make(map[string]int)
-	leaderTasks := 0
 	for idx, task := range tg.Tasks {
 		if task.Name == "" {
 			mErr.Errors = append(mErr.Errors, fmt.Errorf("Task %d missing name", idx+1))
@@ -2011,20 +1941,12 @@ func (tg *TaskGroup) Validate() error {
 		} else {
 			tasks[task.Name] = idx
 		}
-
-		if task.Leader {
-			leaderTasks++
-		}
-	}
-
-	if leaderTasks > 1 {
-		mErr.Errors = append(mErr.Errors, fmt.Errorf("Only one task may be marked as leader"))
 	}
 
 	// Validate the tasks
 	for _, task := range tg.Tasks {
 		if err := task.Validate(tg.EphemeralDisk); err != nil {
-			outer := fmt.Errorf("Task %s validation failed: %v", task.Name, err)
+			outer := fmt.Errorf("Task %s validation failed: %s", task.Name, err)
 			mErr.Errors = append(mErr.Errors, outer)
 		}
 	}
@@ -2070,10 +1992,10 @@ type ServiceCheck struct {
 	Args          []string      // Args is a list of argumes for script checks
 	Path          string        // path of the health check url for http type check
 	Protocol      string        // Protocol to use if check is http, defaults to http
-	PortLabel     string        // The port to use for tcp/http checks
+	PortLabel     string        `mapstructure:"port"` // The port to use for tcp/http checks
 	Interval      time.Duration // Interval of the check
 	Timeout       time.Duration // Timeout of the response from the check before consul fails the check
-	InitialStatus string        // Initial status of the check
+	InitialStatus string        `mapstructure:"initial_status"` // Initial status of the check
 }
 
 func (sc *ServiceCheck) Copy() *ServiceCheck {
@@ -2140,7 +2062,7 @@ func (sc *ServiceCheck) validate() error {
 	case api.HealthWarning:
 	case api.HealthCritical:
 	default:
-		return fmt.Errorf(`invalid initial check state (%s), must be one of %q, %q, %q or empty`, sc.InitialStatus, api.HealthPassing, api.HealthWarning, api.HealthCritical)
+		return fmt.Errorf(`invalid initial check state (%s), must be one of %q, %q, %q, %q or empty`, sc.InitialStatus, api.HealthPassing, api.HealthWarning, api.HealthCritical)
 
 	}
 
@@ -2182,7 +2104,7 @@ type Service struct {
 	// PortLabel is either the numeric port number or the `host:port`.
 	// To specify the port number using the host's Consul Advertise
 	// address, specify an empty host in the PortLabel (e.g. `:port`).
-	PortLabel string
+	PortLabel string          `mapstructure:"port"`
 	Tags      []string        // List of tags for the service
 	Checks    []*ServiceCheck // List of checks associated with the service
 }
@@ -2267,7 +2189,7 @@ func (s *Service) ValidateName(name string) error {
 	// (https://tools.ietf.org/html/rfc2782).
 	re := regexp.MustCompile(`^(?i:[a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9])$`)
 	if !re.MatchString(name) {
-		return fmt.Errorf("service name must be valid per RFC 1123 and can contain only alphanumeric characters or dashes and must be no longer than 63 characters: %q", name)
+		return fmt.Errorf("service name must be valid per RFC 1123 and can contain only alphanumeric characters or dashes and must be less than 63 characters long: %q", name)
 	}
 	return nil
 }
@@ -2290,8 +2212,8 @@ const (
 
 // LogConfig provides configuration for log rotation
 type LogConfig struct {
-	MaxFiles      int
-	MaxFileSizeMB int
+	MaxFiles      int `mapstructure:"max_files"`
+	MaxFileSizeMB int `mapstructure:"max_file_size"`
 }
 
 // DefaultLogConfig returns the default LogConfig values.
@@ -2359,18 +2281,14 @@ type Task struct {
 
 	// KillTimeout is the time between signaling a task that it will be
 	// killed and killing it.
-	KillTimeout time.Duration
+	KillTimeout time.Duration `mapstructure:"kill_timeout"`
 
 	// LogConfig provides configuration for log rotation
-	LogConfig *LogConfig
+	LogConfig *LogConfig `mapstructure:"logs"`
 
 	// Artifacts is a list of artifacts to download and extract before running
 	// the task.
 	Artifacts []*TaskArtifact
-
-	// Leader marks the task as the leader within the group. When the leader
-	// task exits, other tasks will be gracefully terminated.
-	Leader bool
 }
 
 func (t *Task) Copy() *Task {
@@ -2515,12 +2433,6 @@ func (t *Task) Validate(ephemeralDisk *EphemeralDisk) error {
 			outer := fmt.Errorf("Constraint %d validation failed: %s", idx+1, err)
 			mErr.Errors = append(mErr.Errors, outer)
 		}
-
-		switch constr.Operand {
-		case ConstraintDistinctHosts, ConstraintDistinctProperty:
-			outer := fmt.Errorf("Constraint %d has disallowed Operand at task level: %s", idx+1, constr.Operand)
-			mErr.Errors = append(mErr.Errors, outer)
-		}
 	}
 
 	// Validate Services
@@ -2657,34 +2569,26 @@ var (
 // Template represents a template configuration to be rendered for a given task
 type Template struct {
 	// SourcePath is the path to the template to be rendered
-	SourcePath string
+	SourcePath string `mapstructure:"source"`
 
 	// DestPath is the path to where the template should be rendered
-	DestPath string
+	DestPath string `mapstructure:"destination"`
 
 	// EmbeddedTmpl store the raw template. This is useful for smaller templates
 	// where they are embedded in the job file rather than sent as an artificat
-	EmbeddedTmpl string
+	EmbeddedTmpl string `mapstructure:"data"`
 
 	// ChangeMode indicates what should be done if the template is re-rendered
-	ChangeMode string
+	ChangeMode string `mapstructure:"change_mode"`
 
 	// ChangeSignal is the signal that should be sent if the change mode
 	// requires it.
-	ChangeSignal string
+	ChangeSignal string `mapstructure:"change_signal"`
 
 	// Splay is used to avoid coordinated restarts of processes by applying a
 	// random wait between 0 and the given splay value before signalling the
 	// application of a change
-	Splay time.Duration
-
-	// Perms is the permission the file should be written out with.
-	Perms string
-
-	// LeftDelim and RightDelim are optional configurations to control what
-	// delimiter is utilized when parsing the template.
-	LeftDelim  string
-	RightDelim string
+	Splay time.Duration `mapstructure:"splay"`
 }
 
 // DefaultTemplate returns a default template.
@@ -2692,7 +2596,6 @@ func DefaultTemplate() *Template {
 	return &Template{
 		ChangeMode: TemplateChangeModeRestart,
 		Splay:      5 * time.Second,
-		Perms:      "0644",
 	}
 }
 
@@ -2748,13 +2651,6 @@ func (t *Template) Validate() error {
 		multierror.Append(&mErr, fmt.Errorf("Must specify positive splay value"))
 	}
 
-	// Verify the permissions
-	if t.Perms != "" {
-		if _, err := strconv.ParseUint(t.Perms, 8, 12); err != nil {
-			multierror.Append(&mErr, fmt.Errorf("Failed to parse %q as octal: %v", t.Perms, err))
-		}
-	}
-
 	return mErr.ErrorOrNil()
 }
 
@@ -2774,14 +2670,6 @@ type TaskState struct {
 	// Failed marks a task as having failed
 	Failed bool
 
-	// StartedAt is the time the task is started. It is updated each time the
-	// task starts
-	StartedAt time.Time
-
-	// FinishedAt is the time at which the task transistioned to dead and will
-	// not be started again.
-	FinishedAt time.Time
-
 	// Series of task events that transition the state of the task.
 	Events []*TaskEvent
 }
@@ -2793,8 +2681,6 @@ func (ts *TaskState) Copy() *TaskState {
 	copy := new(TaskState)
 	copy.State = ts.State
 	copy.Failed = ts.Failed
-	copy.StartedAt = ts.StartedAt
-	copy.FinishedAt = ts.FinishedAt
 
 	if ts.Events != nil {
 		copy.Events = make([]*TaskEvent, len(ts.Events))
@@ -2872,28 +2758,18 @@ const (
 	// failed.
 	TaskArtifactDownloadFailed = "Failed Artifact Download"
 
-	// TaskBuildingTaskDir indicates that the task directory/chroot is being
-	// built.
-	TaskBuildingTaskDir = "Building Task Directory"
-
-	// TaskSetup indicates the task runner is setting up the task environment
-	TaskSetup = "Task Setup"
-
 	// TaskDiskExceeded indicates that one of the tasks in a taskgroup has
 	// exceeded the requested disk resources.
 	TaskDiskExceeded = "Disk Resources Exceeded"
 
 	// TaskSiblingFailed indicates that a sibling task in the task group has
 	// failed.
-	TaskSiblingFailed = "Sibling Task Failed"
+	TaskSiblingFailed = "Sibling task failed"
 
 	// TaskDriverMessage is an informational event message emitted by
 	// drivers such as when they're performing a long running action like
 	// downloading an image.
 	TaskDriverMessage = "Driver"
-
-	// TaskLeaderDead indicates that the leader task within the has finished.
-	TaskLeaderDead = "Leader Task Dead"
 )
 
 // TaskEvent is an event that effects the state of a task and contains meta-data
@@ -2959,12 +2835,6 @@ type TaskEvent struct {
 
 func (te *TaskEvent) GoString() string {
 	return fmt.Sprintf("%v at %v", te.Type, te.Time)
-}
-
-// SetMessage sets the message of TaskEvent
-func (te *TaskEvent) SetMessage(msg string) *TaskEvent {
-	te.Message = msg
-	return te
 }
 
 func (te *TaskEvent) Copy() *TaskEvent {
@@ -3097,15 +2967,15 @@ func (e *TaskEvent) SetDriverMessage(m string) *TaskEvent {
 // TaskArtifact is an artifact to download before running the task.
 type TaskArtifact struct {
 	// GetterSource is the source to download an artifact using go-getter
-	GetterSource string
+	GetterSource string `mapstructure:"source"`
 
 	// GetterOptions are options to use when downloading the artifact using
 	// go-getter.
-	GetterOptions map[string]string
+	GetterOptions map[string]string `mapstructure:"options"`
 
 	// RelativeDest is the download destination given relative to the task's
 	// directory.
-	RelativeDest string
+	RelativeDest string `mapstructure:"destination"`
 }
 
 func (ta *TaskArtifact) Copy() *TaskArtifact {
@@ -3205,11 +3075,10 @@ func (ta *TaskArtifact) Validate() error {
 }
 
 const (
-	ConstraintDistinctProperty = "distinct_property"
-	ConstraintDistinctHosts    = "distinct_hosts"
-	ConstraintRegex            = "regexp"
-	ConstraintVersion          = "version"
-	ConstraintSetContains      = "set_contains"
+	ConstraintDistinctHosts = "distinct_hosts"
+	ConstraintRegex         = "regexp"
+	ConstraintVersion       = "version"
+	ConstraintSetContains   = "set_contains"
 )
 
 // Constraints are used to restrict placement options.
@@ -3270,7 +3139,7 @@ type EphemeralDisk struct {
 	Sticky bool
 
 	// SizeMB is the size of the local disk
-	SizeMB int
+	SizeMB int `mapstructure:"size"`
 
 	// Migrate determines if Nomad client should migrate the allocation dir for
 	// sticky allocations
@@ -3321,11 +3190,11 @@ type Vault struct {
 
 	// ChangeMode is used to configure the task's behavior when the Vault
 	// token changes because the original token could not be renewed in time.
-	ChangeMode string
+	ChangeMode string `mapstructure:"change_mode"`
 
 	// ChangeSignal is the signal sent to the task when a new token is
 	// retrieved. This is only valid when using the signal change mode.
-	ChangeSignal string
+	ChangeSignal string `mapstructure:"change_signal"`
 }
 
 func DefaultVaultBlock() *Vault {
@@ -3358,28 +3227,21 @@ func (v *Vault) Validate() error {
 		return nil
 	}
 
-	var mErr multierror.Error
 	if len(v.Policies) == 0 {
-		multierror.Append(&mErr, fmt.Errorf("Policy list cannot be empty"))
-	}
-
-	for _, p := range v.Policies {
-		if p == "root" {
-			multierror.Append(&mErr, fmt.Errorf("Can not specifiy \"root\" policy"))
-		}
+		return fmt.Errorf("Policy list cannot be empty")
 	}
 
 	switch v.ChangeMode {
 	case VaultChangeModeSignal:
 		if v.ChangeSignal == "" {
-			multierror.Append(&mErr, fmt.Errorf("Signal must be specified when using change mode %q", VaultChangeModeSignal))
+			return fmt.Errorf("Signal must be specified when using change mode %q", VaultChangeModeSignal)
 		}
 	case VaultChangeModeNoop, VaultChangeModeRestart:
 	default:
-		multierror.Append(&mErr, fmt.Errorf("Unknown change mode %q", v.ChangeMode))
+		return fmt.Errorf("Unknown change mode %q", v.ChangeMode)
 	}
 
-	return mErr.ErrorOrNil()
+	return nil
 }
 
 const (
@@ -3844,14 +3706,14 @@ type Evaluation struct {
 	// during the evaluation. This should not be set during normal operations.
 	AnnotatePlan bool
 
-	// QueuedAllocations is the number of unplaced allocations at the time the
-	// evaluation was processed. The map is keyed by Task Group names.
-	QueuedAllocations map[string]int
-
 	// SnapshotIndex is the Raft index of the snapshot used to process the
 	// evaluation. As such it will only be set once it has gone through the
 	// scheduler.
 	SnapshotIndex uint64
+
+	// QueuedAllocations is the number of unplaced allocations at the time the
+	// evaluation was processed. The map is keyed by Task Group names.
+	QueuedAllocations map[string]int
 
 	// Raft Indexes
 	CreateIndex uint64
@@ -4203,33 +4065,15 @@ func NewRecoverableError(e error, recoverable bool) error {
 	}
 }
 
-// WrapRecoverable wraps an existing error in a new RecoverableError with a new
-// message. If the error was recoverable before the returned error is as well;
-// otherwise it is unrecoverable.
-func WrapRecoverable(msg string, err error) error {
-	return &RecoverableError{Err: msg, Recoverable: IsRecoverable(err)}
-}
-
 func (r *RecoverableError) Error() string {
 	return r.Err
-}
-
-func (r *RecoverableError) IsRecoverable() bool {
-	return r.Recoverable
-}
-
-// Recoverable is an interface for errors to implement to indicate whether or
-// not they are fatal or recoverable.
-type Recoverable interface {
-	error
-	IsRecoverable() bool
 }
 
 // IsRecoverable returns true if error is a RecoverableError with
 // Recoverable=true. Otherwise false is returned.
 func IsRecoverable(e error) bool {
-	if re, ok := e.(Recoverable); ok {
-		return re.IsRecoverable()
+	if re, ok := e.(*RecoverableError); ok {
+		return re.Recoverable
 	}
 	return false
 }

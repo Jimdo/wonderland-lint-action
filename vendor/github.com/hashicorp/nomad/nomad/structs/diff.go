@@ -98,7 +98,7 @@ func (j *Job) Diff(other *Job, contextual bool) (*JobDiff, error) {
 	diff.Fields = fieldDiffs(oldPrimitiveFlat, newPrimitiveFlat, false)
 
 	// Datacenters diff
-	if setDiff := stringSetDiff(j.Datacenters, other.Datacenters, "Datacenters", contextual); setDiff != nil && setDiff.Type != DiffTypeNone {
+	if setDiff := stringSetDiff(j.Datacenters, other.Datacenters, "Datacenters", contextual); setDiff != nil {
 		diff.Objects = append(diff.Objects, setDiff)
 	}
 
@@ -403,7 +403,7 @@ func (t *Task) Diff(other *Task, contextual bool) (*TaskDiff, error) {
 		diff.Objects = append(diff.Objects, vDiff)
 	}
 
-	// Template diff
+	// Artifacts diff
 	tmplDiffs := primitiveObjectSetDiff(
 		interfaceSlice(t.Templates),
 		interfaceSlice(other.Templates),

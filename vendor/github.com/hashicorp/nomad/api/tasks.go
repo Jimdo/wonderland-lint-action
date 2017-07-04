@@ -1,11 +1,7 @@
 package api
 
 import (
-	"fmt"
-	"strings"
 	"time"
-
-	"github.com/hashicorp/nomad/helper"
 )
 
 // MemoryStats holds memory usage related stats
@@ -55,25 +51,10 @@ type AllocResourceUsage struct {
 // RestartPolicy defines how the Nomad client restarts
 // tasks in a taskgroup when they fail
 type RestartPolicy struct {
-	Interval *time.Duration
-	Attempts *int
-	Delay    *time.Duration
-	Mode     *string
-}
-
-func (r *RestartPolicy) Merge(rp *RestartPolicy) {
-	if rp.Interval != nil {
-		r.Interval = rp.Interval
-	}
-	if rp.Attempts != nil {
-		r.Attempts = rp.Attempts
-	}
-	if rp.Delay != nil {
-		r.Delay = rp.Delay
-	}
-	if rp.Mode != nil {
-		r.Mode = rp.Mode
-	}
+	Interval time.Duration
+	Attempts int
+	Delay    time.Duration
+	Mode     string
 }
 
 // The ServiceCheck data model represents the consul health check that
@@ -85,7 +66,7 @@ type ServiceCheck struct {
 	Command       string
 	Args          []string
 	Path          string
-	Protocol      string
+	Protocol      string `mapstructure:"port"`
 	PortLabel     string `mapstructure:"port"`
 	Interval      time.Duration
 	Timeout       time.Duration
@@ -101,43 +82,17 @@ type Service struct {
 	Checks    []ServiceCheck
 }
 
-func (s *Service) Canonicalize(t *Task, tg *TaskGroup, job *Job) {
-	if s.Name == "" {
-		s.Name = fmt.Sprintf("%s-%s-%s", *job.Name, *tg.Name, t.Name)
-	}
-}
-
 // EphemeralDisk is an ephemeral disk object
 type EphemeralDisk struct {
-	Sticky  *bool
-	Migrate *bool
-	SizeMB  *int `mapstructure:"size"`
-}
-
-func DefaultEphemeralDisk() *EphemeralDisk {
-	return &EphemeralDisk{
-		Sticky:  helper.BoolToPtr(false),
-		Migrate: helper.BoolToPtr(false),
-		SizeMB:  helper.IntToPtr(300),
-	}
-}
-
-func (e *EphemeralDisk) Canonicalize() {
-	if e.Sticky == nil {
-		e.Sticky = helper.BoolToPtr(false)
-	}
-	if e.Migrate == nil {
-		e.Migrate = helper.BoolToPtr(false)
-	}
-	if e.SizeMB == nil {
-		e.SizeMB = helper.IntToPtr(300)
-	}
+	Sticky  bool
+	Migrate bool
+	SizeMB  int `mapstructure:"size"`
 }
 
 // TaskGroup is the unit of scheduling.
 type TaskGroup struct {
-	Name          *string
-	Count         *int
+	Name          string
+	Count         int
 	Constraints   []*Constraint
 	Tasks         []*Task
 	RestartPolicy *RestartPolicy
@@ -148,49 +103,9 @@ type TaskGroup struct {
 // NewTaskGroup creates a new TaskGroup.
 func NewTaskGroup(name string, count int) *TaskGroup {
 	return &TaskGroup{
-		Name:  helper.StringToPtr(name),
-		Count: helper.IntToPtr(count),
+		Name:  name,
+		Count: count,
 	}
-}
-
-func (g *TaskGroup) Canonicalize(job *Job) {
-	if g.Name == nil {
-		g.Name = helper.StringToPtr("")
-	}
-	if g.Count == nil {
-		g.Count = helper.IntToPtr(1)
-	}
-	for _, t := range g.Tasks {
-		t.Canonicalize(g, job)
-	}
-	if g.EphemeralDisk == nil {
-		g.EphemeralDisk = DefaultEphemeralDisk()
-	} else {
-		g.EphemeralDisk.Canonicalize()
-	}
-
-	var defaultRestartPolicy *RestartPolicy
-	switch *job.Type {
-	case "service", "system":
-		defaultRestartPolicy = &RestartPolicy{
-			Delay:    helper.TimeToPtr(15 * time.Second),
-			Attempts: helper.IntToPtr(2),
-			Interval: helper.TimeToPtr(1 * time.Minute),
-			Mode:     helper.StringToPtr("delay"),
-		}
-	default:
-		defaultRestartPolicy = &RestartPolicy{
-			Delay:    helper.TimeToPtr(15 * time.Second),
-			Attempts: helper.IntToPtr(15),
-			Interval: helper.TimeToPtr(7 * 24 * time.Hour),
-			Mode:     helper.StringToPtr("delay"),
-		}
-	}
-
-	if g.RestartPolicy != nil {
-		defaultRestartPolicy.Merge(g.RestartPolicy)
-	}
-	g.RestartPolicy = defaultRestartPolicy
 }
 
 // Constrain is used to add a constraint to a task group.
@@ -222,24 +137,8 @@ func (g *TaskGroup) RequireDisk(disk *EphemeralDisk) *TaskGroup {
 
 // LogConfig provides configuration for log rotation
 type LogConfig struct {
-	MaxFiles      *int `mapstructure:"max_files"`
-	MaxFileSizeMB *int `mapstructure:"max_file_size"`
-}
-
-func DefaultLogConfig() *LogConfig {
-	return &LogConfig{
-		MaxFiles:      helper.IntToPtr(10),
-		MaxFileSizeMB: helper.IntToPtr(10),
-	}
-}
-
-func (l *LogConfig) Canonicalize() {
-	if l.MaxFiles == nil {
-		l.MaxFiles = helper.IntToPtr(10)
-	}
-	if l.MaxFileSizeMB == nil {
-		l.MaxFileSizeMB = helper.IntToPtr(10)
-	}
+	MaxFiles      int
+	MaxFileSizeMB int
 }
 
 // DispatchPayloadConfig configures how a task gets its input from a job dispatch
@@ -255,125 +154,38 @@ type Task struct {
 	Config          map[string]interface{}
 	Constraints     []*Constraint
 	Env             map[string]string
-	Services        []*Service
+	Services        []Service
 	Resources       *Resources
 	Meta            map[string]string
-	KillTimeout     *time.Duration `mapstructure:"kill_timeout"`
-	LogConfig       *LogConfig     `mapstructure:"logs"`
+	KillTimeout     time.Duration
+	LogConfig       *LogConfig
 	Artifacts       []*TaskArtifact
 	Vault           *Vault
 	Templates       []*Template
 	DispatchPayload *DispatchPayloadConfig
-	Leader          bool
-}
-
-func (t *Task) Canonicalize(tg *TaskGroup, job *Job) {
-	min := MinResources()
-	min.Merge(t.Resources)
-	min.Canonicalize()
-	t.Resources = min
-
-	if t.KillTimeout == nil {
-		t.KillTimeout = helper.TimeToPtr(5 * time.Second)
-	}
-	if t.LogConfig == nil {
-		t.LogConfig = DefaultLogConfig()
-	} else {
-		t.LogConfig.Canonicalize()
-	}
-	for _, artifact := range t.Artifacts {
-		artifact.Canonicalize()
-	}
-	if t.Vault != nil {
-		t.Vault.Canonicalize()
-	}
-	for _, tmpl := range t.Templates {
-		tmpl.Canonicalize()
-	}
-	for _, s := range t.Services {
-		s.Canonicalize(t, tg, job)
-	}
 }
 
 // TaskArtifact is used to download artifacts before running a task.
 type TaskArtifact struct {
-	GetterSource  *string           `mapstructure:"source"`
-	GetterOptions map[string]string `mapstructure:"options"`
-	RelativeDest  *string           `mapstructure:"destination"`
-}
-
-func (a *TaskArtifact) Canonicalize() {
-	if a.RelativeDest == nil {
-		a.RelativeDest = helper.StringToPtr("local/")
-	}
+	GetterSource  string
+	GetterOptions map[string]string
+	RelativeDest  string
 }
 
 type Template struct {
-	SourcePath   *string        `mapstructure:"source"`
-	DestPath     *string        `mapstructure:"destination"`
-	EmbeddedTmpl *string        `mapstructure:"data"`
-	ChangeMode   *string        `mapstructure:"change_mode"`
-	ChangeSignal *string        `mapstructure:"change_signal"`
-	Splay        *time.Duration `mapstructure:"splay"`
-	Perms        *string        `mapstructure:"perms"`
-	LeftDelim    *string        `mapstructure:"left_delimiter"`
-	RightDelim   *string        `mapstructure:"right_delimiter"`
-}
-
-func (tmpl *Template) Canonicalize() {
-	if tmpl.SourcePath == nil {
-		tmpl.SourcePath = helper.StringToPtr("")
-	}
-	if tmpl.DestPath == nil {
-		tmpl.DestPath = helper.StringToPtr("")
-	}
-	if tmpl.EmbeddedTmpl == nil {
-		tmpl.EmbeddedTmpl = helper.StringToPtr("")
-	}
-	if tmpl.ChangeMode == nil {
-		tmpl.ChangeMode = helper.StringToPtr("restart")
-	}
-	if tmpl.ChangeSignal == nil {
-		if *tmpl.ChangeMode == "signal" {
-			tmpl.ChangeSignal = helper.StringToPtr("SIGHUP")
-		} else {
-			tmpl.ChangeSignal = helper.StringToPtr("")
-		}
-	} else {
-		sig := *tmpl.ChangeSignal
-		tmpl.ChangeSignal = helper.StringToPtr(strings.ToUpper(sig))
-	}
-	if tmpl.Splay == nil {
-		tmpl.Splay = helper.TimeToPtr(5 * time.Second)
-	}
-	if tmpl.Perms == nil {
-		tmpl.Perms = helper.StringToPtr("0644")
-	}
-	if tmpl.LeftDelim == nil {
-		tmpl.LeftDelim = helper.StringToPtr("{{")
-	}
-	if tmpl.RightDelim == nil {
-		tmpl.RightDelim = helper.StringToPtr("}}")
-	}
+	SourcePath   string
+	DestPath     string
+	EmbeddedTmpl string
+	ChangeMode   string
+	ChangeSignal string
+	Splay        time.Duration
 }
 
 type Vault struct {
 	Policies     []string
-	Env          *bool
-	ChangeMode   *string `mapstructure:"change_mode"`
-	ChangeSignal *string `mapstructure:"change_signal"`
-}
-
-func (v *Vault) Canonicalize() {
-	if v.Env == nil {
-		v.Env = helper.BoolToPtr(true)
-	}
-	if v.ChangeMode == nil {
-		v.ChangeMode = helper.StringToPtr("restart")
-	}
-	if v.ChangeSignal == nil {
-		v.ChangeSignal = helper.StringToPtr("SIGHUP")
-	}
+	Env          bool
+	ChangeMode   string
+	ChangeSignal string
 }
 
 // NewTask creates and initializes a new Task.
@@ -424,15 +236,12 @@ func (t *Task) SetLogConfig(l *LogConfig) *Task {
 // TaskState tracks the current state of a task and events that caused state
 // transitions.
 type TaskState struct {
-	State      string
-	Failed     bool
-	StartedAt  time.Time
-	FinishedAt time.Time
-	Events     []*TaskEvent
+	State  string
+	Failed bool
+	Events []*TaskEvent
 }
 
 const (
-	TaskSetup                  = "Task Setup"
 	TaskSetupFailure           = "Setup Failure"
 	TaskDriverFailure          = "Driver Failure"
 	TaskDriverMessage          = "Driver"
@@ -446,10 +255,10 @@ const (
 	TaskNotRestarting          = "Not Restarting"
 	TaskDownloadingArtifacts   = "Downloading Artifacts"
 	TaskArtifactDownloadFailed = "Failed Artifact Download"
-	TaskSiblingFailed          = "Sibling Task Failed"
+	TaskVaultRenewalFailed     = "Vault token renewal failed"
+	TaskSiblingFailed          = "Sibling task failed"
 	TaskSignaling              = "Signaling"
 	TaskRestartSignal          = "Restart Signaled"
-	TaskLeaderDead             = "Leader Task Dead"
 )
 
 // TaskEvent is an event that effects the state of a task and contains meta-data
