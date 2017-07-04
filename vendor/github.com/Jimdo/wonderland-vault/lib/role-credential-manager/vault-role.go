@@ -4,7 +4,6 @@ import (
 	"crypto/sha1"
 	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -15,14 +14,15 @@ import (
 // RoleCredentialManager is a helper to renew periodic Vault tokens
 // issues by the approle backend and to fetch data from Vault
 type RoleCredentialManager struct {
-	// Debug enables debug logging of internal processes
-	Debug bool
 	// HashSecrets enables / disables secret hashing in debug logging
 	HashSecrets bool
 
 	// VaultClient exposes an authenticated Vault client whose token will
 	// automatically get renewed by the RoleCredentialManager
 	VaultClient *api.Client
+
+	// The Logger used to print debug information
+	Logger Logger
 
 	roleID  string
 	errChan chan error
@@ -33,22 +33,18 @@ type RoleCredentialManager struct {
 
 // New creates a new instance of the RoleCredentialManager with debugging disabled
 func New(vaultAddress, roleID string) (*RoleCredentialManager, error) {
-	return newRCM(vaultAddress, roleID, false)
+	return NewWithLogger(vaultAddress, roleID, nil)
 }
 
 // NewWithDebug creates a new instance of the RoleCredentialManager with debugging enabled
-func NewWithDebug(vaultAddress, roleID string) (*RoleCredentialManager, error) {
-	return newRCM(vaultAddress, roleID, true)
-}
-
-func newRCM(vaultAddress, roleID string, debug bool) (*RoleCredentialManager, error) {
+func NewWithLogger(vaultAddress string, roleID string, logger Logger) (*RoleCredentialManager, error) {
 	vc, err := api.NewClient(&api.Config{Address: vaultAddress, MaxRetries: 3})
 	if err != nil {
 		return nil, err
 	}
 
 	rcm := &RoleCredentialManager{
-		Debug:       debug,
+		Logger:      logger,
 		HashSecrets: true,
 
 		roleID:      roleID,
@@ -161,7 +157,7 @@ func (r *RoleCredentialManager) hashedSecret(secret string) string {
 }
 
 func (r *RoleCredentialManager) dbg(format string, v ...interface{}) {
-	if r.Debug {
-		log.Printf("[RCM|DEBUG] "+format, v...)
+	if r.Logger != nil {
+		r.Logger.Debugf(fmt.Sprintf("rcm: %s", format), v...)
 	}
 }

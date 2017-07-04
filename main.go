@@ -70,7 +70,7 @@ func main() {
 	}
 	log.SetLevel(level)
 
-	rcm, err := rcm.NewWithDebug(config.VaultAddress, config.VaultRoleID)
+	rcm, err := rcm.NewWithLogger(config.VaultAddress, config.VaultRoleID, log.StandardLogger())
 	if err != nil {
 		abort("Could not set up role credential manager: %s", err)
 	}

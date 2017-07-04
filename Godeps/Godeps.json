@@ -18,7 +18,7 @@
 		},
 		{
 			"ImportPath": "github.com/Jimdo/wonderland-vault/lib/role-credential-manager",
-			"Rev": "526f61bfd18daf2fda22fe45ff5bd83f57f2f6a0"
+			"Rev": "cbd830df2c1ee4c0cc2ffef4e46777202e73197f"
 		},
 		{
 			"ImportPath": "github.com/Luzifer/rconfig",
