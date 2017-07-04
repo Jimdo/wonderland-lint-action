@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/Luzifer/rconfig"
+	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 	cleanhttp "github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/nomad/api"
@@ -28,6 +29,8 @@ import (
 
 var (
 	config struct {
+		LogLevel string `flag:"log" default:"debug" description:"The minimum LogLevel of messages to write. Possible values: []"`
+
 		// Server
 		Addr            string        `flag:"addr" default:":8000" description:"The address/port combination to listen on"`
 		ShutdownTimeout time.Duration `flag:"shutdown-timeout" default:"10s" description:"The time to wait for active requests to finish when shutting down"`
@@ -60,6 +63,12 @@ func main() {
 	if err := rconfig.Parse(&config); err != nil {
 		abort("Could not parse config: %s", err)
 	}
+
+	level, err := log.ParseLevel(config.LogLevel)
+	if err != nil {
+		abort("Invalid log level %q: %s", config.LogLevel, err)
+	}
+	log.SetLevel(level)
 
 	rcm, err := rcm.NewWithDebug(config.VaultAddress, config.VaultRoleID)
 	if err != nil {
