@@ -57,25 +57,8 @@ func (a *AllocFS) getNodeClient(node *Node, allocID string, q **QueryOptions) (*
 		return nil, fmt.Errorf("http addr of the node where alloc %q is running is not advertised", allocID)
 	}
 
-	region := ""
-	if q != nil && *q != nil && (*q).Region != "" {
-		region = (*q).Region
-	} else if a.client.config.Region != "" {
-		// Use the region from the client
-		region = a.client.config.Region
-	} else {
-		// Use the region from the agent
-		agentRegion, err := a.client.Agent().Region()
-		if err != nil {
-			return nil, err
-		}
-		region = agentRegion
-	}
-
 	// Get an API client for the node
-	conf := a.client.config.CopyConfig(node.HTTPAddr, node.TLSEnabled)
-	conf.TLSConfig.TLSServerName = fmt.Sprintf("client.%s.nomad", region)
-	nodeClient, err := NewClient(conf)
+	nodeClient, err := NewClient(a.client.config.CopyConfig(node.HTTPAddr, node.TLSEnabled))
 	if err != nil {
 		return nil, err
 	}
