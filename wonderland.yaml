@@ -26,6 +26,11 @@ components:
       APP_PORT: '8000'
       APP_HEALTHCHECK: /v1/status
       $ref_secrets: vault+secret://vault.{{env `ZONE`}}/wonderland/crons/proxy
+    logging:
+      enabled: true
+      types:
+        - access_log
+        - error_log_nginx
 endpoint:
   component: auth-proxy
   domain: crons.{{env `ZONE`}}
