@@ -46,7 +46,7 @@ func (a *API) StatusHandler(w http.ResponseWriter, req *http.Request) {}
 func (a *API) ListCrons(ctx context.Context, w http.ResponseWriter, req *http.Request) {
 	crons, err := a.config.Service.List()
 	if err != nil {
-		sendError(w, fmt.Errorf("Unable to list crons: %s", err), http.StatusInternalServerError)
+		sendServerError(w, fmt.Errorf("Unable to list crons: %s", err))
 		return
 	}
 
@@ -64,7 +64,7 @@ func (a *API) CronStatus(ctx context.Context, w http.ResponseWriter, req *http.R
 			return
 		}
 
-		sendError(w, fmt.Errorf("Unable to get status of cron %q: %s", cronName, err), http.StatusInternalServerError)
+		sendServerError(w, fmt.Errorf("Unable to get status of cron %q: %s", cronName, err))
 		return
 	}
 

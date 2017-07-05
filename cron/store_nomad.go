@@ -7,11 +7,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"sort"
 	"strings"
 	"time"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/hashicorp/nomad/api"
 	"github.com/hashicorp/nomad/nomad/structs"
 	"golang.org/x/sync/errgroup"
@@ -284,7 +284,7 @@ func (s *nomadCronStore) aggregateChildJobSummary(cronName string) (*CronSummary
 			}
 			job := queueItem.(*api.JobListStub)
 			if summary, err := s.getJobSummary(job); err != nil {
-				log.Printf("Error while getting job summary of %q: %s", job.ID, err)
+				log.WithField("job", job.ID).WithError(err).Warn("Error getting job summary")
 				return err
 			} else {
 				summariesQueue.Enqueue(summary)
@@ -358,7 +358,7 @@ func (s *nomadCronStore) Allocations(cronName string) ([]*CronAllocation, error)
 
 			allocs, queryMeta, err := s.config.Client.Jobs().Allocations(job.ID, false, nil)
 			if err != nil {
-				log.Printf("Error while getting allocations of job %q: %s", job.ID, err)
+				log.WithField("job", job.ID).WithError(err).Warn("Error getting allocations")
 				return err
 			}
 			logSlowQuery(queryMeta.RequestTime, "Jobs.Allocations", job.ID)
@@ -613,6 +613,10 @@ func validateUUID(uuid string) error {
 
 func logSlowQuery(d time.Duration, op string, args ...string) {
 	if d > NomadLongQueryTime {
-		log.Printf("Slow Nomad query: %s(%v) took %s", op, args, d)
+		log.WithFields(log.Fields{
+			"operation": op,
+			"arguments": args,
+			"duration": d,
+		}).Info("Slow Nomad query")
 	}
 }

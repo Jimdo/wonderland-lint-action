@@ -2,9 +2,15 @@ package v1
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
+
+	log "github.com/Sirupsen/logrus"
 )
+
+func sendServerError(w http.ResponseWriter, err error) {
+	log.WithError(err).Warn("Server Error")
+	sendError(w, err, http.StatusInternalServerError)
+}
 
 func sendError(w http.ResponseWriter, err error, code int) {
 	apiErr := struct {
@@ -23,7 +29,7 @@ func sendJSON(w http.ResponseWriter, data interface{}, code int) {
 	w.WriteHeader(code)
 
 	if err := json.NewEncoder(w).Encode(data); err != nil {
-		log.Printf("Error encoding HTTP response data: %s", err)
+		log.WithError(err).Warn("Error encoding HTTP response data")
 		http.Error(w, "Error encoding response data", http.StatusInternalServerError)
 		return
 	}

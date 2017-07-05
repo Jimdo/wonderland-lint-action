@@ -13,6 +13,10 @@ components:
     capacity:
       memory: M
       CPU: L
+    logging:
+      enabled: true
+      types:
+        - logfmt
   - name: auth-proxy
     image: {{env `AUTH_PROXY_IMAGE`}}
     links:
