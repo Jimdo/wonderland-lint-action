@@ -26,11 +26,6 @@
 			"Rev": "31d785fa79c95e7b92c955689c5b0feed4fc0c7d"
 		},
 		{
-			"ImportPath": "github.com/Sirupsen/logrus",
-			"Comment": "v0.10.0-38-g3ec0642",
-			"Rev": "3ec0642a7fb6488f65b06f9040adc67e3990296a"
-		},
-		{
 			"ImportPath": "github.com/aws/aws-sdk-go/aws",
 			"Comment": "v1.2.7",
 			"Rev": "565027b24171359f23f883d0fc48c228cdde301d"
