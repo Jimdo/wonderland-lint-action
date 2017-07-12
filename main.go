@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"github.com/Luzifer/rconfig"
-	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 	cleanhttp "github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/nomad/api"
+	log "github.com/sirupsen/logrus"
 	graceful "gopkg.in/tylerb/graceful.v1"
 
 	"github.com/Jimdo/wonderland-validator/docker/registry"

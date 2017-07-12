@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/hashicorp/nomad/api"
 	"github.com/hashicorp/nomad/nomad/structs"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 	lane "gopkg.in/oleiade/lane.v1"
 )
@@ -616,7 +616,7 @@ func logSlowQuery(d time.Duration, op string, args ...string) {
 		log.WithFields(log.Fields{
 			"operation": op,
 			"arguments": args,
-			"duration": d,
+			"duration":  d,
 		}).Info("Slow Nomad query")
 	}
 }
