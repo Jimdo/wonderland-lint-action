@@ -5,6 +5,8 @@ RUN apk --update add ca-certificates
 ADD . /go/src/github.com/Jimdo/wonderland-crons
 WORKDIR /go/src/github.com/Jimdo/wonderland-crons
 
+RUN ./scripts/fix-sirupsen
+
 RUN go install -v
 
 ENTRYPOINT ["wonderland-crons"]
