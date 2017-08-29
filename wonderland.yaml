@@ -14,9 +14,8 @@ components:
       memory: M
       CPU: L
     logging:
-      enabled: true
       types:
-        - logfmt
+        - json
   - name: auth-proxy
     image: {{env `AUTH_PROXY_IMAGE`}}
     links:
@@ -27,7 +26,6 @@ components:
       APP_HEALTHCHECK: /v1/status
       $ref_secrets: vault+secret://vault.{{env `ZONE`}}/wonderland/crons/proxy
     logging:
-      enabled: true
       types:
         - access_log
         - error_log_nginx

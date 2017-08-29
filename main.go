@@ -69,6 +69,7 @@ func main() {
 		abort("Invalid log level %q: %s", config.LogLevel, err)
 	}
 	log.SetLevel(level)
+	log.SetFormatter(&log.JSONFormatter{})
 
 	rcm, err := rcm.NewWithLogger(config.VaultAddress, config.VaultRoleID, log.StandardLogger())
 	if err != nil {
