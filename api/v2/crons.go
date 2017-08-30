@@ -28,7 +28,7 @@ type API struct {
 func (a *API) Register() {
 	a.config.Router.HandleFunc("/status", a.StatusHandler).Methods("GET")
 
-	a.config.Router.HandleFunc("/ping", api.HandlerWithDefaultTimeout(a.PingHandler)).Methods("GET")
+	a.config.Router.HandleFunc("/crons/ping", api.HandlerWithDefaultTimeout(a.PingHandler)).Methods("GET")
 }
 
 func (a *API) StatusHandler(w http.ResponseWriter, req *http.Request) {}
