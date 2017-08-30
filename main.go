@@ -21,6 +21,7 @@ import (
 	"github.com/Jimdo/wonderland-vault/lib/role-credential-manager"
 
 	"github.com/Jimdo/wonderland-crons/api/v1"
+	"github.com/Jimdo/wonderland-crons/api/v2"
 	"github.com/Jimdo/wonderland-crons/cron"
 	"github.com/Jimdo/wonderland-crons/service"
 	"github.com/Jimdo/wonderland-crons/validation"
@@ -147,6 +148,10 @@ func main() {
 			}),
 		},
 		Router: router.PathPrefix("/v1").Subrouter(),
+	}).Register()
+
+	v2.New(&v2.Config{
+		Router: router.PathPrefix("/v2").Subrouter(),
 	}).Register()
 
 	router.HandleFunc("/debug/pprof/profile", pprof.Profile)
