@@ -23,7 +23,7 @@ import (
 	"github.com/Jimdo/wonderland-crons/api/v1"
 	"github.com/Jimdo/wonderland-crons/api/v2"
 	"github.com/Jimdo/wonderland-crons/cron"
-	"github.com/Jimdo/wonderland-crons/service"
+	"github.com/Jimdo/wonderland-crons/nomad"
 	"github.com/Jimdo/wonderland-crons/validation"
 	"github.com/Jimdo/wonderland-crons/vault"
 )
@@ -109,8 +109,8 @@ func main() {
 	}
 
 	v1.New(&v1.Config{
-		Service: &service.CronService{
-			Store: cron.NewNomadCronStore(&cron.NomadCronStoreConfig{
+		Service: &nomad.CronService{
+			Store: nomad.NewCronStore(&nomad.CronStoreConfig{
 				CronPrefix:    config.NomadCronPrefix,
 				Datacenters:   []string{os.Getenv("AWS_REGION")},
 				Client:        nomadClient,

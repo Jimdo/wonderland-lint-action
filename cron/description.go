@@ -1,6 +1,7 @@
 package cron
 
 import (
+	"encoding/json"
 	"strconv"
 	"strings"
 )
@@ -34,6 +35,30 @@ var CPUCapacitySpecifications = map[string]uint{
 
 var MinCPUCapacity = CPUTShirtSizeToUInt("XS")
 var MaxCPUCapacity = CPUTShirtSizeToUInt("3XL")
+
+func NewCronDescriptionFromJSON(data []byte) (*CronDescription, error) {
+	desc := &CronDescription{}
+	if err := json.Unmarshal(data, desc); err != nil {
+		return nil, err
+	}
+	desc.Init()
+
+	return desc, nil
+}
+
+func (d *CronDescription) Init() {
+	if d.Description == nil {
+		return
+	}
+
+	d.Description.init()
+}
+
+type CronDescription struct {
+	Name        string                `json:"name"`
+	Schedule    string                `json:"schedule"`
+	Description *ContainerDescription `json:"description"`
+}
 
 type ContainerDescription struct {
 	Image       string               `json:"image"`
