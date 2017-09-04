@@ -1,4 +1,4 @@
-package cron
+package nomad
 
 import (
 	"bytes"
@@ -16,6 +16,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 	lane "gopkg.in/oleiade/lane.v1"
+
+	"github.com/Jimdo/wonderland-crons/cron"
 )
 
 var (
@@ -33,7 +35,7 @@ const (
 	NomadLongQueryTime        = 5 * time.Second
 )
 
-type NomadCronStoreConfig struct {
+type CronStoreConfig struct {
 	CronPrefix    string
 	Datacenters   []string
 	Client        *api.Client
@@ -42,17 +44,17 @@ type NomadCronStoreConfig struct {
 	WLGitHubToken string
 }
 
-func NewNomadCronStore(c *NomadCronStoreConfig) *nomadCronStore {
-	return &nomadCronStore{
+func NewCronStore(c *CronStoreConfig) *CronStore {
+	return &CronStore{
 		config: c,
 	}
 }
 
-type nomadCronStore struct {
-	config *NomadCronStoreConfig
+type CronStore struct {
+	config *CronStoreConfig
 }
 
-func (s *nomadCronStore) List() ([]*Cron, error) {
+func (s *CronStore) List() ([]*Cron, error) {
 	jobs, _, err := s.config.Client.Jobs().PrefixList(s.config.CronPrefix)
 	if err != nil {
 		return nil, err
@@ -71,7 +73,7 @@ func (s *nomadCronStore) List() ([]*Cron, error) {
 	return crons, nil
 }
 
-func (s *nomadCronStore) Status(cronName string) (*Cron, error) {
+func (s *CronStore) Status(cronName string) (*Cron, error) {
 	jobID := s.config.CronPrefix + cronName
 	j, _, err := s.config.Client.Jobs().Info(jobID, nil)
 	if err != nil {
@@ -94,7 +96,7 @@ func (s *nomadCronStore) Status(cronName string) (*Cron, error) {
 	}, nil
 }
 
-func (s *nomadCronStore) Stop(cronName string) error {
+func (s *CronStore) Stop(cronName string) error {
 	jobID := s.config.CronPrefix + cronName
 	_, _, err := s.config.Client.Jobs().Info(jobID, nil)
 	if err != nil {
@@ -122,7 +124,7 @@ func (s *nomadCronStore) Stop(cronName string) error {
 	return nil
 }
 
-func (s *nomadCronStore) Run(cron *CronDescription) error {
+func (s *CronStore) Run(cron *cron.CronDescription) error {
 	args := []string{"--name", cron.Name}
 	for env, value := range cron.Description.Environment {
 		args = append(args, "-e", fmt.Sprintf("%s=%s", env, value))
@@ -209,7 +211,7 @@ func (s *nomadCronStore) Run(cron *CronDescription) error {
 
 // convertStructJob is used to take a *structs.Job and convert it to an *api.Job.
 // This function is just a hammer and probably needs to be revisited.
-func (s *nomadCronStore) convertStructJob(in *structs.Job) (*api.Job, error) {
+func (s *CronStore) convertStructJob(in *structs.Job) (*api.Job, error) {
 	gob.Register([]map[string]interface{}{})
 	gob.Register([]interface{}{})
 	var apiJob *api.Job
@@ -223,7 +225,7 @@ func (s *nomadCronStore) convertStructJob(in *structs.Job) (*api.Job, error) {
 	return apiJob, nil
 }
 
-func (s *nomadCronStore) deleteJobs(jobs []*api.JobListStub) []string {
+func (s *CronStore) deleteJobs(jobs []*api.JobListStub) []string {
 	jobsQueue := lane.NewQueue()
 	errorsQueue := lane.NewQueue()
 
@@ -257,7 +259,7 @@ func (s *nomadCronStore) deleteJobs(jobs []*api.JobListStub) []string {
 	return deletionErrors
 }
 
-func (s *nomadCronStore) aggregateChildJobSummary(cronName string) (*CronSummary, error) {
+func (s *CronStore) aggregateChildJobSummary(cronName string) (*CronSummary, error) {
 	invocations, err := s.jobInvocations(cronName)
 	if err != nil {
 		return nil, err
@@ -309,7 +311,7 @@ func (s *nomadCronStore) aggregateChildJobSummary(cronName string) (*CronSummary
 	return cronSummary, nil
 }
 
-func (s *nomadCronStore) getJobSummary(job *api.JobListStub) (*api.TaskGroupSummary, error) {
+func (s *CronStore) getJobSummary(job *api.JobListStub) (*api.TaskGroupSummary, error) {
 	childSummaries, queryMeta, err := s.config.Client.Jobs().Summary(job.ID, nil)
 	if err != nil {
 		return nil, fmt.Errorf("Error querying job summary of invocation %q: %s", job.ID, err)
@@ -322,7 +324,7 @@ func (s *nomadCronStore) getJobSummary(job *api.JobListStub) (*api.TaskGroupSumm
 	return &childSummary, nil
 }
 
-func (s *nomadCronStore) Allocations(cronName string) ([]*CronAllocation, error) {
+func (s *CronStore) Allocations(cronName string) ([]*CronAllocation, error) {
 	if _, _, err := s.config.Client.Jobs().Info(s.config.CronPrefix+cronName, nil); err != nil {
 		if strings.Contains(err.Error(), "job not found") {
 			return nil, ErrCronNotFound
@@ -395,7 +397,7 @@ func (s *nomadCronStore) Allocations(cronName string) ([]*CronAllocation, error)
 	return cronAllocs, nil
 }
 
-func (s *nomadCronStore) AllocationStatus(allocID string) (*CronAllocation, error) {
+func (s *CronStore) AllocationStatus(allocID string) (*CronAllocation, error) {
 	if err := validateUUID(allocID); err != nil {
 		return nil, ErrInvalidAllocationID
 	}
@@ -440,7 +442,7 @@ func (s *nomadCronStore) AllocationStatus(allocID string) (*CronAllocation, erro
 	return &cronAlloc, nil
 }
 
-func (s *nomadCronStore) AllocationLogs(allocID, logType string) (*CronAllocationLogs, error) {
+func (s *CronStore) AllocationLogs(allocID, logType string) (*CronAllocationLogs, error) {
 	allocs, _, err := s.config.Client.Allocations().PrefixList(allocID)
 	if err != nil {
 		return nil, err
@@ -481,7 +483,7 @@ func (s *nomadCronStore) AllocationLogs(allocID, logType string) (*CronAllocatio
 
 // Returns the Nomad jobs that are the most recent invocations of the cron job.
 // (Those with "periodic-" in the name.)
-func (s *nomadCronStore) jobInvocations(cronName string) ([]*api.JobListStub, error) {
+func (s *CronStore) jobInvocations(cronName string) ([]*api.JobListStub, error) {
 	prefix := s.config.CronPrefix + cronName + structs.PeriodicLaunchSuffix
 	jobs, queryMeta, err := s.config.Client.Jobs().PrefixList(prefix)
 	if err != nil {
@@ -495,7 +497,7 @@ func (s *nomadCronStore) jobInvocations(cronName string) ([]*api.JobListStub, er
 	return jobs, nil
 }
 
-func (s *nomadCronStore) executeAsync(f func() error) error {
+func (s *CronStore) executeAsync(f func() error) error {
 	var g errgroup.Group
 	for ws := 1; ws <= NomadParallelRequestLimit; ws++ {
 		g.Go(f)
@@ -503,7 +505,7 @@ func (s *nomadCronStore) executeAsync(f func() error) error {
 	return g.Wait()
 }
 
-func (s *nomadCronStore) convertEvent(event *api.TaskEvent) *CronEvent {
+func (s *CronStore) convertEvent(event *api.TaskEvent) *CronEvent {
 	// HACK: Define this here to avoid importing "github.com/hashicorp/nomad/client"
 	const ReasonWithinPolicy = "Restart within policy"
 

@@ -10,7 +10,7 @@ import (
 
 	"github.com/Jimdo/wonderland-crons/api"
 	"github.com/Jimdo/wonderland-crons/cron"
-	"github.com/Jimdo/wonderland-crons/service"
+	"github.com/Jimdo/wonderland-crons/nomad"
 	"github.com/Jimdo/wonderland-crons/validation"
 )
 
@@ -21,7 +21,7 @@ func New(c *Config) *API {
 }
 
 type Config struct {
-	Service *service.CronService
+	Service *nomad.CronService
 	Router  *mux.Router
 }
 
@@ -59,7 +59,7 @@ func (a *API) CronStatus(ctx context.Context, w http.ResponseWriter, req *http.R
 
 	status, err := a.config.Service.Status(cronName)
 	if err != nil {
-		if err == cron.ErrCronNotFound {
+		if err == nomad.ErrCronNotFound {
 			sendError(w, err, http.StatusNotFound)
 			return
 		}
@@ -76,7 +76,7 @@ func (a *API) StopCron(ctx context.Context, w http.ResponseWriter, req *http.Req
 	cronName := vars["name"]
 
 	if err := a.config.Service.Stop(cronName); err != nil {
-		if err == cron.ErrCronNotFound {
+		if err == nomad.ErrCronNotFound {
 			sendError(w, err, http.StatusNotFound)
 			return
 		}
@@ -114,7 +114,7 @@ func (a *API) CronAllocations(ctx context.Context, w http.ResponseWriter, req *h
 
 	allocs, err := a.config.Service.Allocations(cronName)
 	if err != nil {
-		if err == cron.ErrCronNotFound {
+		if err == nomad.ErrCronNotFound {
 			sendError(w, err, http.StatusNotFound)
 			return
 		}
@@ -132,10 +132,10 @@ func (a *API) AllocationStatus(ctx context.Context, w http.ResponseWriter, req *
 
 	status, err := a.config.Service.AllocationStatus(allocID)
 	if err != nil {
-		if err == cron.ErrInvalidAllocationID {
+		if err == nomad.ErrInvalidAllocationID {
 			sendError(w, err, http.StatusBadRequest)
 			return
-		} else if err == cron.ErrAllocationNotFound {
+		} else if err == nomad.ErrAllocationNotFound {
 			sendError(w, err, http.StatusNotFound)
 			return
 		}
@@ -158,7 +158,7 @@ func (a *API) AllocationLogs(ctx context.Context, w http.ResponseWriter, req *ht
 
 	status, err := a.config.Service.AllocationLogs(allocID, logType)
 	if err != nil {
-		if err == cron.ErrAllocationNotFound {
+		if err == nomad.ErrAllocationNotFound {
 			sendError(w, err, http.StatusNotFound)
 			return
 		}

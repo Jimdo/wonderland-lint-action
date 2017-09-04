@@ -1,4 +1,4 @@
-package service
+package nomad
 
 import (
 	"github.com/Jimdo/wonderland-crons/cron"
@@ -6,15 +6,15 @@ import (
 )
 
 type CronService struct {
-	Store     cron.CronStore
+	Store     *CronStore
 	Validator *validation.Validator
 }
 
-func (s *CronService) List() ([]*cron.Cron, error) {
+func (s *CronService) List() ([]*Cron, error) {
 	return s.Store.List()
 }
 
-func (s *CronService) Status(cronName string) (*cron.Cron, error) {
+func (s *CronService) Status(cronName string) (*Cron, error) {
 	return s.Store.Status(cronName)
 }
 
@@ -30,14 +30,14 @@ func (s *CronService) Run(cron *cron.CronDescription) error {
 	return s.Store.Run(cron)
 }
 
-func (s *CronService) Allocations(cronName string) ([]*cron.CronAllocation, error) {
+func (s *CronService) Allocations(cronName string) ([]*CronAllocation, error) {
 	return s.Store.Allocations(cronName)
 }
 
-func (s *CronService) AllocationStatus(allocID string) (*cron.CronAllocation, error) {
+func (s *CronService) AllocationStatus(allocID string) (*CronAllocation, error) {
 	return s.Store.AllocationStatus(allocID)
 }
 
-func (s *CronService) AllocationLogs(allocID, logType string) (*cron.CronAllocationLogs, error) {
+func (s *CronService) AllocationLogs(allocID, logType string) (*CronAllocationLogs, error) {
 	return s.Store.AllocationLogs(allocID, logType)
 }

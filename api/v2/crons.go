@@ -7,7 +7,6 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/Jimdo/wonderland-crons/api"
-	"github.com/Jimdo/wonderland-crons/service"
 )
 
 func New(c *Config) *API {
@@ -17,8 +16,7 @@ func New(c *Config) *API {
 }
 
 type Config struct {
-	Service *service.CronService
-	Router  *mux.Router
+	Router *mux.Router
 }
 
 type API struct {
