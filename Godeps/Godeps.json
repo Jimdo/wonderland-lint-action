@@ -26,24 +26,89 @@
 			"Rev": "31d785fa79c95e7b92c955689c5b0feed4fc0c7d"
 		},
 		{
-			"ImportPath": "github.com/sirupsen/logrus",
+			"ImportPath": "github.com/Sirupsen/logrus",
 			"Comment": "1.0.2",
 			"Rev": "a3f95b5c423586578a4e099b11a46c2479628cac"
 		},
 		{
 			"ImportPath": "github.com/aws/aws-sdk-go/aws",
-			"Comment": "v1.2.7",
-			"Rev": "565027b24171359f23f883d0fc48c228cdde301d"
+			"Comment": "v1.10.37",
+			"Rev": "2dd0010a66ff968eb03c2507cfb5deab080c5d93"
 		},
 		{
 			"ImportPath": "github.com/aws/aws-sdk-go/aws/awserr",
-			"Comment": "v1.2.7",
-			"Rev": "565027b24171359f23f883d0fc48c228cdde301d"
+			"Comment": "v1.10.37",
+			"Rev": "2dd0010a66ff968eb03c2507cfb5deab080c5d93"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/aws/awsutil",
+			"Comment": "v1.10.37",
+			"Rev": "2dd0010a66ff968eb03c2507cfb5deab080c5d93"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/aws/client",
+			"Comment": "v1.10.37",
+			"Rev": "2dd0010a66ff968eb03c2507cfb5deab080c5d93"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/aws/client/metadata",
+			"Comment": "v1.10.37",
+			"Rev": "2dd0010a66ff968eb03c2507cfb5deab080c5d93"
 		},
 		{
 			"ImportPath": "github.com/aws/aws-sdk-go/aws/credentials",
-			"Comment": "v1.2.7",
-			"Rev": "565027b24171359f23f883d0fc48c228cdde301d"
+			"Comment": "v1.10.37",
+			"Rev": "2dd0010a66ff968eb03c2507cfb5deab080c5d93"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/aws/endpoints",
+			"Comment": "v1.10.37",
+			"Rev": "2dd0010a66ff968eb03c2507cfb5deab080c5d93"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/aws/request",
+			"Comment": "v1.10.37",
+			"Rev": "2dd0010a66ff968eb03c2507cfb5deab080c5d93"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/aws/signer/v4",
+			"Comment": "v1.10.37",
+			"Rev": "2dd0010a66ff968eb03c2507cfb5deab080c5d93"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/internal/shareddefaults",
+			"Comment": "v1.10.37",
+			"Rev": "2dd0010a66ff968eb03c2507cfb5deab080c5d93"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/private/protocol",
+			"Comment": "v1.10.37",
+			"Rev": "2dd0010a66ff968eb03c2507cfb5deab080c5d93"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/private/protocol/json/jsonutil",
+			"Comment": "v1.10.37",
+			"Rev": "2dd0010a66ff968eb03c2507cfb5deab080c5d93"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/private/protocol/jsonrpc",
+			"Comment": "v1.10.37",
+			"Rev": "2dd0010a66ff968eb03c2507cfb5deab080c5d93"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/private/protocol/rest",
+			"Comment": "v1.10.37",
+			"Rev": "2dd0010a66ff968eb03c2507cfb5deab080c5d93"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/service/cloudwatchevents",
+			"Comment": "v1.10.37",
+			"Rev": "2dd0010a66ff968eb03c2507cfb5deab080c5d93"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/service/cloudwatchevents/cloudwatcheventsiface",
+			"Comment": "v1.10.37",
+			"Rev": "2dd0010a66ff968eb03c2507cfb5deab080c5d93"
 		},
 		{
 			"ImportPath": "github.com/docker/distribution",
@@ -240,6 +305,11 @@
 			"Rev": "cb70a5c5ff4d1cc474e4bbe33b6bcc0fbadc4ce2"
 		},
 		{
+			"ImportPath": "github.com/jmespath/go-jmespath",
+			"Comment": "0.2.2-2-gc01cf91",
+			"Rev": "c01cf91b011868172fdcd9f41838e80c9d716264"
+		},
+		{
 			"ImportPath": "github.com/mitchellh/copystructure",
 			"Rev": "6871c41ca9148d368715dedcda473f396f205df5"
 		},
@@ -262,6 +332,11 @@
 		{
 			"ImportPath": "github.com/sethgrid/pester",
 			"Rev": "2a102734c18c43c74fd0664e06cd414cf9602b93"
+		},
+		{
+			"ImportPath": "github.com/sirupsen/logrus",
+			"Comment": "1.0.2",
+			"Rev": "a3f95b5c423586578a4e099b11a46c2479628cac"
 		},
 		{
 			"ImportPath": "github.com/spf13/pflag",
