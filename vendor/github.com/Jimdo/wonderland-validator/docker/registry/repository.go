@@ -15,6 +15,8 @@ import (
 	"github.com/docker/distribution/reference"
 	"github.com/docker/distribution/registry/client"
 	"github.com/docker/distribution/registry/client/auth"
+	"github.com/docker/distribution/registry/client/auth/challenge"
+
 	"github.com/docker/distribution/registry/client/transport"
 	"golang.org/x/net/context"
 )
@@ -49,7 +51,7 @@ func NewRepository(registryName, repoName string, credentialStore auth.Credentia
 		endpointURL = "https://" + registryName
 	}
 
-	challengeManager := auth.NewSimpleChallengeManager()
+	challengeManager := challenge.NewSimpleManager()
 	if err := ping(challengeManager, endpointURL+"/v2/"); err != nil {
 		return nil, err
 	}
@@ -111,7 +113,7 @@ func (r *Repository) HasTag(tagName string) (bool, error) {
 	return false, nil
 }
 
-func ping(manager auth.ChallengeManager, endpoint string) error {
+func ping(manager challenge.Manager, endpoint string) error {
 	resp, err := http.Get(endpoint)
 	if err != nil {
 		return err
