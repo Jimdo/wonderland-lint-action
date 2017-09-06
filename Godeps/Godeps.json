@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/Jimdo/wonderland-crons",
-	"GoVersion": "go1.8",
+	"GoVersion": "go1.9",
 	"GodepVersion": "v79",
 	"Packages": [
 		"./..."
@@ -24,11 +24,6 @@
 			"ImportPath": "github.com/Luzifer/rconfig",
 			"Comment": "v1.1.0-2-g31d785f",
 			"Rev": "31d785fa79c95e7b92c955689c5b0feed4fc0c7d"
-		},
-		{
-			"ImportPath": "github.com/sirupsen/logrus",
-			"Comment": "1.0.2",
-			"Rev": "a3f95b5c423586578a4e099b11a46c2479628cac"
 		},
 		{
 			"ImportPath": "github.com/aws/aws-sdk-go/aws",
@@ -56,7 +51,37 @@
 			"Rev": "960dd6034cbdac0e9716bfa66d91de88b286889f"
 		},
 		{
+			"ImportPath": "github.com/aws/aws-sdk-go/aws/corehandlers",
+			"Comment": "v1.10.38",
+			"Rev": "960dd6034cbdac0e9716bfa66d91de88b286889f"
+		},
+		{
 			"ImportPath": "github.com/aws/aws-sdk-go/aws/credentials",
+			"Comment": "v1.10.38",
+			"Rev": "960dd6034cbdac0e9716bfa66d91de88b286889f"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds",
+			"Comment": "v1.10.38",
+			"Rev": "960dd6034cbdac0e9716bfa66d91de88b286889f"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/aws/credentials/endpointcreds",
+			"Comment": "v1.10.38",
+			"Rev": "960dd6034cbdac0e9716bfa66d91de88b286889f"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/aws/credentials/stscreds",
+			"Comment": "v1.10.38",
+			"Rev": "960dd6034cbdac0e9716bfa66d91de88b286889f"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/aws/defaults",
+			"Comment": "v1.10.38",
+			"Rev": "960dd6034cbdac0e9716bfa66d91de88b286889f"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/aws/ec2metadata",
 			"Comment": "v1.10.38",
 			"Rev": "960dd6034cbdac0e9716bfa66d91de88b286889f"
 		},
@@ -67,6 +92,11 @@
 		},
 		{
 			"ImportPath": "github.com/aws/aws-sdk-go/aws/request",
+			"Comment": "v1.10.38",
+			"Rev": "960dd6034cbdac0e9716bfa66d91de88b286889f"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/aws/session",
 			"Comment": "v1.10.38",
 			"Rev": "960dd6034cbdac0e9716bfa66d91de88b286889f"
 		},
@@ -96,7 +126,22 @@
 			"Rev": "960dd6034cbdac0e9716bfa66d91de88b286889f"
 		},
 		{
+			"ImportPath": "github.com/aws/aws-sdk-go/private/protocol/query",
+			"Comment": "v1.10.38",
+			"Rev": "960dd6034cbdac0e9716bfa66d91de88b286889f"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/private/protocol/query/queryutil",
+			"Comment": "v1.10.38",
+			"Rev": "960dd6034cbdac0e9716bfa66d91de88b286889f"
+		},
+		{
 			"ImportPath": "github.com/aws/aws-sdk-go/private/protocol/rest",
+			"Comment": "v1.10.38",
+			"Rev": "960dd6034cbdac0e9716bfa66d91de88b286889f"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/private/protocol/xml/xmlutil",
 			"Comment": "v1.10.38",
 			"Rev": "960dd6034cbdac0e9716bfa66d91de88b286889f"
 		},
@@ -117,6 +162,11 @@
 		},
 		{
 			"ImportPath": "github.com/aws/aws-sdk-go/service/ecs/ecsiface",
+			"Comment": "v1.10.38",
+			"Rev": "960dd6034cbdac0e9716bfa66d91de88b286889f"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/service/sts",
 			"Comment": "v1.10.38",
 			"Rev": "960dd6034cbdac0e9716bfa66d91de88b286889f"
 		},
@@ -198,11 +248,6 @@
 			"ImportPath": "github.com/gorhill/cronexpr",
 			"Comment": "1.0.0-3-gf098431",
 			"Rev": "f0984319b44273e83de132089ae42b1810f4933b"
-		},
-		{
-			"ImportPath": "github.com/gorilla/context",
-			"Comment": "v1.1-7-g08b5f42",
-			"Rev": "08b5f424b9271eedf6f9f0ce86cb9396ed337a42"
 		},
 		{
 			"ImportPath": "github.com/gorilla/mux",
@@ -321,8 +366,8 @@
 		},
 		{
 			"ImportPath": "github.com/jmespath/go-jmespath",
-			"Comment": "0.2.2-2-gc01cf91",
-			"Rev": "c01cf91b011868172fdcd9f41838e80c9d716264"
+			"Comment": "0.2.2-14-gbd40a43",
+			"Rev": "bd40a432e4c76585ef6b72d3fd96fb9b6dc7b68d"
 		},
 		{
 			"ImportPath": "github.com/mitchellh/copystructure",
