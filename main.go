@@ -10,6 +10,11 @@ import (
 	"time"
 
 	"github.com/Luzifer/rconfig"
+	awssdk "github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/client"
+	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/gorilla/mux"
 	cleanhttp "github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/nomad/api"
@@ -22,10 +27,12 @@ import (
 
 	"github.com/Jimdo/wonderland-crons/api/v1"
 	"github.com/Jimdo/wonderland-crons/api/v2"
+	"github.com/Jimdo/wonderland-crons/aws"
 	"github.com/Jimdo/wonderland-crons/cron"
 	"github.com/Jimdo/wonderland-crons/nomad"
 	"github.com/Jimdo/wonderland-crons/validation"
 	"github.com/Jimdo/wonderland-crons/vault"
+	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
 )
 
 var (
@@ -57,7 +64,15 @@ var (
 		QuayRegistryAddress       string `flag:"query-registry-address" env:"QUAY_REGISTRY_ADDRESS" default:"quay.io" description:"The address of the Quay registry"`
 		QuayRegistryUser          string `flag:"query-registry-user" env:"QUAY_REGISTRY_USER" description:"The username for the Quay registry"`
 		QuayRegistryPass          string `flag:"query-registry-pass" env:"QUAY_REGISTRY_PASS" description:"The passwordfor the Quay registry"`
+
+		// AWS
+		AWSRegion                     string        `flag:"region" env:"AWS_REGION" default:"eu-west-1" description:"The AWS region to use"`
+		CronRoleARN                   string        `flag:"cron-role-arn" env:"CRON_ROLE_ARN" description:"The IAM Role that grants Cloudwatch access to ECS"`
+		ECSClusterARN                 string        `flag:"cluster-arn" env:"ECS_CLUSTER_ARN" description:"The ARN of the ECS cluster crons should run on"`
+		RefreshAWSCredentialsInterval time.Duration `flag:"aws-credentials-interval" env:"AWS_CREDENTIALS_INTERVAL" default:"10m" description:"Interval in which to fetch new AWS credentials from Vault"`
 	}
+	programIdentifier = "wonderland-crons"
+	programVersion    = "dev"
 )
 
 func main() {
@@ -108,6 +123,54 @@ func main() {
 		abort("Could not create Nomad client: %s", err)
 	}
 
+	validator := validation.New(validation.Configuration{
+		WonderlandNameValidator: &wonderlandValidator.WonderlandName{},
+		DockerImageValidator: &wonderlandValidator.DockerImage{
+			DockerImageService: registry.NewImageService([]registry.Credential{{
+				Host:     config.QuayRegistryAddress,
+				Username: config.QuayRegistryUser,
+				Password: config.QuayRegistryPass,
+			}, {
+				Host:     config.WonderlandRegistryAddress,
+				Username: config.WonderlandRegistryUser,
+				Password: config.WonderlandRegistryPass,
+			}}),
+		},
+		CapacityValidator: &wonderlandValidator.ContainerCapacity{
+			CPUCapacitySpecifications: cron.CPUCapacitySpecifications,
+			CPUMinCapacity:            cron.MinCPUCapacity,
+			CPUMaxCapacity:            cron.MaxCPUCapacity,
+
+			MemoryCapacitySpecifications: cron.MemoryCapacitySpecifications,
+			MemoryMinCapacity:            cron.MinMemoryCapacity,
+			MemoryMaxCapacity:            cron.MaxMemoryCapacity,
+		},
+		EnvironmentVariables: &wonderlandValidator.EnvironmentVariables{
+			VaultSecretProvider: &vault.SecretProvider{
+				VaultClient: rcm.VaultClient,
+			},
+		},
+	})
+
+	ecsClient := ecsClient()
+	cwClient := cloudwatchEventsClient()
+	if err := refreshAWSCredentials(ecsClient.Client, rcm); err != nil {
+		log.Fatalf("Failed to fetch AWS config from Vault: %s", err)
+	}
+	if err := refreshAWSCredentials(cwClient.Client, rcm); err != nil {
+		log.Fatalf("Failed to fetch AWS config from Vault: %s", err)
+	}
+	go func() {
+		for range time.Tick(config.RefreshAWSCredentialsInterval) {
+			if err := refreshAWSCredentials(ecsClient.Client, rcm); err != nil {
+				log.Fatalf("Failed to fetch AWS config from Vault: %s", err)
+			}
+			if err := refreshAWSCredentials(cwClient.Client, rcm); err != nil {
+				log.Fatalf("Failed to fetch AWS config from Vault: %s", err)
+			}
+		}
+	}()
+
 	v1.New(&v1.Config{
 		Service: &nomad.CronService{
 			Store: nomad.NewCronStore(&nomad.CronStoreConfig{
@@ -118,40 +181,14 @@ func main() {
 				WLEnvironment: os.Getenv("WONDERLAND_ENV"),
 				WLGitHubToken: config.WonderlandGitHubToken,
 			}),
-			Validator: validation.New(validation.Configuration{
-				WonderlandNameValidator: &wonderlandValidator.WonderlandName{},
-				DockerImageValidator: &wonderlandValidator.DockerImage{
-					DockerImageService: registry.NewImageService([]registry.Credential{{
-						Host:     config.QuayRegistryAddress,
-						Username: config.QuayRegistryUser,
-						Password: config.QuayRegistryPass,
-					}, {
-						Host:     config.WonderlandRegistryAddress,
-						Username: config.WonderlandRegistryUser,
-						Password: config.WonderlandRegistryPass,
-					}}),
-				},
-				CapacityValidator: &wonderlandValidator.ContainerCapacity{
-					CPUCapacitySpecifications: cron.CPUCapacitySpecifications,
-					CPUMinCapacity:            cron.MinCPUCapacity,
-					CPUMaxCapacity:            cron.MaxCPUCapacity,
-
-					MemoryCapacitySpecifications: cron.MemoryCapacitySpecifications,
-					MemoryMinCapacity:            cron.MinMemoryCapacity,
-					MemoryMaxCapacity:            cron.MaxMemoryCapacity,
-				},
-				EnvironmentVariables: &wonderlandValidator.EnvironmentVariables{
-					VaultSecretProvider: &vault.SecretProvider{
-						VaultClient: rcm.VaultClient,
-					},
-				},
-			}),
+			Validator: validator,
 		},
 		Router: router.PathPrefix("/v1").Subrouter(),
 	}).Register()
 
 	v2.New(&v2.Config{
-		Router: router.PathPrefix("/v2").Subrouter(),
+		Router:  router.PathPrefix("/v2").Subrouter(),
+		Service: aws.NewService(validator, cwClient, ecsClient, config.ECSClusterARN, config.CronRoleARN),
 	}).Register()
 
 	router.HandleFunc("/debug/pprof/profile", pprof.Profile)
@@ -165,4 +202,39 @@ func main() {
 func abort(format string, a ...interface{}) {
 	fmt.Fprintf(os.Stderr, "error: "+format+"\n", a...)
 	os.Exit(1)
+}
+
+func ecsClient() *ecs.ECS {
+	httpClient := &http.Client{
+		Timeout: time.Duration(10) * time.Second,
+	}
+	s := session.Must(session.NewSession(awssdk.NewConfig().WithHTTPClient(httpClient)))
+	c := ecs.New(s)
+
+	// prefix user-agent with program name and version
+	c.Handlers.Build.PushFront(request.MakeAddToUserAgentHandler(programIdentifier, programVersion))
+
+	return c
+}
+
+func cloudwatchEventsClient() *cloudwatchevents.CloudWatchEvents {
+	httpClient := &http.Client{
+		Timeout: time.Duration(10) * time.Second,
+	}
+	s := session.Must(session.NewSession(awssdk.NewConfig().WithHTTPClient(httpClient)))
+	c := cloudwatchevents.New(s)
+
+	// prefix user-agent with program name and version
+	c.Handlers.Build.PushFront(request.MakeAddToUserAgentHandler(programIdentifier, programVersion))
+
+	return c
+}
+
+func refreshAWSCredentials(c *client.Client, rcmInstance *rcm.RoleCredentialManager) error {
+	awsConfig, err := rcmInstance.GetAWSConfig(programIdentifier, config.AWSRegion)
+	if err != nil {
+		log.Fatalf("Failed to fetch AWS config from Vault: %s", err)
+	}
+	c.Config.MergeIn(awsConfig)
+	return nil
 }

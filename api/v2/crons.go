@@ -2,11 +2,16 @@ package v2
 
 import (
 	"context"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/gorilla/mux"
 
 	"github.com/Jimdo/wonderland-crons/api"
+	"github.com/Jimdo/wonderland-crons/aws"
+	"github.com/Jimdo/wonderland-crons/cron"
+	"github.com/Jimdo/wonderland-crons/validation"
 )
 
 func New(c *Config) *API {
@@ -16,7 +21,8 @@ func New(c *Config) *API {
 }
 
 type Config struct {
-	Router *mux.Router
+	Router  *mux.Router
+	Service *aws.Service
 }
 
 type API struct {
@@ -27,10 +33,46 @@ func (a *API) Register() {
 	a.config.Router.HandleFunc("/status", a.StatusHandler).Methods("GET")
 
 	a.config.Router.HandleFunc("/crons/ping", api.HandlerWithDefaultTimeout(a.PingHandler)).Methods("GET")
+	a.config.Router.HandleFunc("/crons", api.HandlerWithDefaultTimeout(a.CreateHandler)).Methods("POST")
+	a.config.Router.HandleFunc("/crons/{name}", api.HandlerWithDefaultTimeout(a.DeleteHandler)).Methods("DELETE")
 }
 
 func (a *API) StatusHandler(w http.ResponseWriter, req *http.Request) {}
 
 func (a *API) PingHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) {
 	sendJSON(w, "pong", http.StatusOK)
+}
+
+func (a *API) CreateHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) {
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		sendError(w, fmt.Errorf("Unable to read request body: %s", err), http.StatusInternalServerError)
+		return
+	}
+	desc, err := cron.NewCronDescriptionFromJSON(body)
+	if err != nil {
+		sendError(w, fmt.Errorf("Unable to parse cron description: %s", err), http.StatusBadRequest)
+		return
+	}
+
+	if err := a.config.Service.Create(desc); err != nil {
+		statusCode := http.StatusInternalServerError
+		if _, ok := err.(validation.Error); ok {
+			statusCode = http.StatusBadRequest
+		}
+		sendError(w, fmt.Errorf("Unable to run cron: %s", err), statusCode)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+}
+
+func (a *API) DeleteHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	cronName := vars["name"]
+
+	if err := a.config.Service.Delete(cronName); err != nil {
+		sendServerError(w, fmt.Errorf("Unable to delete cron %q: %s", cronName, err))
+		return
+	}
 }

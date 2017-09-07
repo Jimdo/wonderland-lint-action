@@ -4,11 +4,13 @@ components:
   - name: crons
     image: {{env `CRONS_IMAGE`}}
     env:
-      WONDERLAND_REGISTRY_ADDRESS: '{{env `WONDERLAND_REGISTRY` }}'
+      AWS_REGION: '{{env `NOMAD_AWS_REGION`}}'
+      CRON_ROLE_ARN: '{{ env `CRON_ROLE_ARN`}}'
+      ECS_CLUSTER_ARN: '{{ env `ECS_CLUSTER_ARN`}}'
       NOMAD_API: '{{env `NOMAD_API`}}'
       NOMAD_WL_DOCKER_IMAGE: '{{ env `NOMAD_WL_DOCKER_IMAGE`}}'
-      AWS_REGION: '{{env `NOMAD_AWS_REGION`}}'
       WONDERLAND_ENV: '{{env `WONDERLAND_ENV`}}'
+      WONDERLAND_REGISTRY_ADDRESS: '{{env `WONDERLAND_REGISTRY` }}'
       $ref_secrets: vault+secret://vault.{{env `ZONE`}}/wonderland/crons
     capacity:
       memory: M
