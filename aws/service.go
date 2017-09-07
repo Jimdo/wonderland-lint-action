@@ -90,7 +90,6 @@ func (s *Service) Create(cron *cron.CronDescription) error {
 				Id:      awssdk.String(baseName),
 				RoleArn: awssdk.String("arn:aws:iam::062052581233:role/ecsEventsRole"),
 				EcsParameters: &cloudwatchevents.EcsParameters{
-					// Build Task Definition ARN
 					TaskDefinitionArn: def.TaskDefinition.TaskDefinitionArn,
 				},
 			},
