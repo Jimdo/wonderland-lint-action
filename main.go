@@ -186,7 +186,8 @@ func main() {
 		Router: router.PathPrefix("/v1").Subrouter(),
 	}).Register()
 
-	ecstsd := aws.NewECSTaskDefinitionStore(ecsClient)
+	ecstdm := aws.NewECSTaskDefinitionMapper()
+	ecstsd := aws.NewECSTaskDefinitionStore(ecsClient, ecstdm)
 	cloudwatchcm := aws.NewCloudwatchRuleCronManager(cwClient, config.ECSClusterARN, config.CronRoleARN)
 	v2.New(&v2.Config{
 		Router:  router.PathPrefix("/v2").Subrouter(),

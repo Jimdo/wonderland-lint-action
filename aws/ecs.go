@@ -13,38 +13,20 @@ import (
 
 type ECSTaskDefinitionStore struct {
 	ecs ecsiface.ECSAPI
+	tdm *ECSTaskDefinitionMapper
 }
 
-func NewECSTaskDefinitionStore(e ecsiface.ECSAPI) *ECSTaskDefinitionStore {
+func NewECSTaskDefinitionStore(e ecsiface.ECSAPI, tdm *ECSTaskDefinitionMapper) *ECSTaskDefinitionStore {
 	return &ECSTaskDefinitionStore{
 		ecs: e,
+		tdm: tdm,
 	}
 }
 
 func (tds *ECSTaskDefinitionStore) AddRevisionFromCronDescription(family string, cron *cron.CronDescription) (string, error) {
-	var envVars []*ecs.KeyValuePair
-	for key, value := range cron.Description.Environment {
-		envVars = append(envVars, &ecs.KeyValuePair{
-			Name:  awssdk.String(key),
-			Value: awssdk.String(value),
-		})
-	}
-
 	out, err := tds.ecs.RegisterTaskDefinition(&ecs.RegisterTaskDefinitionInput{
-		ContainerDefinitions: []*ecs.ContainerDefinition{
-			{
-				Command: awssdk.StringSlice(cron.Description.Arguments),
-				Cpu:     awssdk.Int64(int64(cron.Description.Capacity.CPULimit())),
-				DockerLabels: map[string]*string{
-					"com.jimdo.wonderland.cron": awssdk.String(cron.Name),
-				},
-				Environment: envVars,
-				Image:       awssdk.String(cron.Description.Image),
-				Memory:      awssdk.Int64(int64(cron.Description.Capacity.MemoryLimit())),
-				Name:        awssdk.String(family),
-			},
-		},
-		Family: awssdk.String(family),
+		ContainerDefinitions: []*ecs.ContainerDefinition{tds.tdm.ContainerDefinitionFromCronDescription(family, cron)},
+		Family:               awssdk.String(family),
 	})
 	if err != nil {
 		return "", fmt.Errorf("could not register task definition for family %q with error: %s", family, err)
