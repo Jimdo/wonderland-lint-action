@@ -186,9 +186,11 @@ func main() {
 		Router: router.PathPrefix("/v1").Subrouter(),
 	}).Register()
 
+	ecstsd := aws.NewECSTaskDefinitionStore(ecsClient)
+	cloudwatchcm := aws.NewCloudwatchRuleCronManager(cwClient, config.ECSClusterARN, config.CronRoleARN)
 	v2.New(&v2.Config{
 		Router:  router.PathPrefix("/v2").Subrouter(),
-		Service: aws.NewService(validator, cwClient, ecsClient, config.ECSClusterARN, config.CronRoleARN),
+		Service: aws.NewService(validator, cloudwatchcm, ecstsd),
 	}).Register()
 
 	router.HandleFunc("/debug/pprof/profile", pprof.Profile)
