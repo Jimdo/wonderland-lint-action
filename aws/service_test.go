@@ -163,7 +163,7 @@ func TestService_Delete_Error_OnlyFirstErrorReturned(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected an error when if multiple errors happened, but got none")
 	}
-	if err.Error() == "foo1" {
+	if err.Error() != "foo1" {
 		t.Fatalf("expected first error to be returned if multiple errors happened, but got: %s", err)
 	}
 }
