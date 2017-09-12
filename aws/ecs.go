@@ -11,6 +11,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+type TaskDefinitionStore interface {
+	AddRevisionFromCronDescription(string, *cron.CronDescription) (string, error)
+	DeleteByFamily(string) error
+}
+
 type ECSTaskDefinitionStore struct {
 	ecs ecsiface.ECSAPI
 	tdm *ECSTaskDefinitionMapper

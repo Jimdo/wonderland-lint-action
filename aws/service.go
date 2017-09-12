@@ -6,12 +6,12 @@ import (
 )
 
 type Service struct {
-	cm        *CloudwatchRuleCronManager
-	tds       *ECSTaskDefinitionStore
-	validator *validation.Validator
+	cm        RuleCronManager
+	tds       TaskDefinitionStore
+	validator validation.CronValidator
 }
 
-func NewService(v *validation.Validator, cm *CloudwatchRuleCronManager, tds *ECSTaskDefinitionStore) *Service {
+func NewService(v validation.CronValidator, cm RuleCronManager, tds TaskDefinitionStore) *Service {
 	return &Service{
 		cm:        cm,
 		tds:       tds,

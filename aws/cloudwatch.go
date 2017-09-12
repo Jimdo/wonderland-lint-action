@@ -9,6 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents/cloudwatcheventsiface"
 )
 
+type RuleCronManager interface {
+	RunTaskDefinitionWithSchedule(string, string, string) error
+	DeleteRule(string) error
+}
+
 type CloudwatchRuleCronManager struct {
 	cloudwatchEvents cloudwatcheventsiface.CloudWatchEventsAPI
 	cronRoleARN      string
