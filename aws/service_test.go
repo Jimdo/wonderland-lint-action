@@ -100,3 +100,70 @@ func TestService_Create_Error_RunTaskDefinitionWithSchedule(t *testing.T) {
 		t.Fatal("expected an error when running a task definition to result in an error, but got none")
 	}
 }
+
+func TestService_Delete(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	v := mock.NewMockCronValidator(ctrl)
+	cm := mock.NewMockRuleCronManager(ctrl)
+	tds := mock.NewMockTaskDefinitionStore(ctrl)
+	service := NewService(v, cm, tds)
+
+	cm.EXPECT().DeleteRule("cron--test-cron")
+	tds.EXPECT().DeleteByFamily("cron--test-cron")
+
+	err := service.Delete("test-cron")
+	if err != nil {
+		t.Fatalf("expected no error when deleting a cron, but got one: %s", err)
+	}
+}
+
+func TestService_Delete_Error_OnRuleDeletionError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	v := mock.NewMockCronValidator(ctrl)
+	cm := mock.NewMockRuleCronManager(ctrl)
+	tds := mock.NewMockTaskDefinitionStore(ctrl)
+	service := NewService(v, cm, tds)
+
+	cm.EXPECT().DeleteRule("cron--test-cron").Return(errors.New("foo"))
+	tds.EXPECT().DeleteByFamily("cron--test-cron")
+
+	err := service.Delete("test-cron")
+	if err == nil {
+		t.Fatal("expected an error when deletion of a rule fails, but got none")
+	}
+}
+
+func TestService_Delete_Error_OnTaskDefinitionDeletionError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	v := mock.NewMockCronValidator(ctrl)
+	cm := mock.NewMockRuleCronManager(ctrl)
+	tds := mock.NewMockTaskDefinitionStore(ctrl)
+	service := NewService(v, cm, tds)
+
+	cm.EXPECT().DeleteRule("cron--test-cron")
+	tds.EXPECT().DeleteByFamily("cron--test-cron").Return(errors.New("foo"))
+
+	err := service.Delete("test-cron")
+	if err == nil {
+		t.Fatal("expected an error when deletion of a task definition fails, but got none")
+	}
+}
+
+func TestService_Delete_Error_OnlyFirstErrorReturned(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	v := mock.NewMockCronValidator(ctrl)
+	cm := mock.NewMockRuleCronManager(ctrl)
+	tds := mock.NewMockTaskDefinitionStore(ctrl)
+	service := NewService(v, cm, tds)
+
+	cm.EXPECT().DeleteRule("cron--test-cron").Return(errors.New("foo1"))
+	tds.EXPECT().DeleteByFamily("cron--test-cron").Return(errors.New("foo2"))
+
+	err := service.Delete("test-cron")
+	if err == nil {
+		t.Fatal("expected an error when if multiple errors happened, but got none")
+	}
+	if err.Error() == "foo1" {
+		t.Fatalf("expected first error to be returned if multiple errors happened, but got: %s", err)
+	}
+}

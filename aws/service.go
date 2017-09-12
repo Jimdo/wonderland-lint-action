@@ -39,15 +39,20 @@ func (s *Service) Create(cron *cron.CronDescription) error {
 }
 
 func (s *Service) Delete(cronName string) error {
+	var errors []error
 	resourceName := s.generateResourceName(cronName)
 	if err := s.cm.DeleteRule(resourceName); err != nil {
-		return err
+		errors = append(errors, err)
 	}
 
 	if err := s.tds.DeleteByFamily(resourceName); err != nil {
-		return err
+		errors = append(errors, err)
 	}
 
+	if len(errors) > 0 {
+		//TODO: Add logging for all errors
+		return errors[0]
+	}
 	return nil
 }
 
