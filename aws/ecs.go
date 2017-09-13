@@ -49,8 +49,7 @@ func (tds *ECSTaskDefinitionStore) DeleteByFamily(family string) error {
 			})
 			// TODO: How to handle this case best?
 			if err != nil {
-				logrus.
-					WithField("ARN", awssdk.StringValue(arn)).
+				logrus.WithField("ARN", awssdk.StringValue(arn)).
 					WithError(err).
 					Error("Could not delete TaskDefinition")
 			}
