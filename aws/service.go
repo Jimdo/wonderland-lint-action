@@ -2,16 +2,19 @@ package aws
 
 import (
 	"github.com/Jimdo/wonderland-crons/cron"
-	"github.com/Jimdo/wonderland-crons/validation"
 )
+
+type CronValidator interface {
+	ValidateCronDescription(*cron.CronDescription) error
+}
 
 type Service struct {
 	cm        RuleCronManager
 	tds       TaskDefinitionStore
-	validator validation.CronValidator
+	validator CronValidator
 }
 
-func NewService(v validation.CronValidator, cm RuleCronManager, tds TaskDefinitionStore) *Service {
+func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore) *Service {
 	return &Service{
 		cm:        cm,
 		tds:       tds,

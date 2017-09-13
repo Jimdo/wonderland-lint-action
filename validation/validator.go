@@ -6,10 +6,6 @@ import (
 	wonderlandValidator "github.com/Jimdo/wonderland-validator/validator"
 )
 
-type CronValidator interface {
-	ValidateCronDescription(*cron.CronDescription) error
-}
-
 type Validator struct {
 	cron *cronDescription
 }
