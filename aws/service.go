@@ -42,7 +42,7 @@ func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s 
 	}
 }
 
-func (s *Service) Create(cron *cron.CronDescription) error {
+func (s *Service) Apply(cron *cron.CronDescription) error {
 	if err := s.validator.ValidateCronDescription(cron); err != nil {
 		return err
 	}
