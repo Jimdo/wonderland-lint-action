@@ -33,7 +33,7 @@ func (cm *CloudwatchRuleCronManager) RunTaskDefinitionWithSchedule(ruleName, tas
 		Description:        awssdk.String("Foobar"),
 		Name:               awssdk.String(ruleName),
 		State:              awssdk.String(cloudwatchevents.RuleStateEnabled),
-		ScheduleExpression: awssdk.String(fmt.Sprintf("cron(%s *)", schedule)),
+		ScheduleExpression: awssdk.String(schedule),
 	})
 	if err != nil {
 		return fmt.Errorf("could not put cloudwatch rule %q with error: %s", ruleName, err)
