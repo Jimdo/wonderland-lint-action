@@ -66,30 +66,3 @@ func TestValidateCronDescriptionName_Invalid(t *testing.T) {
 		t.Fatalf("Name %s should not be a valid cron name", name)
 	}
 }
-
-func TestValidateCronSchedule_Valid(t *testing.T) {
-	v := &cronDescription{}
-	schedules := []string{
-		"@hourly",
-		"@daily",
-		"* * * * *",
-		"*/10 1 2 3 4",
-		"0 0 29 2 *",
-	}
-	for _, schedule := range schedules {
-		if err := v.validateCronSchedule(schedule); err != nil {
-			t.Fatalf("'%s' should be a valid cron schedule. err = %s", schedule, err)
-		}
-	}
-}
-
-func TestValidateCronSchedule_Invalid(t *testing.T) {
-	v := &cronDescription{}
-
-	schedules := []string{"@today", "@now", "* * * * * 10", ""}
-	for _, schedule := range schedules {
-		if err := v.validateCronSchedule(schedule); err == nil {
-			t.Fatalf("'%s' should not be a valid cron schedule", schedule)
-		}
-	}
-}
