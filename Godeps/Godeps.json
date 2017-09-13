@@ -245,6 +245,11 @@
 			"Rev": "9f4d2712cf687b68fad24366f81eaee163079090"
 		},
 		{
+			"ImportPath": "github.com/golang/mock/gomock",
+			"Comment": "v1.0.0-17-g18f6dd1",
+			"Rev": "18f6dd13ccdd227b8ebc546ca95cd62a02f3970c"
+		},
+		{
 			"ImportPath": "github.com/gorhill/cronexpr",
 			"Comment": "1.0.0-3-gf098431",
 			"Rev": "f0984319b44273e83de132089ae42b1810f4933b"
