@@ -1,9 +1,10 @@
 package aws
 
 import (
-	"github.com/Jimdo/wonderland-crons/cron"
 	awssdk "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
+
+	"github.com/Jimdo/wonderland-crons/cron"
 )
 
 type ECSTaskDefinitionMapper struct{}

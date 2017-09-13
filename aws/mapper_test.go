@@ -3,9 +3,10 @@ package aws
 import (
 	"testing"
 
-	"github.com/Jimdo/wonderland-crons/cron"
 	awssdk "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
+
+	"github.com/Jimdo/wonderland-crons/cron"
 )
 
 func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription(t *testing.T) {

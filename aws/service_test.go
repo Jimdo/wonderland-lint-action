@@ -1,13 +1,13 @@
 package aws
 
 import (
+	"errors"
 	"testing"
 
-	"errors"
+	"github.com/golang/mock/gomock"
 
 	"github.com/Jimdo/wonderland-crons/aws/mock"
 	"github.com/Jimdo/wonderland-crons/cron"
-	"github.com/golang/mock/gomock"
 )
 
 func TestService_Create(t *testing.T) {

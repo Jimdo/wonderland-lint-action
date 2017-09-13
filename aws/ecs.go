@@ -1,14 +1,14 @@
 package aws
 
 import (
+	"fmt"
+
 	awssdk "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/ecs/ecsiface"
-
-	"fmt"
+	"github.com/sirupsen/logrus"
 
 	"github.com/Jimdo/wonderland-crons/cron"
-	"github.com/sirupsen/logrus"
 )
 
 type TaskDefinitionStore interface {
