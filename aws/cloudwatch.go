@@ -20,7 +20,7 @@ type CloudwatchRuleCronManager struct {
 	ecsClusterARN    string
 }
 
-func NewCloudwatchRuleCronManager(ce cloudwatcheventsiface.CloudWatchEventsAPI, roleARN, clusterARN string) *CloudwatchRuleCronManager {
+func NewCloudwatchRuleCronManager(ce cloudwatcheventsiface.CloudWatchEventsAPI, clusterARN, roleARN string) *CloudwatchRuleCronManager {
 	return &CloudwatchRuleCronManager{
 		cloudwatchEvents: ce,
 		cronRoleARN:      roleARN,
