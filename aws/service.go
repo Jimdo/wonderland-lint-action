@@ -2,6 +2,7 @@ package aws
 
 import (
 	"github.com/Jimdo/wonderland-crons/cron"
+	"github.com/Jimdo/wonderland-crons/store"
 )
 
 type CronValidator interface {
@@ -10,13 +11,15 @@ type CronValidator interface {
 
 type Service struct {
 	cm        RuleCronManager
+	store     *store.DynamoDBStore
 	tds       TaskDefinitionStore
 	validator CronValidator
 }
 
-func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore) *Service {
+func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s *store.DynamoDBStore) *Service {
 	return &Service{
 		cm:        cm,
+		store:     s,
 		tds:       tds,
 		validator: v,
 	}
