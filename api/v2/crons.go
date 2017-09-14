@@ -59,12 +59,7 @@ func (a *API) PutHandler(ctx context.Context, w http.ResponseWriter, req *http.R
 		return
 	}
 
-	if desc.Name != cronName {
-		sendError(w, fmt.Errorf("Cron name mismatch: url name %s != cron file name %s", cronName, desc.Name), http.StatusBadRequest)
-		return
-	}
-
-	if err := a.config.Service.Apply(desc); err != nil {
+	if err := a.config.Service.Apply(cronName, desc); err != nil {
 		statusCode := http.StatusInternalServerError
 		if _, ok := err.(validation.Error); ok {
 			statusCode = http.StatusBadRequest

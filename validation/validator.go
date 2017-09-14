@@ -35,3 +35,7 @@ func New(cfg Configuration) *Validator {
 func (v *Validator) ValidateCronDescription(cd *cron.CronDescription) error {
 	return v.cron.validate(cd)
 }
+
+func (v *Validator) ValidateCronName(name string) error {
+	return v.cron.ValidateCronName(name)
+}

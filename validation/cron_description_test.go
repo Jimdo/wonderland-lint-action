@@ -13,7 +13,6 @@ import (
 
 func TestValidateCronDescription_Valid(t *testing.T) {
 	desc := &cron.CronDescription{
-		Name:     "test-cron",
 		Schedule: "* * * * *",
 		Description: &cron.ContainerDescription{
 			Image: "perl",
@@ -51,7 +50,7 @@ func TestValidateCronDescriptionName_Valid(t *testing.T) {
 	}
 
 	name := "test-cron"
-	if err := v.validateCronName(name); err != nil {
+	if err := v.ValidateCronName(name); err != nil {
 		t.Fatalf("Name %s should be a valid cron name. err = %s", name, err)
 	}
 }
@@ -62,7 +61,7 @@ func TestValidateCronDescriptionName_Invalid(t *testing.T) {
 	}
 
 	name := "test/cron"
-	if err := v.validateCronName(name); err == nil {
+	if err := v.ValidateCronName(name); err == nil {
 		t.Fatalf("Name %s should not be a valid cron name", name)
 	}
 }

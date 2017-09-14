@@ -38,3 +38,13 @@ func (_m *MockCronValidator) ValidateCronDescription(_param0 *cron.CronDescripti
 func (_mr *_MockCronValidatorRecorder) ValidateCronDescription(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "ValidateCronDescription", arg0)
 }
+
+func (_m *MockCronValidator) ValidateCronName(_param0 string) error {
+	ret := _m.ctrl.Call(_m, "ValidateCronName", _param0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+func (_mr *_MockCronValidatorRecorder) ValidateCronName(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "ValidateCronName", arg0)
+}
