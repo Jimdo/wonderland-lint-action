@@ -12,7 +12,6 @@ import (
 func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription(t *testing.T) {
 	containerName := "python-test"
 	cronDesc := &cron.CronDescription{
-		Name:     "test-cron",
 		Schedule: "* * * * *",
 		Description: &cron.ContainerDescription{
 			Image: "python",
@@ -32,7 +31,7 @@ func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription(t *testi
 	}
 
 	tdm := NewECSTaskDefinitionMapper()
-	containerDesc := tdm.ContainerDefinitionFromCronDescription(containerName, cronDesc)
+	containerDesc := tdm.ContainerDefinitionFromCronDescription("test-cron", containerName, cronDesc)
 
 	if *containerDesc.Name != containerName {
 		t.Fatalf("expected container name to be %q, but got %q", containerName, *containerDesc.Name)

@@ -66,7 +66,7 @@ func (s *Service) Apply(name string, cron *cron.CronDescription) error {
 		}
 	}
 
-	taskDefinitionARN, err := s.tds.AddRevisionFromCronDescription(resourceName, cron)
+	taskDefinitionARN, err := s.tds.AddRevisionFromCronDescription(name, resourceName, cron)
 	if err != nil {
 		if err := s.store.SetDeployStatus(name, StatusTaskDefinitionCreationFailed); err != nil {
 			log.WithError(err).WithFields(log.Fields{

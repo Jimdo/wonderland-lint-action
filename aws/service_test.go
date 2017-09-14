@@ -44,7 +44,7 @@ func TestService_Apply_Creation(t *testing.T) {
 	v.EXPECT().ValidateCronName("test-cron")
 	s.EXPECT().GetResourceName("test-cron").Return("", store.ErrCronNotFound)
 	s.EXPECT().Save("test-cron", "cron--test-cron", cronDesc, StatusCreating)
-	tds.EXPECT().AddRevisionFromCronDescription("cron--test-cron", cronDesc).Return("task-definition-arn", nil)
+	tds.EXPECT().AddRevisionFromCronDescription("test-cron", "cron--test-cron", cronDesc).Return("task-definition-arn", nil)
 	cm.EXPECT().RunTaskDefinitionWithSchedule("cron--test-cron", "task-definition-arn", cronDesc.Schedule)
 	s.EXPECT().Save("test-cron", "cron--test-cron", cronDesc, StatusSuccess)
 
@@ -87,7 +87,7 @@ func TestService_Apply_Update(t *testing.T) {
 	v.EXPECT().ValidateCronDescription(cronDesc)
 	v.EXPECT().ValidateCronName("test-cron")
 	s.EXPECT().GetResourceName("test-cron").Return(resourceName, nil)
-	tds.EXPECT().AddRevisionFromCronDescription(resourceName, cronDesc).Return("task-definition-arn", nil)
+	tds.EXPECT().AddRevisionFromCronDescription("test-cron", resourceName, cronDesc).Return("task-definition-arn", nil)
 	cm.EXPECT().RunTaskDefinitionWithSchedule(resourceName, "task-definition-arn", cronDesc.Schedule)
 	s.EXPECT().Save("test-cron", resourceName, cronDesc, StatusSuccess)
 
@@ -172,7 +172,7 @@ func TestService_Apply_Error_AddTaskDefinitionRevision(t *testing.T) {
 	v.EXPECT().ValidateCronDescription(cronDesc)
 	s.EXPECT().GetResourceName("test-cron").Return("", store.ErrCronNotFound)
 	s.EXPECT().Save("test-cron", "cron--test-cron", cronDesc, StatusCreating)
-	tds.EXPECT().AddRevisionFromCronDescription("cron--test-cron", cronDesc).Return("", errors.New("foo"))
+	tds.EXPECT().AddRevisionFromCronDescription("test-cron", "cron--test-cron", cronDesc).Return("", errors.New("foo"))
 	s.EXPECT().SetDeployStatus("test-cron", StatusTaskDefinitionCreationFailed)
 
 	err := service.Apply("test-cron", cronDesc)
@@ -196,7 +196,7 @@ func TestService_Apply_Error_RunTaskDefinitionWithSchedule(t *testing.T) {
 	v.EXPECT().ValidateCronDescription(cronDesc)
 	s.EXPECT().GetResourceName("test-cron").Return("", store.ErrCronNotFound)
 	s.EXPECT().Save("test-cron", "cron--test-cron", cronDesc, StatusCreating)
-	tds.EXPECT().AddRevisionFromCronDescription("cron--test-cron", cronDesc).Return("task-definition-arn", nil)
+	tds.EXPECT().AddRevisionFromCronDescription("test-cron", "cron--test-cron", cronDesc).Return("task-definition-arn", nil)
 
 	cm.EXPECT().
 		RunTaskDefinitionWithSchedule("cron--test-cron", "task-definition-arn", cronDesc.Schedule).

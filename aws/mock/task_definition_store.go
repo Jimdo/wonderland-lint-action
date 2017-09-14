@@ -29,15 +29,15 @@ func (_m *MockTaskDefinitionStore) EXPECT() *_MockTaskDefinitionStoreRecorder {
 	return _m.recorder
 }
 
-func (_m *MockTaskDefinitionStore) AddRevisionFromCronDescription(_param0 string, _param1 *cron.CronDescription) (string, error) {
-	ret := _m.ctrl.Call(_m, "AddRevisionFromCronDescription", _param0, _param1)
+func (_m *MockTaskDefinitionStore) AddRevisionFromCronDescription(_param0 string, _param1 string, _param2 *cron.CronDescription) (string, error) {
+	ret := _m.ctrl.Call(_m, "AddRevisionFromCronDescription", _param0, _param1, _param2)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-func (_mr *_MockTaskDefinitionStoreRecorder) AddRevisionFromCronDescription(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "AddRevisionFromCronDescription", arg0, arg1)
+func (_mr *_MockTaskDefinitionStoreRecorder) AddRevisionFromCronDescription(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "AddRevisionFromCronDescription", arg0, arg1, arg2)
 }
 
 func (_m *MockTaskDefinitionStore) DeleteByFamily(_param0 string) error {

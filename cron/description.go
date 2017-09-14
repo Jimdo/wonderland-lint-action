@@ -55,6 +55,8 @@ func (d *CronDescription) Init() {
 }
 
 type CronDescription struct {
+	// Name is the old attribute that was used to indicate a cron's name
+	// Deprecated: a cron's name is now provided in the URL path of the API endpoint
 	Name        string                `json:"name"`
 	Schedule    string                `json:"schedule"`
 	Description *ContainerDescription `json:"description"`

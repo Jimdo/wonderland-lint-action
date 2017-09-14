@@ -13,7 +13,7 @@ func NewECSTaskDefinitionMapper() *ECSTaskDefinitionMapper {
 	return &ECSTaskDefinitionMapper{}
 }
 
-func (tds *ECSTaskDefinitionMapper) ContainerDefinitionFromCronDescription(containerName string, cron *cron.CronDescription) *ecs.ContainerDefinition {
+func (tds *ECSTaskDefinitionMapper) ContainerDefinitionFromCronDescription(cronName, containerName string, cron *cron.CronDescription) *ecs.ContainerDefinition {
 	var envVars []*ecs.KeyValuePair
 	for key, value := range cron.Description.Environment {
 		envVars = append(envVars, &ecs.KeyValuePair{
@@ -26,7 +26,7 @@ func (tds *ECSTaskDefinitionMapper) ContainerDefinitionFromCronDescription(conta
 		Command: awssdk.StringSlice(cron.Description.Arguments),
 		Cpu:     awssdk.Int64(int64(cron.Description.Capacity.CPULimit())),
 		DockerLabels: map[string]*string{
-			"com.jimdo.wonderland.cron": awssdk.String(cron.Name),
+			"com.jimdo.wonderland.cron": awssdk.String(cronName),
 		},
 		Environment: envVars,
 		Image:       awssdk.String(cron.Description.Image),
