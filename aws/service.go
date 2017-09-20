@@ -9,6 +9,8 @@ type CronValidator interface {
 	ValidateCronDescription(*cron.CronDescription) error
 }
 
+type CronStore interface{}
+
 type Service struct {
 	cm        RuleCronManager
 	store     *store.DynamoDBStore
