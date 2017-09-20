@@ -12,6 +12,8 @@ import (
 
 func TestService_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
 	v := mock.NewMockCronValidator(ctrl)
 	cm := mock.NewMockRuleCronManager(ctrl)
 	tds := mock.NewMockTaskDefinitionStore(ctrl)
@@ -49,6 +51,8 @@ func TestService_Create(t *testing.T) {
 
 func TestService_Create_Error_InvalidCronDescription(t *testing.T) {
 	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
 	v := mock.NewMockCronValidator(ctrl)
 	cm := mock.NewMockRuleCronManager(ctrl)
 	tds := mock.NewMockTaskDefinitionStore(ctrl)
@@ -65,6 +69,8 @@ func TestService_Create_Error_InvalidCronDescription(t *testing.T) {
 
 func TestService_Create_Error_AddTaskDefinitionRevision(t *testing.T) {
 	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
 	v := mock.NewMockCronValidator(ctrl)
 	cm := mock.NewMockRuleCronManager(ctrl)
 	tds := mock.NewMockTaskDefinitionStore(ctrl)
@@ -82,6 +88,8 @@ func TestService_Create_Error_AddTaskDefinitionRevision(t *testing.T) {
 
 func TestService_Create_Error_RunTaskDefinitionWithSchedule(t *testing.T) {
 	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
 	v := mock.NewMockCronValidator(ctrl)
 	cm := mock.NewMockRuleCronManager(ctrl)
 	tds := mock.NewMockTaskDefinitionStore(ctrl)
@@ -103,6 +111,8 @@ func TestService_Create_Error_RunTaskDefinitionWithSchedule(t *testing.T) {
 
 func TestService_Delete(t *testing.T) {
 	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
 	v := mock.NewMockCronValidator(ctrl)
 	cm := mock.NewMockRuleCronManager(ctrl)
 	tds := mock.NewMockTaskDefinitionStore(ctrl)
@@ -119,6 +129,8 @@ func TestService_Delete(t *testing.T) {
 
 func TestService_Delete_Error_OnRuleDeletionError(t *testing.T) {
 	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
 	v := mock.NewMockCronValidator(ctrl)
 	cm := mock.NewMockRuleCronManager(ctrl)
 	tds := mock.NewMockTaskDefinitionStore(ctrl)
@@ -135,6 +147,8 @@ func TestService_Delete_Error_OnRuleDeletionError(t *testing.T) {
 
 func TestService_Delete_Error_OnTaskDefinitionDeletionError(t *testing.T) {
 	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
 	v := mock.NewMockCronValidator(ctrl)
 	cm := mock.NewMockRuleCronManager(ctrl)
 	tds := mock.NewMockTaskDefinitionStore(ctrl)
@@ -151,6 +165,8 @@ func TestService_Delete_Error_OnTaskDefinitionDeletionError(t *testing.T) {
 
 func TestService_Delete_Error_OnlyFirstErrorReturned(t *testing.T) {
 	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
 	v := mock.NewMockCronValidator(ctrl)
 	cm := mock.NewMockRuleCronManager(ctrl)
 	tds := mock.NewMockTaskDefinitionStore(ctrl)
