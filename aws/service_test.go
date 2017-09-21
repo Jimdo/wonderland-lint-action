@@ -43,9 +43,10 @@ func TestService_Create(t *testing.T) {
 
 	v.EXPECT().ValidateCronDescription(cronDesc)
 	s.EXPECT().GetResourceName("test-cron").Return("", store.ErrCronNotFound)
+	s.EXPECT().Save("test-cron", "cron--test-cron", cronDesc, StatusCreating)
 	tds.EXPECT().AddRevisionFromCronDescription("cron--test-cron", cronDesc).Return("task-definition-arn", nil)
 	cm.EXPECT().RunTaskDefinitionWithSchedule("cron--test-cron", "task-definition-arn", cronDesc.Schedule)
-	s.EXPECT().Save("test-cron", "cron--test-cron", cronDesc)
+	s.EXPECT().Save("test-cron", "cron--test-cron", cronDesc, StatusSuccess)
 
 	err := service.Create(cronDesc)
 	if err != nil {
@@ -88,7 +89,7 @@ func TestService_Create_Update(t *testing.T) {
 	s.EXPECT().GetResourceName("test-cron").Return(resourceName, nil)
 	tds.EXPECT().AddRevisionFromCronDescription(resourceName, cronDesc).Return("task-definition-arn", nil)
 	cm.EXPECT().RunTaskDefinitionWithSchedule(resourceName, "task-definition-arn", cronDesc.Schedule)
-	s.EXPECT().Save("test-cron", resourceName, cronDesc)
+	s.EXPECT().Save("test-cron", resourceName, cronDesc, StatusSuccess)
 
 	err := service.Create(cronDesc)
 	if err != nil {
@@ -151,7 +152,9 @@ func TestService_Create_Error_AddTaskDefinitionRevision(t *testing.T) {
 	cronDesc := &cron.CronDescription{Name: "test-cron"}
 	v.EXPECT().ValidateCronDescription(cronDesc)
 	s.EXPECT().GetResourceName("test-cron").Return("", store.ErrCronNotFound)
+	s.EXPECT().Save("test-cron", "cron--test-cron", cronDesc, StatusCreating)
 	tds.EXPECT().AddRevisionFromCronDescription("cron--test-cron", cronDesc).Return("", errors.New("foo"))
+	s.EXPECT().SetDeployStatus("test-cron", StatusTaskDefinitionCreationFailed)
 
 	err := service.Create(cronDesc)
 	if err == nil {
@@ -172,11 +175,13 @@ func TestService_Create_Error_RunTaskDefinitionWithSchedule(t *testing.T) {
 	cronDesc := &cron.CronDescription{Name: "test-cron"}
 	v.EXPECT().ValidateCronDescription(cronDesc)
 	s.EXPECT().GetResourceName("test-cron").Return("", store.ErrCronNotFound)
+	s.EXPECT().Save("test-cron", "cron--test-cron", cronDesc, StatusCreating)
 	tds.EXPECT().AddRevisionFromCronDescription("cron--test-cron", cronDesc).Return("task-definition-arn", nil)
 
 	cm.EXPECT().
 		RunTaskDefinitionWithSchedule("cron--test-cron", "task-definition-arn", cronDesc.Schedule).
 		Return(errors.New("foo"))
+	s.EXPECT().SetDeployStatus("test-cron", StatusRuleCreationFailed)
 
 	err := service.Create(cronDesc)
 	if err == nil {
