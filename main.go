@@ -14,6 +14,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/gorilla/mux"
 	cleanhttp "github.com/hashicorp/go-cleanhttp"
@@ -30,9 +32,9 @@ import (
 	"github.com/Jimdo/wonderland-crons/aws"
 	"github.com/Jimdo/wonderland-crons/cron"
 	"github.com/Jimdo/wonderland-crons/nomad"
+	"github.com/Jimdo/wonderland-crons/store"
 	"github.com/Jimdo/wonderland-crons/validation"
 	"github.com/Jimdo/wonderland-crons/vault"
-	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
 )
 
 var (
@@ -154,11 +156,16 @@ func main() {
 
 	ecsClient := ecsClient()
 	cwClient := cloudwatchEventsClient()
+	dynamoDBClient := dynamoDBClient()
+
 	if err := refreshAWSCredentials(ecsClient.Client, rcm); err != nil {
 		log.Fatalf("Failed to fetch AWS config from Vault: %s", err)
 	}
 	if err := refreshAWSCredentials(cwClient.Client, rcm); err != nil {
 		log.Fatalf("Failed to fetch AWS config from Vault: %s", err)
+	}
+	if err := refreshAWSCredentials(dynamoDBClient.Client, rcm); err != nil {
+		log.Fatalf("Failed to fetch AWS config from Vault :%s", err)
 	}
 	go func() {
 		for range time.Tick(config.RefreshAWSCredentialsInterval) {
@@ -166,6 +173,9 @@ func main() {
 				log.Fatalf("Failed to fetch AWS config from Vault: %s", err)
 			}
 			if err := refreshAWSCredentials(cwClient.Client, rcm); err != nil {
+				log.Fatalf("Failed to fetch AWS config from Vault: %s", err)
+			}
+			if err := refreshAWSCredentials(dynamoDBClient.Client, rcm); err != nil {
 				log.Fatalf("Failed to fetch AWS config from Vault: %s", err)
 			}
 		}
@@ -187,11 +197,16 @@ func main() {
 	}).Register()
 
 	ecstdm := aws.NewECSTaskDefinitionMapper()
-	ecstsd := aws.NewECSTaskDefinitionStore(ecsClient, ecstdm)
+	ecstds := aws.NewECSTaskDefinitionStore(ecsClient, ecstdm)
 	cloudwatchcm := aws.NewCloudwatchRuleCronManager(cwClient, config.ECSClusterARN, config.CronRoleARN)
+	dynamoDBStore, err := store.NewDynamoDBStore(dynamoDBClient)
+	if err != nil {
+		log.Fatalf("Failed to initialize Cron store: %s", err)
+	}
+
 	v2.New(&v2.Config{
 		Router:  router.PathPrefix("/v2").Subrouter(),
-		Service: aws.NewService(validator, cloudwatchcm, ecstsd),
+		Service: aws.NewService(validator, cloudwatchcm, ecstds, dynamoDBStore),
 	}).Register()
 
 	router.HandleFunc("/debug/pprof/profile", pprof.Profile)
@@ -226,6 +241,19 @@ func cloudwatchEventsClient() *cloudwatchevents.CloudWatchEvents {
 	}
 	s := session.Must(session.NewSession(awssdk.NewConfig().WithHTTPClient(httpClient)))
 	c := cloudwatchevents.New(s)
+
+	// prefix user-agent with program name and version
+	c.Handlers.Build.PushFront(request.MakeAddToUserAgentHandler(programIdentifier, programVersion))
+
+	return c
+}
+
+func dynamoDBClient() *dynamodb.DynamoDB {
+	httpClient := &http.Client{
+		Timeout: time.Duration(10) * time.Second,
+	}
+	s := session.Must(session.NewSession(awssdk.NewConfig().WithHTTPClient(httpClient)))
+	c := dynamodb.New(s)
 
 	// prefix user-agent with program name and version
 	c.Handlers.Build.PushFront(request.MakeAddToUserAgentHandler(programIdentifier, programVersion))
