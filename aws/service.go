@@ -9,7 +9,7 @@ type CronValidator interface {
 }
 
 type CronStore interface {
-	Save(string) error
+	Save(string, string, string) error
 }
 
 type Service struct {
@@ -45,7 +45,7 @@ func (s *Service) Create(cron *cron.CronDescription) error {
 	}
 
 	// TODO: Decide: use cron.Name or resourceName?
-	s.store.Save(cron.Name)
+	s.store.Save(cron.Name, taskDefinitionARN, cron.Schedule)
 
 	return nil
 }

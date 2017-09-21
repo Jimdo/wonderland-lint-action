@@ -43,7 +43,7 @@ func TestService_Create(t *testing.T) {
 	v.EXPECT().ValidateCronDescription(cronDesc)
 	tds.EXPECT().AddRevisionFromCronDescription("cron--test-cron", cronDesc).Return("task-definition-arn", nil)
 	cm.EXPECT().RunTaskDefinitionWithSchedule("cron--test-cron", "task-definition-arn", cronDesc.Schedule)
-	s.EXPECT().Save("test-cron")
+	s.EXPECT().Save("test-cron", "task-definition-arn", cronDesc.Schedule)
 
 	err := service.Create(cronDesc)
 	if err != nil {

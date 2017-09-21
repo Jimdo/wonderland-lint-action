@@ -31,7 +31,9 @@ var (
 )
 
 type Cron struct {
-	Name string
+	Name     string
+	TaskArn  string
+	Schedule string
 }
 
 type DynamoDBStore struct {
@@ -48,9 +50,11 @@ func NewDynamoDBStore(dynamoDBClient dynamodbiface.DynamoDBAPI) (*DynamoDBStore,
 	}, nil
 }
 
-func (d *DynamoDBStore) Save(name string) error {
+func (d *DynamoDBStore) Save(name, taskArn, schedule string) error {
 	cron := &Cron{
-		Name: name,
+		Name:     name,
+		TaskArn:  taskArn,
+		Schedule: schedule,
 	}
 
 	data, err := dynamodbattribute.MarshalMap(cron)

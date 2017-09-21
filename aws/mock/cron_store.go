@@ -28,12 +28,12 @@ func (_m *MockCronStore) EXPECT() *_MockCronStoreRecorder {
 	return _m.recorder
 }
 
-func (_m *MockCronStore) Save(_param0 string) error {
-	ret := _m.ctrl.Call(_m, "Save", _param0)
+func (_m *MockCronStore) Save(_param0 string, _param1 string, _param2 string) error {
+	ret := _m.ctrl.Call(_m, "Save", _param0, _param1, _param2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-func (_mr *_MockCronStoreRecorder) Save(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "Save", arg0)
+func (_mr *_MockCronStoreRecorder) Save(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Save", arg0, arg1, arg2)
 }
