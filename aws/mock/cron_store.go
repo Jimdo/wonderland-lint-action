@@ -4,6 +4,7 @@
 package mock
 
 import (
+	cron "github.com/Jimdo/wonderland-crons/cron"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -28,7 +29,7 @@ func (_m *MockCronStore) EXPECT() *_MockCronStoreRecorder {
 	return _m.recorder
 }
 
-func (_m *MockCronStore) Save(_param0 string, _param1 string, _param2 string) error {
+func (_m *MockCronStore) Save(_param0 string, _param1 string, _param2 *cron.CronDescription) error {
 	ret := _m.ctrl.Call(_m, "Save", _param0, _param1, _param2)
 	ret0, _ := ret[0].(error)
 	return ret0

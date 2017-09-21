@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 
+	"github.com/Jimdo/wonderland-crons/cron"
 	"github.com/Jimdo/wonderland-crons/dynamodbutil"
 )
 
@@ -33,7 +34,7 @@ var (
 type Cron struct {
 	Name              string
 	TaskDefinitionArn string
-	Schedule          string
+	Description       *cron.CronDescription
 }
 
 type DynamoDBStore struct {
@@ -50,11 +51,11 @@ func NewDynamoDBStore(dynamoDBClient dynamodbiface.DynamoDBAPI) (*DynamoDBStore,
 	}, nil
 }
 
-func (d *DynamoDBStore) Save(name, taskDefinitionArn, schedule string) error {
+func (d *DynamoDBStore) Save(name, taskDefinitionArn string, desc *cron.CronDescription) error {
 	cron := &Cron{
 		Name:              name,
 		TaskDefinitionArn: taskDefinitionArn,
-		Schedule:          schedule,
+		Description:       desc,
 	}
 
 	data, err := dynamodbattribute.MarshalMap(cron)

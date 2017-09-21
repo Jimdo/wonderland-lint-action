@@ -11,7 +11,7 @@ type CronValidator interface {
 }
 
 type CronStore interface {
-	Save(string, string, string) error
+	Save(string, string, *cron.CronDescription) error
 }
 
 type Service struct {
@@ -46,7 +46,7 @@ func (s *Service) Create(cron *cron.CronDescription) error {
 		return err
 	}
 
-	if err := s.store.Save(cron.Name, taskDefinitionARN, cron.Schedule); err != nil {
+	if err := s.store.Save(cron.Name, taskDefinitionARN, cron); err != nil {
 		log.WithError(err).Error("Could not save cron in DynamoDB")
 	}
 
