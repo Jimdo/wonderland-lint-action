@@ -105,6 +105,44 @@ func (d *DynamoDBStore) SetDeployStatus(name, msg string) error {
 	return d.set(cron)
 }
 
+func (d *DynamoDBStore) List() ([]string, error) {
+	crons, err := d.getAll()
+	if err != nil {
+		return nil, err
+	}
+	var cronNames []string
+	for _, cron := range crons {
+		cronNames = append(cronNames, cron.Name)
+	}
+	return cronNames, nil
+}
+
+func (d *DynamoDBStore) getAll() ([]*Cron, error) {
+	var result []*Cron
+	var mapperError error
+	err := d.Client.ScanPages(&dynamodb.ScanInput{
+		TableName: aws.String(tableName),
+	}, func(out *dynamodb.ScanOutput, last bool) bool {
+		for _, item := range out.Items {
+			cron := &Cron{}
+			if err := dynamodbattribute.UnmarshalMap(item, cron); err != nil {
+				mapperError = fmt.Errorf("Error transforming DynamoDB item to cron: %s", err)
+				return false
+			}
+			result = append(result, cron)
+		}
+		return !last
+	})
+	if err != nil {
+		return nil, err
+	}
+	if mapperError != nil {
+		return nil, mapperError
+	}
+
+	return result, nil
+}
+
 func (d *DynamoDBStore) getByName(name string) (*Cron, error) {
 	cron := &Cron{}
 

@@ -23,6 +23,7 @@ type CronStore interface {
 	GetResourceName(string) (string, error)
 	Delete(string) error
 	SetDeployStatus(string, string) error
+	List() ([]string, error)
 }
 
 type Service struct {
@@ -121,6 +122,10 @@ func (s *Service) Delete(cronName string) error {
 	}
 
 	return nil
+}
+
+func (s *Service) List() ([]string, error) {
+	return s.store.List()
 }
 
 func (s *Service) generateResourceName(cronName string) string {
