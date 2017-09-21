@@ -12,8 +12,8 @@ import (
 )
 
 type TaskDefinitionStore interface {
-	AddRevisionFromCronDescription(string, string, *cron.CronDescription) (string, error)
-	DeleteByFamily(string) error
+	AddRevisionFromCronDescription(cronName, family string, desc *cron.CronDescription) (string, error)
+	DeleteByFamily(family string) error
 }
 
 type ECSTaskDefinitionStore struct {
@@ -28,9 +28,9 @@ func NewECSTaskDefinitionStore(e ecsiface.ECSAPI, tdm *ECSTaskDefinitionMapper) 
 	}
 }
 
-func (tds *ECSTaskDefinitionStore) AddRevisionFromCronDescription(cronName, family string, cron *cron.CronDescription) (string, error) {
+func (tds *ECSTaskDefinitionStore) AddRevisionFromCronDescription(cronName, family string, desc *cron.CronDescription) (string, error) {
 	out, err := tds.ecs.RegisterTaskDefinition(&ecs.RegisterTaskDefinitionInput{
-		ContainerDefinitions: []*ecs.ContainerDefinition{tds.tdm.ContainerDefinitionFromCronDescription(cronName, family, cron)},
+		ContainerDefinitions: []*ecs.ContainerDefinition{tds.tdm.ContainerDefinitionFromCronDescription(cronName, family, desc)},
 		Family:               awssdk.String(family),
 	})
 	if err != nil {
