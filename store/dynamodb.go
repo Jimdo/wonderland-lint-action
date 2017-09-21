@@ -3,14 +3,18 @@ package store
 import (
 	"fmt"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 
 	"github.com/Jimdo/wonderland-crons/dynamodbutil"
 )
 
 var (
-	schema = []dynamodbutil.TableDescription{{
-		Name: "wonderland-crons",
+	tableName = "wonderland-crons"
+	schema    = []dynamodbutil.TableDescription{{
+		Name: tableName,
 		Keys: []dynamodbutil.KeyDescription{
 			{
 				Name: "name",
@@ -26,6 +30,10 @@ var (
 	}}
 )
 
+type Cron struct {
+	Name string
+}
+
 type DynamoDBStore struct {
 	Client dynamodbiface.DynamoDBAPI
 }
@@ -38,4 +46,25 @@ func NewDynamoDBStore(dynamoDBClient dynamodbiface.DynamoDBAPI) (*DynamoDBStore,
 	return &DynamoDBStore{
 		Client: dynamoDBClient,
 	}, nil
+}
+
+func (d *DynamoDBStore) Save(name string) error {
+	cron := &Cron{
+		Name: name,
+	}
+
+	data, err := dynamodbattribute.MarshalMap(cron)
+	if err != nil {
+		return fmt.Errorf("Could not marshal cron into DynamoDB value: %s", err)
+	}
+
+	_, err = d.Client.PutItem(&dynamodb.PutItemInput{
+		TableName: aws.String(tableName),
+		Item:      data,
+	})
+	if err != nil {
+		return fmt.Errorf("Could not update DynamoDB: %s", err)
+	}
+
+	return nil
 }

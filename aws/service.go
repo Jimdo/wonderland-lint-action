@@ -8,7 +8,9 @@ type CronValidator interface {
 	ValidateCronDescription(*cron.CronDescription) error
 }
 
-type CronStore interface{}
+type CronStore interface {
+	Save(string) error
+}
 
 type Service struct {
 	cm        RuleCronManager
@@ -41,6 +43,9 @@ func (s *Service) Create(cron *cron.CronDescription) error {
 	if err := s.cm.RunTaskDefinitionWithSchedule(resourceName, taskDefinitionARN, cron.Schedule); err != nil {
 		return err
 	}
+
+	// TODO: Decide: use cron.Name or resourceName?
+	s.store.Save(cron.Name)
 
 	return nil
 }
