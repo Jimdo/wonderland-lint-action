@@ -17,13 +17,13 @@ var (
 		Name: tableName,
 		Keys: []dynamodbutil.KeyDescription{
 			{
-				Name: "name",
+				Name: "Name",
 				Type: dynamodbutil.KeyTypeHash,
 			},
 		},
 		Attributes: []dynamodbutil.AttributeDescription{
 			{
-				Name: "name",
+				Name: "Name",
 				Type: dynamodbutil.AttributeTypeString,
 			},
 		},
@@ -31,9 +31,9 @@ var (
 )
 
 type Cron struct {
-	Name     string
-	TaskArn  string
-	Schedule string
+	Name              string
+	TaskDefinitionArn string
+	Schedule          string
 }
 
 type DynamoDBStore struct {
@@ -50,11 +50,11 @@ func NewDynamoDBStore(dynamoDBClient dynamodbiface.DynamoDBAPI) (*DynamoDBStore,
 	}, nil
 }
 
-func (d *DynamoDBStore) Save(name, taskArn, schedule string) error {
+func (d *DynamoDBStore) Save(name, taskDefinitionArn, schedule string) error {
 	cron := &Cron{
-		Name:     name,
-		TaskArn:  taskArn,
-		Schedule: schedule,
+		Name:              name,
+		TaskDefinitionArn: taskDefinitionArn,
+		Schedule:          schedule,
 	}
 
 	data, err := dynamodbattribute.MarshalMap(cron)
