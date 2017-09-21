@@ -1,6 +1,8 @@
 package aws
 
 import (
+	log "github.com/sirupsen/logrus"
+
 	"github.com/Jimdo/wonderland-crons/cron"
 )
 
@@ -44,8 +46,9 @@ func (s *Service) Create(cron *cron.CronDescription) error {
 		return err
 	}
 
-	// TODO: Decide: use cron.Name or resourceName?
-	s.store.Save(cron.Name, taskDefinitionARN, cron.Schedule)
+	if err := s.store.Save(cron.Name, taskDefinitionARN, cron.Schedule); err != nil {
+		log.WithError(err).Error("Could not save cron in DynamoDB")
+	}
 
 	return nil
 }
