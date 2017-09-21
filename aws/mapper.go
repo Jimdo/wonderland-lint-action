@@ -13,7 +13,7 @@ func NewECSTaskDefinitionMapper() *ECSTaskDefinitionMapper {
 	return &ECSTaskDefinitionMapper{}
 }
 
-func (tds *ECSTaskDefinitionMapper) ContainerDefinitionFromCronDescription(cronName, containerName string, cron *cron.CronDescription) *ecs.ContainerDefinition {
+func (tds *ECSTaskDefinitionMapper) ContainerDefinitionFromCronDescription(containerName string, cron *cron.CronDescription, cronName string) *ecs.ContainerDefinition {
 	var envVars []*ecs.KeyValuePair
 	for key, value := range cron.Description.Environment {
 		envVars = append(envVars, &ecs.KeyValuePair{

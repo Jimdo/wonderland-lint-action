@@ -30,7 +30,7 @@ func NewECSTaskDefinitionStore(e ecsiface.ECSAPI, tdm *ECSTaskDefinitionMapper) 
 
 func (tds *ECSTaskDefinitionStore) AddRevisionFromCronDescription(cronName, family string, desc *cron.CronDescription) (string, error) {
 	out, err := tds.ecs.RegisterTaskDefinition(&ecs.RegisterTaskDefinitionInput{
-		ContainerDefinitions: []*ecs.ContainerDefinition{tds.tdm.ContainerDefinitionFromCronDescription(cronName, family, desc)},
+		ContainerDefinitions: []*ecs.ContainerDefinition{tds.tdm.ContainerDefinitionFromCronDescription(family, desc, cronName)},
 		Family:               awssdk.String(family),
 	})
 	if err != nil {
