@@ -42,13 +42,80 @@ func TestService_Create(t *testing.T) {
 	}
 
 	v.EXPECT().ValidateCronDescription(cronDesc)
+	s.EXPECT().GetResourceName("test-cron").Return("", store.ErrCronNotFound)
 	tds.EXPECT().AddRevisionFromCronDescription("cron--test-cron", cronDesc).Return("task-definition-arn", nil)
 	cm.EXPECT().RunTaskDefinitionWithSchedule("cron--test-cron", "task-definition-arn", cronDesc.Schedule)
 	s.EXPECT().Save("test-cron", "cron--test-cron", cronDesc)
 
 	err := service.Create(cronDesc)
 	if err != nil {
-		t.Fatalf("Creating cron failed :%s", err)
+		t.Fatalf("Creating cron failed: %s", err)
+	}
+}
+
+func TestService_Create_Update(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	v := mock.NewMockCronValidator(ctrl)
+	cm := mock.NewMockRuleCronManager(ctrl)
+	tds := mock.NewMockTaskDefinitionStore(ctrl)
+	s := mock.NewMockCronStore(ctrl)
+	service := NewService(v, cm, tds, s)
+
+	cronDesc := &cron.CronDescription{
+		Name:     "test-cron",
+		Schedule: "* * * * *",
+		Description: &cron.ContainerDescription{
+			Image: "python",
+			Arguments: []string{
+				"python",
+				"--version",
+			},
+			Environment: map[string]string{
+				"foo": "bar",
+				"baz": "fuz",
+			},
+			Capacity: &cron.CapacityDescription{
+				Memory: "l",
+				CPU:    "m",
+			},
+		},
+	}
+	resourceName := "cron--test-cron-resource-name"
+
+	v.EXPECT().ValidateCronDescription(cronDesc)
+	s.EXPECT().GetResourceName("test-cron").Return(resourceName, nil)
+	tds.EXPECT().AddRevisionFromCronDescription(resourceName, cronDesc).Return("task-definition-arn", nil)
+	cm.EXPECT().RunTaskDefinitionWithSchedule(resourceName, "task-definition-arn", cronDesc.Schedule)
+	s.EXPECT().Save("test-cron", resourceName, cronDesc)
+
+	err := service.Create(cronDesc)
+	if err != nil {
+		t.Fatalf("Creating cron failed: %s", err)
+	}
+}
+
+func TestService_Create_Error_OnStoreGetResourceName(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	v := mock.NewMockCronValidator(ctrl)
+	cm := mock.NewMockRuleCronManager(ctrl)
+	tds := mock.NewMockTaskDefinitionStore(ctrl)
+	s := mock.NewMockCronStore(ctrl)
+	service := NewService(v, cm, tds, s)
+
+	cronDesc := &cron.CronDescription{
+		Name: "test-cron",
+	}
+
+	v.EXPECT().ValidateCronDescription(cronDesc)
+	s.EXPECT().GetResourceName("test-cron").Return("", errors.New("Foo"))
+
+	err := service.Create(cronDesc)
+	if err == nil {
+		t.Fatal("expected an error when fetching resource name from DynamoDB, got none")
 	}
 }
 
@@ -83,6 +150,7 @@ func TestService_Create_Error_AddTaskDefinitionRevision(t *testing.T) {
 
 	cronDesc := &cron.CronDescription{Name: "test-cron"}
 	v.EXPECT().ValidateCronDescription(cronDesc)
+	s.EXPECT().GetResourceName("test-cron").Return("", store.ErrCronNotFound)
 	tds.EXPECT().AddRevisionFromCronDescription("cron--test-cron", cronDesc).Return("", errors.New("foo"))
 
 	err := service.Create(cronDesc)
@@ -103,6 +171,7 @@ func TestService_Create_Error_RunTaskDefinitionWithSchedule(t *testing.T) {
 
 	cronDesc := &cron.CronDescription{Name: "test-cron"}
 	v.EXPECT().ValidateCronDescription(cronDesc)
+	s.EXPECT().GetResourceName("test-cron").Return("", store.ErrCronNotFound)
 	tds.EXPECT().AddRevisionFromCronDescription("cron--test-cron", cronDesc).Return("task-definition-arn", nil)
 
 	cm.EXPECT().

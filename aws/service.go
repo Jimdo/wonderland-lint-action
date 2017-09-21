@@ -38,7 +38,13 @@ func (s *Service) Create(cron *cron.CronDescription) error {
 		return err
 	}
 
-	resourceName := s.generateResourceName(cron.Name)
+	resourceName, err := s.store.GetResourceName(cron.Name)
+	if err != nil {
+		if err != store.ErrCronNotFound {
+			return err
+		}
+		resourceName = s.generateResourceName(cron.Name)
+	}
 
 	taskDefinitionARN, err := s.tds.AddRevisionFromCronDescription(resourceName, cron)
 	if err != nil {
