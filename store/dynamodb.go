@@ -1,6 +1,7 @@
 package store
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -29,12 +30,14 @@ var (
 			},
 		},
 	}}
+
+	ErrCronNotFound = errors.New("The cron was not found")
 )
 
 type Cron struct {
-	Name              string
-	TaskDefinitionArn string
-	Description       *cron.CronDescription
+	Name         string
+	ResourceName string
+	Description  *cron.CronDescription
 }
 
 type DynamoDBStore struct {
@@ -51,11 +54,11 @@ func NewDynamoDBStore(dynamoDBClient dynamodbiface.DynamoDBAPI) (*DynamoDBStore,
 	}, nil
 }
 
-func (d *DynamoDBStore) Save(name, taskDefinitionArn string, desc *cron.CronDescription) error {
+func (d *DynamoDBStore) Save(name, res string, desc *cron.CronDescription) error {
 	cron := &Cron{
-		Name:              name,
-		TaskDefinitionArn: taskDefinitionArn,
-		Description:       desc,
+		Name:         name,
+		ResourceName: res,
+		Description:  desc,
 	}
 
 	data, err := dynamodbattribute.MarshalMap(cron)
@@ -69,6 +72,47 @@ func (d *DynamoDBStore) Save(name, taskDefinitionArn string, desc *cron.CronDesc
 	})
 	if err != nil {
 		return fmt.Errorf("Could not update DynamoDB: %s", err)
+	}
+
+	return nil
+}
+
+func (d *DynamoDBStore) GetResourceName(name string) (string, error) {
+	cron := &Cron{}
+
+	res, err := d.Client.GetItem(&dynamodb.GetItemInput{
+		TableName: aws.String(tableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"Name": {
+				S: aws.String(name),
+			},
+		},
+	})
+	if err != nil {
+		return "", fmt.Errorf("Could not fetch cron from DynamoDB: %s", err)
+	}
+	if res.Item == nil {
+		return "", ErrCronNotFound
+	}
+
+	if err := dynamodbattribute.UnmarshalMap(res.Item, cron); err != nil {
+		return "", fmt.Errorf("Could not unmarshal cron: %s", err)
+	}
+
+	return cron.ResourceName, nil
+}
+
+func (d *DynamoDBStore) Delete(name string) error {
+	_, err := d.Client.DeleteItem(&dynamodb.DeleteItemInput{
+		TableName: aws.String(tableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"Name": {
+				S: aws.String(name),
+			},
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("Could not delete cron from DynamoDB: %s", err)
 	}
 
 	return nil

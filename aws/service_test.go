@@ -8,6 +8,7 @@ import (
 
 	"github.com/Jimdo/wonderland-crons/aws/mock"
 	"github.com/Jimdo/wonderland-crons/cron"
+	"github.com/Jimdo/wonderland-crons/store"
 )
 
 func TestService_Create(t *testing.T) {
@@ -43,7 +44,7 @@ func TestService_Create(t *testing.T) {
 	v.EXPECT().ValidateCronDescription(cronDesc)
 	tds.EXPECT().AddRevisionFromCronDescription("cron--test-cron", cronDesc).Return("task-definition-arn", nil)
 	cm.EXPECT().RunTaskDefinitionWithSchedule("cron--test-cron", "task-definition-arn", cronDesc.Schedule)
-	s.EXPECT().Save("test-cron", "task-definition-arn", cronDesc)
+	s.EXPECT().Save("test-cron", "cron--test-cron", cronDesc)
 
 	err := service.Create(cronDesc)
 	if err != nil {
@@ -124,8 +125,12 @@ func TestService_Delete(t *testing.T) {
 	s := mock.NewMockCronStore(ctrl)
 	service := NewService(v, cm, tds, s)
 
-	cm.EXPECT().DeleteRule("cron--test-cron")
-	tds.EXPECT().DeleteByFamily("cron--test-cron")
+	resourceName := "cron--test-cron"
+
+	s.EXPECT().GetResourceName("test-cron").Return(resourceName, nil)
+	cm.EXPECT().DeleteRule(resourceName)
+	tds.EXPECT().DeleteByFamily(resourceName)
+	s.EXPECT().Delete("test-cron")
 
 	err := service.Delete("test-cron")
 	if err != nil {
@@ -143,8 +148,11 @@ func TestService_Delete_Error_OnRuleDeletionError(t *testing.T) {
 	s := mock.NewMockCronStore(ctrl)
 	service := NewService(v, cm, tds, s)
 
-	cm.EXPECT().DeleteRule("cron--test-cron").Return(errors.New("foo"))
-	tds.EXPECT().DeleteByFamily("cron--test-cron")
+	resourceName := "cron--test-cron"
+
+	s.EXPECT().GetResourceName("test-cron").Return(resourceName, nil)
+	cm.EXPECT().DeleteRule(resourceName).Return(errors.New("foo"))
+	tds.EXPECT().DeleteByFamily(resourceName)
 
 	err := service.Delete("test-cron")
 	if err == nil {
@@ -162,8 +170,11 @@ func TestService_Delete_Error_OnTaskDefinitionDeletionError(t *testing.T) {
 	s := mock.NewMockCronStore(ctrl)
 	service := NewService(v, cm, tds, s)
 
-	cm.EXPECT().DeleteRule("cron--test-cron")
-	tds.EXPECT().DeleteByFamily("cron--test-cron").Return(errors.New("foo"))
+	resourceName := "cron--test-cron"
+
+	s.EXPECT().GetResourceName("test-cron").Return(resourceName, nil)
+	cm.EXPECT().DeleteRule(resourceName)
+	tds.EXPECT().DeleteByFamily(resourceName).Return(errors.New("foo"))
 
 	err := service.Delete("test-cron")
 	if err == nil {
@@ -181,8 +192,11 @@ func TestService_Delete_Error_OnlyFirstErrorReturned(t *testing.T) {
 	s := mock.NewMockCronStore(ctrl)
 	service := NewService(v, cm, tds, s)
 
-	cm.EXPECT().DeleteRule("cron--test-cron").Return(errors.New("foo1"))
-	tds.EXPECT().DeleteByFamily("cron--test-cron").Return(errors.New("foo2"))
+	resourceName := "cron--test-cron"
+
+	s.EXPECT().GetResourceName("test-cron").Return(resourceName, nil)
+	cm.EXPECT().DeleteRule(resourceName).Return(errors.New("foo1"))
+	tds.EXPECT().DeleteByFamily(resourceName).Return(errors.New("foo2"))
 
 	err := service.Delete("test-cron")
 	if err == nil {
@@ -190,5 +204,64 @@ func TestService_Delete_Error_OnlyFirstErrorReturned(t *testing.T) {
 	}
 	if err.Error() != "foo1" {
 		t.Fatalf("expected first error to be returned if multiple errors happened, but got: %s", err)
+	}
+}
+
+func TestService_Delete_Error_OnStoreDelete(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	v := mock.NewMockCronValidator(ctrl)
+	cm := mock.NewMockRuleCronManager(ctrl)
+	tds := mock.NewMockTaskDefinitionStore(ctrl)
+	s := mock.NewMockCronStore(ctrl)
+	service := NewService(v, cm, tds, s)
+
+	resourceName := "cron--test-cron"
+
+	s.EXPECT().GetResourceName("test-cron").Return(resourceName, nil)
+	cm.EXPECT().DeleteRule(resourceName)
+	tds.EXPECT().DeleteByFamily(resourceName)
+	s.EXPECT().Delete("test-cron").Return(errors.New("foo"))
+
+	err := service.Delete("test-cron")
+	if err == nil {
+		t.Fatal("expected an error when deletion from DynamoDB failed, but got none")
+	}
+}
+
+func TestService_Delete_NoError_CronNotFound(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	v := mock.NewMockCronValidator(ctrl)
+	cm := mock.NewMockRuleCronManager(ctrl)
+	tds := mock.NewMockTaskDefinitionStore(ctrl)
+	s := mock.NewMockCronStore(ctrl)
+	service := NewService(v, cm, tds, s)
+
+	s.EXPECT().GetResourceName("test-cron").Return("", store.ErrCronNotFound)
+
+	err := service.Delete("test-cron")
+	if err != nil {
+		t.Fatalf("expected no error when cron was not found in DynamoDB, but got %s", err)
+	}
+}
+
+func TestService_Delete_Error_OnStoreGetResourceName(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	v := mock.NewMockCronValidator(ctrl)
+	cm := mock.NewMockRuleCronManager(ctrl)
+	tds := mock.NewMockTaskDefinitionStore(ctrl)
+	s := mock.NewMockCronStore(ctrl)
+	service := NewService(v, cm, tds, s)
+
+	s.EXPECT().GetResourceName("test-cron").Return("", errors.New("foo"))
+
+	err := service.Delete("test-cron")
+	if err == nil {
+		t.Fatalf("expected an error when resource name could not be fetched from DynamoDB, but got none")
 	}
 }

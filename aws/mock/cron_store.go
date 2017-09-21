@@ -29,6 +29,27 @@ func (_m *MockCronStore) EXPECT() *_MockCronStoreRecorder {
 	return _m.recorder
 }
 
+func (_m *MockCronStore) Delete(_param0 string) error {
+	ret := _m.ctrl.Call(_m, "Delete", _param0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+func (_mr *_MockCronStoreRecorder) Delete(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Delete", arg0)
+}
+
+func (_m *MockCronStore) GetResourceName(_param0 string) (string, error) {
+	ret := _m.ctrl.Call(_m, "GetResourceName", _param0)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+func (_mr *_MockCronStoreRecorder) GetResourceName(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetResourceName", arg0)
+}
+
 func (_m *MockCronStore) Save(_param0 string, _param1 string, _param2 *cron.CronDescription) error {
 	ret := _m.ctrl.Call(_m, "Save", _param0, _param1, _param2)
 	ret0, _ := ret[0].(error)

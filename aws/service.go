@@ -4,6 +4,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/Jimdo/wonderland-crons/cron"
+	"github.com/Jimdo/wonderland-crons/store"
 )
 
 type CronValidator interface {
@@ -12,6 +13,8 @@ type CronValidator interface {
 
 type CronStore interface {
 	Save(string, string, *cron.CronDescription) error
+	GetResourceName(string) (string, error)
+	Delete(string) error
 }
 
 type Service struct {
@@ -46,7 +49,7 @@ func (s *Service) Create(cron *cron.CronDescription) error {
 		return err
 	}
 
-	if err := s.store.Save(cron.Name, taskDefinitionARN, cron); err != nil {
+	if err := s.store.Save(cron.Name, resourceName, cron); err != nil {
 		log.WithError(err).Error("Could not save cron in DynamoDB")
 	}
 
@@ -54,8 +57,15 @@ func (s *Service) Create(cron *cron.CronDescription) error {
 }
 
 func (s *Service) Delete(cronName string) error {
+	resourceName, err := s.store.GetResourceName(cronName)
+	if err != nil {
+		if err == store.ErrCronNotFound {
+			return nil
+		}
+		return err
+	}
+
 	var errors []error
-	resourceName := s.generateResourceName(cronName)
 	if err := s.cm.DeleteRule(resourceName); err != nil {
 		errors = append(errors, err)
 	}
@@ -68,6 +78,11 @@ func (s *Service) Delete(cronName string) error {
 		//TODO: Add logging for all errors
 		return errors[0]
 	}
+
+	if err := s.store.Delete(cronName); err != nil {
+		return err
+	}
+
 	return nil
 }
 
