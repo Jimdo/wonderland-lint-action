@@ -13,9 +13,12 @@ import (
 	"github.com/Jimdo/wonderland-crons/dynamodbutil"
 )
 
-var (
+const (
 	tableName = "wonderland-crons"
-	schema    = []dynamodbutil.TableDescription{{
+)
+
+var (
+	schema = []dynamodbutil.TableDescription{{
 		Name: tableName,
 		Keys: []dynamodbutil.KeyDescription{
 			{
