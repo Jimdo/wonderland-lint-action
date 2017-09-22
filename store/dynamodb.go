@@ -3,6 +3,7 @@ package store
 import (
 	"errors"
 	"fmt"
+	"sort"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -139,6 +140,8 @@ func (d *DynamoDBStore) getAll() ([]*Cron, error) {
 	if mapperError != nil {
 		return nil, mapperError
 	}
+
+	sort.SliceStable(result, func(i, j int) bool { return result[i].Name < result[j].Name })
 
 	return result, nil
 }
