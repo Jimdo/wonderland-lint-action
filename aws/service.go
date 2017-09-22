@@ -16,6 +16,7 @@ const (
 
 type CronValidator interface {
 	ValidateCronDescription(*cron.CronDescription) error
+	ValidateCronName(string) error
 }
 
 type CronStore interface {
@@ -42,31 +43,34 @@ func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s 
 	}
 }
 
-func (s *Service) Create(cron *cron.CronDescription) error {
+func (s *Service) Apply(name string, cron *cron.CronDescription) error {
+	if err := s.validator.ValidateCronName(name); err != nil {
+		return err
+	}
 	if err := s.validator.ValidateCronDescription(cron); err != nil {
 		return err
 	}
 
-	resourceName, err := s.store.GetResourceName(cron.Name)
+	resourceName, err := s.store.GetResourceName(name)
 	if err != nil {
 		if err != store.ErrCronNotFound {
 			return err
 		}
 
-		resourceName = s.generateResourceName(cron.Name)
-		if err := s.store.Save(cron.Name, resourceName, cron, StatusCreating); err != nil {
+		resourceName = s.generateResourceName(name)
+		if err := s.store.Save(name, resourceName, cron, StatusCreating); err != nil {
 			log.WithError(err).WithFields(log.Fields{
-				"cron": cron.Name,
+				"cron": name,
 			}).Error("Could not create cron in DynamoDB")
 			return err
 		}
 	}
 
-	taskDefinitionARN, err := s.tds.AddRevisionFromCronDescription(resourceName, cron)
+	taskDefinitionARN, err := s.tds.AddRevisionFromCronDescription(name, resourceName, cron)
 	if err != nil {
-		if err := s.store.SetDeployStatus(cron.Name, StatusTaskDefinitionCreationFailed); err != nil {
+		if err := s.store.SetDeployStatus(name, StatusTaskDefinitionCreationFailed); err != nil {
 			log.WithError(err).WithFields(log.Fields{
-				"cron":   cron.Name,
+				"cron":   name,
 				"status": StatusTaskDefinitionCreationFailed,
 			}).Error("Could not set deploy status in DynamoDB")
 		}
@@ -74,18 +78,18 @@ func (s *Service) Create(cron *cron.CronDescription) error {
 	}
 
 	if err := s.cm.RunTaskDefinitionWithSchedule(resourceName, taskDefinitionARN, cron.Schedule); err != nil {
-		if err := s.store.SetDeployStatus(cron.Name, StatusRuleCreationFailed); err != nil {
+		if err := s.store.SetDeployStatus(name, StatusRuleCreationFailed); err != nil {
 			log.WithError(err).WithFields(log.Fields{
-				"cron":   cron.Name,
+				"cron":   name,
 				"status": StatusRuleCreationFailed,
 			}).Error("Could not set deploy status in DynamoDB")
 		}
 		return err
 	}
 
-	if err := s.store.Save(cron.Name, resourceName, cron, StatusSuccess); err != nil {
+	if err := s.store.Save(name, resourceName, cron, StatusSuccess); err != nil {
 		log.WithError(err).WithFields(log.Fields{
-			"cron":   cron.Name,
+			"cron":   name,
 			"status": StatusSuccess,
 		}).Error("Could not update cron in DynamoDB")
 		return err

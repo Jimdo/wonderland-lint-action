@@ -34,8 +34,8 @@ func (a *API) Register() {
 
 	a.config.Router.HandleFunc("/crons/ping", api.HandlerWithDefaultTimeout(a.PingHandler)).Methods("GET")
 	a.config.Router.HandleFunc("/crons", api.HandlerWithDefaultTimeout(a.ListCrons)).Methods("GET")
-	a.config.Router.HandleFunc("/crons", api.HandlerWithDefaultTimeout(a.CreateHandler)).Methods("POST")
 	a.config.Router.HandleFunc("/crons/{name}", api.HandlerWithDefaultTimeout(a.DeleteHandler)).Methods("DELETE")
+	a.config.Router.HandleFunc("/crons/{name}", api.HandlerWithDefaultTimeout(a.PutHandler)).Methods("PUT")
 }
 
 func (a *API) StatusHandler(w http.ResponseWriter, req *http.Request) {}
@@ -44,7 +44,10 @@ func (a *API) PingHandler(ctx context.Context, w http.ResponseWriter, req *http.
 	sendJSON(w, "pong", http.StatusOK)
 }
 
-func (a *API) CreateHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) {
+func (a *API) PutHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	cronName := vars["name"]
+
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		sendError(w, fmt.Errorf("Unable to read request body: %s", err), http.StatusInternalServerError)
@@ -56,7 +59,7 @@ func (a *API) CreateHandler(ctx context.Context, w http.ResponseWriter, req *htt
 		return
 	}
 
-	if err := a.config.Service.Create(desc); err != nil {
+	if err := a.config.Service.Apply(cronName, desc); err != nil {
 		statusCode := http.StatusInternalServerError
 		if _, ok := err.(validation.Error); ok {
 			statusCode = http.StatusBadRequest
@@ -64,8 +67,6 @@ func (a *API) CreateHandler(ctx context.Context, w http.ResponseWriter, req *htt
 		sendError(w, fmt.Errorf("Unable to run cron: %s", err), statusCode)
 		return
 	}
-
-	w.WriteHeader(http.StatusCreated)
 }
 
 func (a *API) DeleteHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) {

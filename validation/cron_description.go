@@ -20,10 +20,6 @@ type cronDescription struct {
 // validate ensures that a cron description provided by a user
 // is valid and can be used to create a Cron.
 func (v *cronDescription) validate(desc *cron.CronDescription) error {
-	if err := v.validateCronName(desc.Name); err != nil {
-		return err
-	}
-
 	if desc.Description == nil {
 		return Error{"Crons require a description."}
 	}
@@ -34,7 +30,7 @@ func (v *cronDescription) validate(desc *cron.CronDescription) error {
 	return nil
 }
 
-func (v *cronDescription) validateCronName(name string) error {
+func (v *cronDescription) ValidateCronName(name string) error {
 	if len(name) > MaxCronNameLength {
 		return Error{fmt.Sprintf("cron name %s is too long (max length is %d)", name, MaxCronNameLength)}
 	}
