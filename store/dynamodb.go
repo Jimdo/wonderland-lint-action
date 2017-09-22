@@ -3,6 +3,7 @@ package store
 import (
 	"errors"
 	"fmt"
+	"sort"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -103,6 +104,44 @@ func (d *DynamoDBStore) SetDeployStatus(name, msg string) error {
 	cron.DeployStatus = msg
 
 	return d.set(cron)
+}
+
+func (d *DynamoDBStore) List() ([]string, error) {
+	crons, err := d.getAll()
+	if err != nil {
+		return nil, err
+	}
+	var cronNames []string
+	for _, cron := range crons {
+		cronNames = append(cronNames, cron.Name)
+	}
+	return cronNames, nil
+}
+
+func (d *DynamoDBStore) getAll() ([]*Cron, error) {
+	var result []*Cron
+	var mapperError error
+	err := d.Client.ScanPages(&dynamodb.ScanInput{
+		TableName: aws.String(tableName),
+	}, func(out *dynamodb.ScanOutput, last bool) bool {
+		var crons []*Cron
+		if err := dynamodbattribute.UnmarshalListOfMaps(out.Items, &crons); err != nil {
+			mapperError = fmt.Errorf("Error transforming DynamoDB items to cron: %s", err)
+			return false
+		}
+		result = append(result, crons...)
+		return !last
+	})
+	if err != nil {
+		return nil, err
+	}
+	if mapperError != nil {
+		return nil, mapperError
+	}
+
+	sort.SliceStable(result, func(i, j int) bool { return result[i].Name < result[j].Name })
+
+	return result, nil
 }
 
 func (d *DynamoDBStore) getByName(name string) (*Cron, error) {

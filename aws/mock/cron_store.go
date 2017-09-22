@@ -50,6 +50,17 @@ func (_mr *_MockCronStoreRecorder) GetResourceName(arg0 interface{}) *gomock.Cal
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetResourceName", arg0)
 }
 
+func (_m *MockCronStore) List() ([]string, error) {
+	ret := _m.ctrl.Call(_m, "List")
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+func (_mr *_MockCronStoreRecorder) List() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "List")
+}
+
 func (_m *MockCronStore) Save(_param0 string, _param1 string, _param2 *cron.CronDescription, _param3 string) error {
 	ret := _m.ctrl.Call(_m, "Save", _param0, _param1, _param2, _param3)
 	ret0, _ := ret[0].(error)

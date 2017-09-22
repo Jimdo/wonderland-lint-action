@@ -33,6 +33,7 @@ func (a *API) Register() {
 	a.config.Router.HandleFunc("/status", a.StatusHandler).Methods("GET")
 
 	a.config.Router.HandleFunc("/crons/ping", api.HandlerWithDefaultTimeout(a.PingHandler)).Methods("GET")
+	a.config.Router.HandleFunc("/crons", api.HandlerWithDefaultTimeout(a.ListCrons)).Methods("GET")
 	a.config.Router.HandleFunc("/crons", api.HandlerWithDefaultTimeout(a.CreateHandler)).Methods("POST")
 	a.config.Router.HandleFunc("/crons/{name}", api.HandlerWithDefaultTimeout(a.DeleteHandler)).Methods("DELETE")
 }
@@ -75,4 +76,14 @@ func (a *API) DeleteHandler(ctx context.Context, w http.ResponseWriter, req *htt
 		sendServerError(w, fmt.Errorf("Unable to delete cron %q: %s", cronName, err))
 		return
 	}
+}
+
+func (a *API) ListCrons(ctx context.Context, w http.ResponseWriter, req *http.Request) {
+	crons, err := a.config.Service.List()
+	if err != nil {
+		sendServerError(w, fmt.Errorf("Unable to list crons: %s", err))
+		return
+	}
+
+	sendJSON(w, crons, http.StatusOK)
 }
