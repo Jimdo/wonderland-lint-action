@@ -124,14 +124,12 @@ func (d *DynamoDBStore) getAll() ([]*Cron, error) {
 	err := d.Client.ScanPages(&dynamodb.ScanInput{
 		TableName: aws.String(tableName),
 	}, func(out *dynamodb.ScanOutput, last bool) bool {
-		for _, item := range out.Items {
-			cron := &Cron{}
-			if err := dynamodbattribute.UnmarshalMap(item, cron); err != nil {
-				mapperError = fmt.Errorf("Error transforming DynamoDB item to cron: %s", err)
-				return false
-			}
-			result = append(result, cron)
+		var crons []*Cron
+		if err := dynamodbattribute.UnmarshalListOfMaps(out.Items, &crons); err != nil {
+			mapperError = fmt.Errorf("Error transforming DynamoDB items to cron: %s", err)
+			return false
 		}
+		result = append(result, crons...)
 		return !last
 	})
 	if err != nil {
