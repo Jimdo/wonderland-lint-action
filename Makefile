@@ -85,3 +85,4 @@ gen-mocks:
 	mockgen -package mock github.com/Jimdo/wonderland-crons/aws RuleCronManager > aws/mock/rule_cron_manager.go
 	mockgen -package mock github.com/Jimdo/wonderland-crons/aws TaskDefinitionStore > aws/mock/task_definition_store.go
 	mockgen -package mock github.com/Jimdo/wonderland-crons/aws CronStore > aws/mock/cron_store.go
+	mockgen -package mock github.com/aws/aws-sdk-go/service/sqs/sqsiface SQSAPI > aws/mock/sqsapi.go
