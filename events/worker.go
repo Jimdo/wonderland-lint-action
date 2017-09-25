@@ -17,10 +17,11 @@ const (
 	TaskStateEventType = "ECS Task State Change"
 )
 
-type TaskStore interface{}
+type TaskStore interface {
+	Update(*ecs.Task) error
+}
 
 type Worker struct {
-	ClusterName  string
 	PollInterval time.Duration
 	QueueURL     string
 	SQS          sqsiface.SQSAPI
@@ -80,8 +81,12 @@ func (w *Worker) handleMessage(m *sqs.Message) error {
 			return fmt.Errorf("could not decode task state event: %s", err)
 		}
 
-		// TODO: Test if this is a cron
-		// TODO: update/save task
+		// TODO: get prefix ("cron--") via function
+		if strings.HasPrefix(aws.StringValue(task.Overrides.ContainerOverrides[0].Name), "cron--") {
+			if err := w.TaskStore.Update(task); err != nil {
+				fmt.Errorf("Storing task in DynamoDB failed: %s", err)
+			}
+		}
 
 	default:
 		log.WithFields(log.Fields{
