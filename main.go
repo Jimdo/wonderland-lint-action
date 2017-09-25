@@ -199,14 +199,14 @@ func main() {
 	ecstdm := aws.NewECSTaskDefinitionMapper()
 	ecstds := aws.NewECSTaskDefinitionStore(ecsClient, ecstdm)
 	cloudwatchcm := aws.NewCloudwatchRuleCronManager(cwClient, config.ECSClusterARN, config.CronRoleARN)
-	dynamoDBStore, err := store.NewDynamoDBStore(dynamoDBClient)
+	dynamoDBCronStore, err := store.NewDynamoDBCronStore(dynamoDBClient)
 	if err != nil {
 		log.Fatalf("Failed to initialize Cron store: %s", err)
 	}
 
 	v2.New(&v2.Config{
 		Router:  router.PathPrefix("/v2").Subrouter(),
-		Service: aws.NewService(validator, cloudwatchcm, ecstds, dynamoDBStore),
+		Service: aws.NewService(validator, cloudwatchcm, ecstds, dynamoDBCronStore),
 	}).Register()
 
 	router.HandleFunc("/debug/pprof/profile", pprof.Profile)

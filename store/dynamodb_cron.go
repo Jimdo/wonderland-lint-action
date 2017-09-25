@@ -15,12 +15,12 @@ import (
 )
 
 const (
-	tableName = "wonderland-crons"
+	cronsTableName = "wonderland-crons"
 )
 
 var (
-	schema = []dynamodbutil.TableDescription{{
-		Name: tableName,
+	cronSchema = []dynamodbutil.TableDescription{{
+		Name: cronsTableName,
 		Keys: []dynamodbutil.KeyDescription{
 			{
 				Name: "Name",
@@ -45,21 +45,21 @@ type Cron struct {
 	DeployStatus string
 }
 
-type DynamoDBStore struct {
+type DynamoDBCronStore struct {
 	Client dynamodbiface.DynamoDBAPI
 }
 
-func NewDynamoDBStore(dynamoDBClient dynamodbiface.DynamoDBAPI) (*DynamoDBStore, error) {
-	if err := dynamodbutil.EnforceSchema(dynamoDBClient, schema); err != nil {
+func NewDynamoDBCronStore(dynamoDBClient dynamodbiface.DynamoDBAPI) (*DynamoDBCronStore, error) {
+	if err := dynamodbutil.EnforceSchema(dynamoDBClient, cronSchema); err != nil {
 		return nil, fmt.Errorf("Could not create DynamoDB schema: %s", err)
 	}
 
-	return &DynamoDBStore{
+	return &DynamoDBCronStore{
 		Client: dynamoDBClient,
 	}, nil
 }
 
-func (d *DynamoDBStore) Save(name, res string, desc *cron.CronDescription, status string) error {
+func (d *DynamoDBCronStore) Save(name, res string, desc *cron.CronDescription, status string) error {
 	cron := &Cron{
 		Name:         name,
 		ResourceName: res,
@@ -70,7 +70,7 @@ func (d *DynamoDBStore) Save(name, res string, desc *cron.CronDescription, statu
 	return d.set(cron)
 }
 
-func (d *DynamoDBStore) GetResourceName(name string) (string, error) {
+func (d *DynamoDBCronStore) GetResourceName(name string) (string, error) {
 	cron, err := d.getByName(name)
 	if err != nil {
 		return "", err
@@ -79,9 +79,9 @@ func (d *DynamoDBStore) GetResourceName(name string) (string, error) {
 	return cron.ResourceName, nil
 }
 
-func (d *DynamoDBStore) Delete(name string) error {
+func (d *DynamoDBCronStore) Delete(name string) error {
 	_, err := d.Client.DeleteItem(&dynamodb.DeleteItemInput{
-		TableName: aws.String(tableName),
+		TableName: aws.String(cronsTableName),
 		Key: map[string]*dynamodb.AttributeValue{
 			"Name": {
 				S: aws.String(name),
@@ -95,7 +95,7 @@ func (d *DynamoDBStore) Delete(name string) error {
 	return nil
 }
 
-func (d *DynamoDBStore) SetDeployStatus(name, msg string) error {
+func (d *DynamoDBCronStore) SetDeployStatus(name, msg string) error {
 	cron, err := d.getByName(name)
 	if err != nil {
 		return fmt.Errorf("Could not fetch cron: %s", err)
@@ -106,7 +106,7 @@ func (d *DynamoDBStore) SetDeployStatus(name, msg string) error {
 	return d.set(cron)
 }
 
-func (d *DynamoDBStore) List() ([]string, error) {
+func (d *DynamoDBCronStore) List() ([]string, error) {
 	crons, err := d.getAll()
 	if err != nil {
 		return nil, err
@@ -118,11 +118,11 @@ func (d *DynamoDBStore) List() ([]string, error) {
 	return cronNames, nil
 }
 
-func (d *DynamoDBStore) getAll() ([]*Cron, error) {
+func (d *DynamoDBCronStore) getAll() ([]*Cron, error) {
 	var result []*Cron
 	var mapperError error
 	err := d.Client.ScanPages(&dynamodb.ScanInput{
-		TableName: aws.String(tableName),
+		TableName: aws.String(cronsTableName),
 	}, func(out *dynamodb.ScanOutput, last bool) bool {
 		var crons []*Cron
 		if err := dynamodbattribute.UnmarshalListOfMaps(out.Items, &crons); err != nil {
@@ -144,11 +144,11 @@ func (d *DynamoDBStore) getAll() ([]*Cron, error) {
 	return result, nil
 }
 
-func (d *DynamoDBStore) getByName(name string) (*Cron, error) {
+func (d *DynamoDBCronStore) getByName(name string) (*Cron, error) {
 	cron := &Cron{}
 
 	res, err := d.Client.GetItem(&dynamodb.GetItemInput{
-		TableName: aws.String(tableName),
+		TableName: aws.String(cronsTableName),
 		Key: map[string]*dynamodb.AttributeValue{
 			"Name": {
 				S: aws.String(name),
@@ -168,14 +168,14 @@ func (d *DynamoDBStore) getByName(name string) (*Cron, error) {
 	return cron, nil
 }
 
-func (d *DynamoDBStore) set(cron *Cron) error {
+func (d *DynamoDBCronStore) set(cron *Cron) error {
 	data, err := dynamodbattribute.MarshalMap(cron)
 	if err != nil {
 		return fmt.Errorf("Could not marshal cron into DynamoDB value: %s", err)
 	}
 
 	_, err = d.Client.PutItem(&dynamodb.PutItemInput{
-		TableName: aws.String(tableName),
+		TableName: aws.String(cronsTableName),
 		Item:      data,
 	})
 	if err != nil {
