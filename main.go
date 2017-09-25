@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/gorilla/mux"
 	cleanhttp "github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/nomad/api"
@@ -31,6 +32,7 @@ import (
 	"github.com/Jimdo/wonderland-crons/api/v2"
 	"github.com/Jimdo/wonderland-crons/aws"
 	"github.com/Jimdo/wonderland-crons/cron"
+	"github.com/Jimdo/wonderland-crons/events"
 	"github.com/Jimdo/wonderland-crons/nomad"
 	"github.com/Jimdo/wonderland-crons/store"
 	"github.com/Jimdo/wonderland-crons/validation"
@@ -72,6 +74,8 @@ var (
 		CronRoleARN                   string        `flag:"cron-role-arn" env:"CRON_ROLE_ARN" description:"The IAM Role that grants Cloudwatch access to ECS"`
 		ECSClusterARN                 string        `flag:"cluster-arn" env:"ECS_CLUSTER_ARN" description:"The ARN of the ECS cluster crons should run on"`
 		RefreshAWSCredentialsInterval time.Duration `flag:"aws-credentials-interval" env:"AWS_CREDENTIALS_INTERVAL" default:"10m" description:"Interval in which to fetch new AWS credentials from Vault"`
+		ECSEventsQueueURL             string        `flag:"ecs-events-queue-url" env:"ECS_EVENTS_QUEUE_URL" description:"The URL of the SQS queue receiving ECS events"`
+		ECSEventQueuePollInterval     time.Duration `flag:"ecs-events-queue-poll-interval" default:"1s" description:"The interval in which to poll new ECS events"`
 	}
 	programIdentifier = "wonderland-crons"
 	programVersion    = "dev"
@@ -157,6 +161,7 @@ func main() {
 	ecsClient := ecsClient()
 	cwClient := cloudwatchEventsClient()
 	dynamoDBClient := dynamoDBClient()
+	sqsClient := sqsClient()
 
 	if err := refreshAWSCredentials(ecsClient.Client, rcm); err != nil {
 		log.Fatalf("Failed to fetch AWS config from Vault: %s", err)
@@ -165,6 +170,9 @@ func main() {
 		log.Fatalf("Failed to fetch AWS config from Vault: %s", err)
 	}
 	if err := refreshAWSCredentials(dynamoDBClient.Client, rcm); err != nil {
+		log.Fatalf("Failed to fetch AWS config from Vault :%s", err)
+	}
+	if err := refreshAWSCredentials(sqsClient.Client, rcm); err != nil {
 		log.Fatalf("Failed to fetch AWS config from Vault :%s", err)
 	}
 	go func() {
@@ -176,6 +184,9 @@ func main() {
 				log.Fatalf("Failed to fetch AWS config from Vault: %s", err)
 			}
 			if err := refreshAWSCredentials(dynamoDBClient.Client, rcm); err != nil {
+				log.Fatalf("Failed to fetch AWS config from Vault: %s", err)
+			}
+			if err := refreshAWSCredentials(sqsClient.Client, rcm); err != nil {
 				log.Fatalf("Failed to fetch AWS config from Vault: %s", err)
 			}
 		}
@@ -195,6 +206,25 @@ func main() {
 		},
 		Router: router.PathPrefix("/v1").Subrouter(),
 	}).Register()
+
+	dynamoDBTaskStore, err := store.NewDynamoDBTaskStore(dynamoDBClient)
+	if err != nil {
+		log.Fatalf("Failed to initialize Cron store: %s", err)
+	}
+
+	w := &events.Worker{
+		PollInterval: config.ECSEventQueuePollInterval,
+		QueueURL:     config.ECSEventsQueueURL,
+		SQS:          sqsClient,
+		TaskStore:    dynamoDBTaskStore,
+	}
+	done := make(chan interface{})
+	defer close(done)
+	go func() {
+		if err := w.Run(done); err != nil {
+			log.Fatalf("Error consuming ECS events: %s", err)
+		}
+	}()
 
 	ecstdm := aws.NewECSTaskDefinitionMapper()
 	ecstds := aws.NewECSTaskDefinitionStore(ecsClient, ecstdm)
@@ -254,6 +284,19 @@ func dynamoDBClient() *dynamodb.DynamoDB {
 	}
 	s := session.Must(session.NewSession(awssdk.NewConfig().WithHTTPClient(httpClient)))
 	c := dynamodb.New(s)
+
+	// prefix user-agent with program name and version
+	c.Handlers.Build.PushFront(request.MakeAddToUserAgentHandler(programIdentifier, programVersion))
+
+	return c
+}
+
+func sqsClient() *sqs.SQS {
+	httpClient := &http.Client{
+		Timeout: time.Duration(10) * time.Second,
+	}
+	s := session.Must(session.NewSession(awssdk.NewConfig().WithHTTPClient(httpClient)))
+	c := sqs.New(s)
 
 	// prefix user-agent with program name and version
 	c.Handlers.Build.PushFront(request.MakeAddToUserAgentHandler(programIdentifier, programVersion))

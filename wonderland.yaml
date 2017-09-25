@@ -7,6 +7,7 @@ components:
       AWS_REGION: '{{env `NOMAD_AWS_REGION`}}'
       CRON_ROLE_ARN: '{{ env `CRON_ROLE_ARN`}}'
       ECS_CLUSTER_ARN: '{{ env `ECS_CLUSTER_ARN`}}'
+      ECS_EVENTS_QUEUE_URL: {{env `ECS_EVENTS_QUEUE_URL`}}
       NOMAD_API: '{{env `NOMAD_API`}}'
       NOMAD_WL_DOCKER_IMAGE: '{{ env `NOMAD_WL_DOCKER_IMAGE`}}'
       WONDERLAND_ENV: '{{env `WONDERLAND_ENV`}}'
