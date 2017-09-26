@@ -78,10 +78,12 @@ func (ts *DynamoDBTaskStore) Update(t *ecs.Task) error {
 	* ensure ordering / check version or use FIFO queue
 	 */
 	task := &Task{
-		Name:      shortName,
-		StartTime: aws.TimeValue(t.CreatedAt),
-		TaskArn:   aws.StringValue(t.TaskArn),
-		Status:    aws.StringValue(t.LastStatus),
+		Name:       shortName,
+		StartTime:  aws.TimeValue(t.CreatedAt),
+		EndTime:    aws.TimeValue(t.StoppedAt),
+		TaskArn:    aws.StringValue(t.TaskArn),
+		ExitReason: aws.StringValue(t.StoppedReason),
+		Status:     aws.StringValue(t.LastStatus),
 	}
 
 	data, err := dynamodbattribute.MarshalMap(task)
