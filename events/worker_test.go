@@ -7,6 +7,7 @@ import (
 
 	"github.com/Jimdo/wonderland-crons/aws/mock"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/golang/mock/gomock"
 )
@@ -27,8 +28,18 @@ func TestWorker_Run(t *testing.T) {
 		queueURL     = "http://example.com"
 	)
 
+	task := &ecs.Task{
+		Overrides: &ecs.TaskOverride{
+			ContainerOverrides: []*ecs.ContainerOverride{{
+				Name: aws.String("cron--test"),
+			}},
+		},
+	}
+	taskJSON, _ := json.Marshal(task)
+
 	messageBody, _ := json.Marshal(&Event{
 		DetailType: TaskStateEventType,
+		Detail:     taskJSON,
 	})
 
 	message := &sqs.Message{
@@ -38,10 +49,9 @@ func TestWorker_Run(t *testing.T) {
 
 	sqsClient := mock.NewMockSQSAPI(ctrl)
 
-	taskStore := TaskStore(struct{}{})
+	taskStore := mock.NewMockTaskStore(ctrl)
 
 	worker := &Worker{
-		ClusterName:  clusterName,
 		PollInterval: pollInterval,
 		QueueURL:     queueURL,
 		TaskStore:    taskStore,
@@ -58,6 +68,8 @@ func TestWorker_Run(t *testing.T) {
 	sqsClient.EXPECT().ReceiveMessage(gomock.Any()).Return(&sqs.ReceiveMessageOutput{
 		Messages: []*sqs.Message{message},
 	}, nil)
+
+	taskStore.EXPECT().Update(task)
 
 	sqsClient.EXPECT().ReceiveMessage(gomock.Any()).Return(&sqs.ReceiveMessageOutput{}, nil)
 

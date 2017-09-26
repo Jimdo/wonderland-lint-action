@@ -82,9 +82,12 @@ func (w *Worker) handleMessage(m *sqs.Message) error {
 		}
 
 		// TODO: get prefix ("cron--") via function
+		if task.Overrides == nil || len(task.Overrides.ContainerOverrides) == 0 {
+			return fmt.Errorf("Task has no overrides defined, cannot discover name")
+		}
 		if strings.HasPrefix(aws.StringValue(task.Overrides.ContainerOverrides[0].Name), "cron--") {
 			if err := w.TaskStore.Update(task); err != nil {
-				fmt.Errorf("Storing task in DynamoDB failed: %s", err)
+				return fmt.Errorf("Storing task in DynamoDB failed: %s", err)
 			}
 		}
 

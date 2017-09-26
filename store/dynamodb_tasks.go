@@ -69,6 +69,7 @@ func NewDynamoDBTaskStore(dynamoDBClient dynamodbiface.DynamoDBAPI) (*DynamoDBTa
 
 func (ts *DynamoDBTaskStore) Update(t *ecs.Task) error {
 	fullName := aws.StringValue(t.Overrides.ContainerOverrides[0].Name)
+	// TODO: use function/const to determine prefix
 	// name as specified by the user
 	shortName := strings.TrimPrefix(fullName, "cron--")
 

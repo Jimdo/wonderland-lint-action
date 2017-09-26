@@ -209,7 +209,7 @@ func main() {
 
 	dynamoDBTaskStore, err := store.NewDynamoDBTaskStore(dynamoDBClient)
 	if err != nil {
-		log.Fatalf("Failed to initialize Cron store: %s", err)
+		log.Fatalf("Failed to initialize Task store: %s", err)
 	}
 
 	w := &events.Worker{
