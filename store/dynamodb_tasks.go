@@ -7,10 +7,12 @@ import (
 
 	"github.com/Jimdo/wonderland-crons/dynamodbutil"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 	"github.com/aws/aws-sdk-go/service/ecs"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -51,6 +53,7 @@ type Task struct {
 	ExitCode   *int
 	ExitReason string
 	Status     string
+	Version    int64
 }
 
 type DynamoDBTaskStore struct {
@@ -84,18 +87,33 @@ func (ts *DynamoDBTaskStore) Update(t *ecs.Task) error {
 		TaskArn:    aws.StringValue(t.TaskArn),
 		ExitReason: aws.StringValue(t.StoppedReason),
 		Status:     aws.StringValue(t.LastStatus),
+		Version:    aws.Int64Value(t.Version),
 	}
 
 	data, err := dynamodbattribute.MarshalMap(task)
 	if err != nil {
 		return fmt.Errorf("Could not marshal task into DynamoDB value: %s", err)
 	}
-
+	versionDBA, err := dynamodbattribute.ConvertTo(task.Version)
+	if err != nil {
+		return fmt.Errorf("Could not convert version %d into DynamoDB value: %s", task.Version, err)
+	}
 	_, err = ts.Client.PutItem(&dynamodb.PutItemInput{
-		TableName: aws.String(taskTableName),
-		Item:      data,
+		TableName:           aws.String(taskTableName),
+		Item:                data,
+		ConditionExpression: aws.String("attribute_not_exists(Version) OR (Version < :version)"),
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":version": versionDBA,
+		},
 	})
 	if err != nil {
+		if err, ok := err.(awserr.Error); ok {
+			if err.Code() == dynamodb.ErrCodeConditionalCheckFailedException {
+				log.Debugf("Task version is lower than stored task version, skipping update")
+				return nil
+			}
+		}
+
 		return fmt.Errorf("Could not update DynamoDB: %s", err)
 	}
 
