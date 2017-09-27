@@ -57,6 +57,7 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 			return err
 		}
 
+		resourceName = cron.GetResourceByName(name)
 		if err := s.store.Save(name, resourceName, cronDescription, StatusCreating); err != nil {
 			log.WithError(err).WithFields(log.Fields{
 				"cron": name,
@@ -129,8 +130,4 @@ func (s *Service) Delete(cronName string) error {
 
 func (s *Service) List() ([]string, error) {
 	return s.store.List()
-}
-
-func (s *Service) generateResourceName(cronName string) string {
-	return "cron--" + cronName
 }

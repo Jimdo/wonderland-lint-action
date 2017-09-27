@@ -2,10 +2,8 @@ package store
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
-	"github.com/Jimdo/wonderland-crons/dynamodbutil"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -13,6 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/Jimdo/wonderland-crons/dynamodbutil"
 )
 
 const (
@@ -70,18 +70,14 @@ func NewDynamoDBTaskStore(dynamoDBClient dynamodbiface.DynamoDBAPI) (*DynamoDBTa
 	}, nil
 }
 
-func (ts *DynamoDBTaskStore) Update(t *ecs.Task) error {
-	fullName := aws.StringValue(t.Overrides.ContainerOverrides[0].Name)
-	// TODO: use function/const to determine prefix
-	// name as specified by the user
-	shortName := strings.TrimPrefix(fullName, "cron--")
+func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
+	// TODO:
+	// * decide what to do with ExitCode
+	// * delete keys when cron was deleted
+	// * add TTL
 
-	/* TODO:
-	* set EndTime:if status != running/pending : stoptime(?) = endtime
-	* ensure ordering / check version or use FIFO queue
-	 */
 	task := &Task{
-		Name:       shortName,
+		Name:       cronName,
 		StartTime:  aws.TimeValue(t.CreatedAt),
 		EndTime:    aws.TimeValue(t.StoppedAt),
 		TaskArn:    aws.StringValue(t.TaskArn),
@@ -94,10 +90,12 @@ func (ts *DynamoDBTaskStore) Update(t *ecs.Task) error {
 	if err != nil {
 		return fmt.Errorf("Could not marshal task into DynamoDB value: %s", err)
 	}
+
 	versionDBA, err := dynamodbattribute.ConvertTo(task.Version)
 	if err != nil {
 		return fmt.Errorf("Could not convert version %d into DynamoDB value: %s", task.Version, err)
 	}
+
 	_, err = ts.Client.PutItem(&dynamodb.PutItemInput{
 		TableName:           aws.String(taskTableName),
 		Item:                data,

@@ -4,7 +4,7 @@
 package mock
 
 import (
-	ecs "github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/aws/aws-sdk-go/service/ecs"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -29,12 +29,12 @@ func (_m *MockTaskStore) EXPECT() *_MockTaskStoreRecorder {
 	return _m.recorder
 }
 
-func (_m *MockTaskStore) Update(_param0 *ecs.Task) error {
-	ret := _m.ctrl.Call(_m, "Update", _param0)
+func (_m *MockTaskStore) Update(_param0 string, _param1 *ecs.Task) error {
+	ret := _m.ctrl.Call(_m, "Update", _param0, _param1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-func (_mr *_MockTaskStoreRecorder) Update(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "Update", arg0)
+func (_mr *_MockTaskStoreRecorder) Update(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Update", arg0, arg1)
 }

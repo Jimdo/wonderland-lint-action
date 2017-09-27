@@ -69,7 +69,7 @@ func TestWorker_Run(t *testing.T) {
 		Messages: []*sqs.Message{message},
 	}, nil)
 
-	taskStore.EXPECT().Update(task)
+	taskStore.EXPECT().Update("test", task)
 
 	sqsClient.EXPECT().ReceiveMessage(gomock.Any()).Return(&sqs.ReceiveMessageOutput{}, nil)
 

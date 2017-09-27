@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Jimdo/wonderland-crons/cron"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -18,7 +19,7 @@ const (
 )
 
 type TaskStore interface {
-	Update(*ecs.Task) error
+	Update(string, *ecs.Task) error
 }
 
 type Worker struct {
@@ -81,12 +82,13 @@ func (w *Worker) handleMessage(m *sqs.Message) error {
 			return fmt.Errorf("could not decode task state event: %s", err)
 		}
 
-		// TODO: get prefix ("cron--") via function
-		if task.Overrides == nil || len(task.Overrides.ContainerOverrides) == 0 {
-			return fmt.Errorf("Task has no overrides defined, cannot discover name")
+		ok, err := cron.IsCron(task)
+		if err != nil {
+			return fmt.Errorf("could not validate if task is a cron: %s", err)
 		}
-		if strings.HasPrefix(aws.StringValue(task.Overrides.ContainerOverrides[0].Name), "cron--") {
-			if err := w.TaskStore.Update(task); err != nil {
+		if ok {
+			cronName := cron.GetNameByResource(aws.StringValue(task.Overrides.ContainerOverrides[0].Name))
+			if err := w.TaskStore.Update(cronName, task); err != nil {
 				return fmt.Errorf("Storing task in DynamoDB failed: %s", err)
 			}
 		}
