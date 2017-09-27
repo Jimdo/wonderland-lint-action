@@ -43,11 +43,11 @@ func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s 
 	}
 }
 
-func (s *Service) Apply(name string, cron *cron.CronDescription) error {
+func (s *Service) Apply(name string, cronDescription *cron.CronDescription) error {
 	if err := s.validator.ValidateCronName(name); err != nil {
 		return err
 	}
-	if err := s.validator.ValidateCronDescription(cron); err != nil {
+	if err := s.validator.ValidateCronDescription(cronDescription); err != nil {
 		return err
 	}
 
@@ -57,8 +57,7 @@ func (s *Service) Apply(name string, cron *cron.CronDescription) error {
 			return err
 		}
 
-		resourceName = s.generateResourceName(name)
-		if err := s.store.Save(name, resourceName, cron, StatusCreating); err != nil {
+		if err := s.store.Save(name, resourceName, cronDescription, StatusCreating); err != nil {
 			log.WithError(err).WithFields(log.Fields{
 				"cron": name,
 			}).Error("Could not create cron in DynamoDB")
@@ -66,7 +65,7 @@ func (s *Service) Apply(name string, cron *cron.CronDescription) error {
 		}
 	}
 
-	taskDefinitionARN, err := s.tds.AddRevisionFromCronDescription(name, resourceName, cron)
+	taskDefinitionARN, err := s.tds.AddRevisionFromCronDescription(name, resourceName, cronDescription)
 	if err != nil {
 		if err := s.store.SetDeployStatus(name, StatusTaskDefinitionCreationFailed); err != nil {
 			log.WithError(err).WithFields(log.Fields{
@@ -77,7 +76,7 @@ func (s *Service) Apply(name string, cron *cron.CronDescription) error {
 		return err
 	}
 
-	if err := s.cm.RunTaskDefinitionWithSchedule(resourceName, taskDefinitionARN, cron.Schedule); err != nil {
+	if err := s.cm.RunTaskDefinitionWithSchedule(resourceName, taskDefinitionARN, cronDescription.Schedule); err != nil {
 		if err := s.store.SetDeployStatus(name, StatusRuleCreationFailed); err != nil {
 			log.WithError(err).WithFields(log.Fields{
 				"cron":   name,
@@ -87,7 +86,7 @@ func (s *Service) Apply(name string, cron *cron.CronDescription) error {
 		return err
 	}
 
-	if err := s.store.Save(name, resourceName, cron, StatusSuccess); err != nil {
+	if err := s.store.Save(name, resourceName, cronDescription, StatusSuccess); err != nil {
 		log.WithError(err).WithFields(log.Fields{
 			"cron":   name,
 			"status": StatusSuccess,
