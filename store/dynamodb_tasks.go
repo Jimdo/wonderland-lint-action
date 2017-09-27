@@ -42,6 +42,10 @@ var (
 				Type: dynamodbutil.AttributeTypeString,
 			},
 		},
+		TTL: dynamodbutil.TTL{
+			Name:    "ExpiryTime",
+			Enabled: true,
+		},
 	}}
 )
 
@@ -54,6 +58,7 @@ type Task struct {
 	ExitReason string
 	Status     string
 	Version    int64
+	ExpiryTime int64
 }
 
 type DynamoDBTaskStore struct {
@@ -73,8 +78,8 @@ func NewDynamoDBTaskStore(dynamoDBClient dynamodbiface.DynamoDBAPI) (*DynamoDBTa
 func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 	// TODO:
 	// * decide what to do with ExitCode
-	// * delete keys when cron was deleted
 	// * add TTL
+	// * delete keys when cron was deleted // maybe TTL is sufficient to reduce complexity
 
 	task := &Task{
 		Name:       cronName,
@@ -84,6 +89,7 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 		ExitReason: aws.StringValue(t.StoppedReason),
 		Status:     aws.StringValue(t.LastStatus),
 		Version:    aws.Int64Value(t.Version),
+		ExpiryTime: ts.calcExpiry(t),
 	}
 
 	data, err := dynamodbattribute.MarshalMap(task)
@@ -116,4 +122,10 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 	}
 
 	return nil
+}
+
+func (ts *DynamoDBTaskStore) calcExpiry(t *ecs.Task) int64 {
+	//TODO: decide if we want to use StoppedAt for ttl if set
+	ttl := aws.TimeValue(t.CreatedAt).Add(24 * time.Hour * 14)
+	return ttl.Unix()
 }
