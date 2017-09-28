@@ -22,7 +22,7 @@ type Task struct {
 	StartTime  time.Time
 	EndTime    time.Time
 	TaskArn    string
-	ExitCode   *int
+	ExitCode   *int64
 	ExitReason string
 	Status     string
 	Version    int64
@@ -46,14 +46,12 @@ func NewDynamoDBTaskStore(dynamoDBClient dynamodbiface.DynamoDBAPI, tableName st
 }
 
 func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
-	// TODO:
-	// * decide what to do with ExitCode
-
 	task := &Task{
 		Name:       cronName,
 		StartTime:  aws.TimeValue(t.CreatedAt),
 		EndTime:    aws.TimeValue(t.StoppedAt),
 		TaskArn:    aws.StringValue(t.TaskArn),
+		ExitCode:   t.Containers[0].ExitCode,
 		ExitReason: aws.StringValue(t.StoppedReason),
 		Status:     aws.StringValue(t.LastStatus),
 		Version:    aws.Int64Value(t.Version),
