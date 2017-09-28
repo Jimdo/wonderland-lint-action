@@ -34,6 +34,10 @@ type DynamoDBTaskStore struct {
 }
 
 func NewDynamoDBTaskStore(dynamoDBClient dynamodbiface.DynamoDBAPI) (*DynamoDBTaskStore, error) {
+	if err := validateDynamoDBConnection(dynamoDBClient, taskTableName); err != nil {
+		return nil, fmt.Errorf("Could not connect to DynamoDB: %s", err)
+	}
+
 	return &DynamoDBTaskStore{
 		Client: dynamoDBClient,
 	}, nil
@@ -42,8 +46,6 @@ func NewDynamoDBTaskStore(dynamoDBClient dynamodbiface.DynamoDBAPI) (*DynamoDBTa
 func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 	// TODO:
 	// * decide what to do with ExitCode
-	// * add TTL
-	// * delete keys when cron was deleted // maybe TTL is sufficient to reduce complexity
 
 	task := &Task{
 		Name:       cronName,

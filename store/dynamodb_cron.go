@@ -33,6 +33,10 @@ type DynamoDBCronStore struct {
 }
 
 func NewDynamoDBCronStore(dynamoDBClient dynamodbiface.DynamoDBAPI) (*DynamoDBCronStore, error) {
+	if err := validateDynamoDBConnection(dynamoDBClient, cronsTableName); err != nil {
+		return nil, fmt.Errorf("Could not connect to DynamoDB: %s", err)
+	}
+
 	return &DynamoDBCronStore{
 		Client: dynamoDBClient,
 	}, nil
