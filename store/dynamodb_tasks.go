@@ -11,42 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	log "github.com/sirupsen/logrus"
-
-	"github.com/Jimdo/wonderland-crons/dynamodbutil"
 )
 
 const (
 	taskTableName = "wonderland-crons-tasks"
-)
-
-var (
-	taskSchema = []dynamodbutil.TableDescription{{
-		Name: taskTableName,
-		Keys: []dynamodbutil.KeyDescription{
-			{
-				Name: "Name",
-				Type: dynamodbutil.KeyTypeHash,
-			},
-			{
-				Name: "StartTime",
-				Type: dynamodbutil.KeyTypeRange,
-			},
-		},
-		Attributes: []dynamodbutil.AttributeDescription{
-			{
-				Name: "Name",
-				Type: dynamodbutil.AttributeTypeString,
-			},
-			{
-				Name: "StartTime",
-				Type: dynamodbutil.AttributeTypeString,
-			},
-		},
-		TTL: dynamodbutil.TTL{
-			Name:    "ExpiryTime",
-			Enabled: true,
-		},
-	}}
 )
 
 type Task struct {
@@ -66,10 +34,6 @@ type DynamoDBTaskStore struct {
 }
 
 func NewDynamoDBTaskStore(dynamoDBClient dynamodbiface.DynamoDBAPI) (*DynamoDBTaskStore, error) {
-	if err := dynamodbutil.EnforceSchema(dynamoDBClient, taskSchema); err != nil {
-		return nil, fmt.Errorf("Could not create DynamoDB schema: %s", err)
-	}
-
 	return &DynamoDBTaskStore{
 		Client: dynamoDBClient,
 	}, nil

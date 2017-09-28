@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 
 	"github.com/Jimdo/wonderland-crons/cron"
-	"github.com/Jimdo/wonderland-crons/dynamodbutil"
 )
 
 const (
@@ -19,22 +18,6 @@ const (
 )
 
 var (
-	cronSchema = []dynamodbutil.TableDescription{{
-		Name: cronsTableName,
-		Keys: []dynamodbutil.KeyDescription{
-			{
-				Name: "Name",
-				Type: dynamodbutil.KeyTypeHash,
-			},
-		},
-		Attributes: []dynamodbutil.AttributeDescription{
-			{
-				Name: "Name",
-				Type: dynamodbutil.AttributeTypeString,
-			},
-		},
-	}}
-
 	ErrCronNotFound = errors.New("The cron was not found")
 )
 
@@ -50,10 +33,6 @@ type DynamoDBCronStore struct {
 }
 
 func NewDynamoDBCronStore(dynamoDBClient dynamodbiface.DynamoDBAPI) (*DynamoDBCronStore, error) {
-	if err := dynamodbutil.EnforceSchema(dynamoDBClient, cronSchema); err != nil {
-		return nil, fmt.Errorf("Could not create DynamoDB schema: %s", err)
-	}
-
 	return &DynamoDBCronStore{
 		Client: dynamoDBClient,
 	}, nil
