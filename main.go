@@ -76,6 +76,8 @@ var (
 		RefreshAWSCredentialsInterval time.Duration `flag:"aws-credentials-interval" env:"AWS_CREDENTIALS_INTERVAL" default:"10m" description:"Interval in which to fetch new AWS credentials from Vault"`
 		ECSEventsQueueURL             string        `flag:"ecs-events-queue-url" env:"ECS_EVENTS_QUEUE_URL" description:"The URL of the SQS queue receiving ECS events"`
 		ECSEventQueuePollInterval     time.Duration `flag:"ecs-events-queue-poll-interval" default:"1s" description:"The interval in which to poll new ECS events"`
+		CronsTableName                string        `flag:"crons-table-name" env:"CRONS_TABLE_NAME" description:"Name of the DynamoDB Table used for storing crons"`
+		TasksTableName                string        `flag:"tasks-table-name" env:"TASKS_TABLE_NAME" description:"Name of the DynamoDB Table used for storing tasks"`
 	}
 	programIdentifier = "wonderland-crons"
 	programVersion    = "dev"
@@ -96,6 +98,14 @@ func main() {
 	rcm, err := rcm.NewWithLogger(config.VaultAddress, config.VaultRoleID, log.StandardLogger())
 	if err != nil {
 		abort("Could not set up role credential manager: %s", err)
+	}
+
+	if config.CronsTableName == "" {
+		abort("Please pass a crons DynamoDB table name")
+	}
+
+	if config.TasksTableName == "" {
+		abort("Please pass a tasks DynamoDB table name")
 	}
 
 	router := mux.NewRouter()
@@ -207,7 +217,7 @@ func main() {
 		Router: router.PathPrefix("/v1").Subrouter(),
 	}).Register()
 
-	dynamoDBTaskStore, err := store.NewDynamoDBTaskStore(dynamoDBClient)
+	dynamoDBTaskStore, err := store.NewDynamoDBTaskStore(dynamoDBClient, config.TasksTableName)
 	if err != nil {
 		log.Fatalf("Failed to initialize Task store: %s", err)
 	}
@@ -229,7 +239,7 @@ func main() {
 	ecstdm := aws.NewECSTaskDefinitionMapper()
 	ecstds := aws.NewECSTaskDefinitionStore(ecsClient, ecstdm)
 	cloudwatchcm := aws.NewCloudwatchRuleCronManager(cwClient, config.ECSClusterARN, config.CronRoleARN)
-	dynamoDBCronStore, err := store.NewDynamoDBCronStore(dynamoDBClient)
+	dynamoDBCronStore, err := store.NewDynamoDBCronStore(dynamoDBClient, config.CronsTableName)
 	if err != nil {
 		log.Fatalf("Failed to initialize Cron store: %s", err)
 	}

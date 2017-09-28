@@ -13,10 +13,6 @@ import (
 	"github.com/Jimdo/wonderland-crons/cron"
 )
 
-const (
-	cronsTableName = "wonderland-crons"
-)
-
 var (
 	ErrCronNotFound = errors.New("The cron was not found")
 )
@@ -29,16 +25,18 @@ type Cron struct {
 }
 
 type DynamoDBCronStore struct {
-	Client dynamodbiface.DynamoDBAPI
+	Client    dynamodbiface.DynamoDBAPI
+	TableName string
 }
 
-func NewDynamoDBCronStore(dynamoDBClient dynamodbiface.DynamoDBAPI) (*DynamoDBCronStore, error) {
-	if err := validateDynamoDBConnection(dynamoDBClient, cronsTableName); err != nil {
+func NewDynamoDBCronStore(dynamoDBClient dynamodbiface.DynamoDBAPI, tableName string) (*DynamoDBCronStore, error) {
+	if err := validateDynamoDBConnection(dynamoDBClient, tableName); err != nil {
 		return nil, fmt.Errorf("Could not connect to DynamoDB: %s", err)
 	}
 
 	return &DynamoDBCronStore{
-		Client: dynamoDBClient,
+		Client:    dynamoDBClient,
+		TableName: tableName,
 	}, nil
 }
 
@@ -64,7 +62,7 @@ func (d *DynamoDBCronStore) GetResourceName(name string) (string, error) {
 
 func (d *DynamoDBCronStore) Delete(name string) error {
 	_, err := d.Client.DeleteItem(&dynamodb.DeleteItemInput{
-		TableName: aws.String(cronsTableName),
+		TableName: aws.String(d.TableName),
 		Key: map[string]*dynamodb.AttributeValue{
 			"Name": {
 				S: aws.String(name),
@@ -105,7 +103,7 @@ func (d *DynamoDBCronStore) getAll() ([]*Cron, error) {
 	var result []*Cron
 	var mapperError error
 	err := d.Client.ScanPages(&dynamodb.ScanInput{
-		TableName: aws.String(cronsTableName),
+		TableName: aws.String(d.TableName),
 	}, func(out *dynamodb.ScanOutput, last bool) bool {
 		var crons []*Cron
 		if err := dynamodbattribute.UnmarshalListOfMaps(out.Items, &crons); err != nil {
@@ -131,7 +129,7 @@ func (d *DynamoDBCronStore) getByName(name string) (*Cron, error) {
 	cron := &Cron{}
 
 	res, err := d.Client.GetItem(&dynamodb.GetItemInput{
-		TableName: aws.String(cronsTableName),
+		TableName: aws.String(d.TableName),
 		Key: map[string]*dynamodb.AttributeValue{
 			"Name": {
 				S: aws.String(name),
@@ -158,7 +156,7 @@ func (d *DynamoDBCronStore) set(cron *Cron) error {
 	}
 
 	_, err = d.Client.PutItem(&dynamodb.PutItemInput{
-		TableName: aws.String(cronsTableName),
+		TableName: aws.String(d.TableName),
 		Item:      data,
 	})
 	if err != nil {

@@ -13,10 +13,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const (
-	taskTableName = "wonderland-crons-tasks"
-)
-
 type Task struct {
 	Name       string
 	StartTime  time.Time
@@ -30,16 +26,18 @@ type Task struct {
 }
 
 type DynamoDBTaskStore struct {
-	Client dynamodbiface.DynamoDBAPI
+	Client    dynamodbiface.DynamoDBAPI
+	TableName string
 }
 
-func NewDynamoDBTaskStore(dynamoDBClient dynamodbiface.DynamoDBAPI) (*DynamoDBTaskStore, error) {
-	if err := validateDynamoDBConnection(dynamoDBClient, taskTableName); err != nil {
+func NewDynamoDBTaskStore(dynamoDBClient dynamodbiface.DynamoDBAPI, tableName string) (*DynamoDBTaskStore, error) {
+	if err := validateDynamoDBConnection(dynamoDBClient, tableName); err != nil {
 		return nil, fmt.Errorf("Could not connect to DynamoDB: %s", err)
 	}
 
 	return &DynamoDBTaskStore{
-		Client: dynamoDBClient,
+		Client:    dynamoDBClient,
+		TableName: tableName,
 	}, nil
 }
 
@@ -69,7 +67,7 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 	}
 
 	_, err = ts.Client.PutItem(&dynamodb.PutItemInput{
-		TableName:           aws.String(taskTableName),
+		TableName:           aws.String(ts.TableName),
 		Item:                data,
 		ConditionExpression: aws.String("attribute_not_exists(Version) OR (Version < :version)"),
 		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
