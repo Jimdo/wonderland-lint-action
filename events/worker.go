@@ -87,7 +87,7 @@ func (w *Worker) handleMessage(m *sqs.Message) error {
 			return fmt.Errorf("could not validate if task is a cron: %s", err)
 		}
 		if ok {
-			cronName := cron.GetNameByResource(aws.StringValue(task.Overrides.ContainerOverrides[0].Name))
+			cronName := cron.GetNameByResource(aws.StringValue(task.Containers[0].Name))
 			if err := w.TaskStore.Update(cronName, task); err != nil {
 				return fmt.Errorf("Storing task in DynamoDB failed: %s", err)
 			}

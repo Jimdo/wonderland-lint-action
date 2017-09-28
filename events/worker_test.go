@@ -29,11 +29,9 @@ func TestWorker_Run(t *testing.T) {
 	)
 
 	task := &ecs.Task{
-		Overrides: &ecs.TaskOverride{
-			ContainerOverrides: []*ecs.ContainerOverride{{
-				Name: aws.String("cron--test"),
-			}},
-		},
+		Containers: []*ecs.Container{{
+			Name: aws.String("cron--test"),
+		}},
 	}
 	taskJSON, _ := json.Marshal(task)
 

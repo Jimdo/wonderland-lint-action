@@ -21,8 +21,8 @@ func GetResourceByName(cronName string) string {
 }
 
 func IsCron(task *ecs.Task) (bool, error) {
-	if task.Overrides == nil || len(task.Overrides.ContainerOverrides) == 0 {
-		return false, fmt.Errorf("Task has no overrides defined, cannot discover name")
+	if len(task.Containers) == 0 {
+		return false, fmt.Errorf("Task has no containers defined, cannot discover name")
 	}
-	return strings.HasPrefix(aws.StringValue(task.Overrides.ContainerOverrides[0].Name), cronPrefix), nil
+	return strings.HasPrefix(aws.StringValue(task.Containers[0].Name), cronPrefix), nil
 }
