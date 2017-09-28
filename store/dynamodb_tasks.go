@@ -13,6 +13,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	daysToKeepTasks = 14
+)
+
 type Task struct {
 	Name       string
 	StartTime  time.Time
@@ -89,7 +93,6 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 }
 
 func (ts *DynamoDBTaskStore) calcExpiry(t *ecs.Task) int64 {
-	//TODO: decide if we want to use StoppedAt for ttl if set
-	ttl := aws.TimeValue(t.CreatedAt).Add(24 * time.Hour * 14)
+	ttl := aws.TimeValue(t.CreatedAt).Add(24 * time.Hour * daysToKeepTasks)
 	return ttl.Unix()
 }
