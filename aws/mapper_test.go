@@ -27,6 +27,9 @@ func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription(t *testi
 				Memory: "l",
 				CPU:    "m",
 			},
+			Logging: &cron.LogDescription{
+				Types: []string{"json", "access_log"},
+			},
 		},
 	}
 
@@ -61,12 +64,16 @@ func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription(t *testi
 		t.Fatalf("expected container command to contain '--version', but did not find it in: %#v", awssdk.StringValueSlice(containerDesc.Command))
 	}
 
-	if len(containerDesc.DockerLabels) != 1 {
+	if len(containerDesc.DockerLabels) != 2 {
 		t.Fatalf("expected container labels to consist of one label, but got %d", len(containerDesc.DockerLabels))
 	}
 
 	if _, ok := containerDesc.DockerLabels["com.jimdo.wonderland.cron"]; !ok {
 		t.Fatalf("expected container labels to container 'com.jimdo.wonderland.cron', but did not find it in: %#v", awssdk.StringValueMap(containerDesc.DockerLabels))
+	}
+
+	if _, ok := containerDesc.DockerLabels["com.jimdo.wonderland.logtypes"]; !ok {
+		t.Fatalf("expected container labels to container 'com.jimdo.wonderland.logtypes', but did not find it in: %#v", awssdk.StringValueMap(containerDesc.DockerLabels))
 	}
 
 	if len(containerDesc.Environment) != 2 {

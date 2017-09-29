@@ -1,6 +1,8 @@
 package aws
 
 import (
+	"strings"
+
 	awssdk "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
 
@@ -26,7 +28,8 @@ func (tds *ECSTaskDefinitionMapper) ContainerDefinitionFromCronDescription(conta
 		Command: awssdk.StringSlice(cron.Description.Arguments),
 		Cpu:     awssdk.Int64(int64(cron.Description.Capacity.CPULimit())),
 		DockerLabels: map[string]*string{
-			"com.jimdo.wonderland.cron": awssdk.String(cronName),
+			"com.jimdo.wonderland.cron":     awssdk.String(cronName),
+			"com.jimdo.wonderland.logtypes": awssdk.String(strings.Join(cron.Description.LoggingTypes(), ",")),
 		},
 		Environment: envVars,
 		Image:       awssdk.String(cron.Description.Image),

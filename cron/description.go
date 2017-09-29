@@ -67,6 +67,7 @@ type ContainerDescription struct {
 	Arguments   []string             `json:"arguments,omitempty"`
 	Environment map[string]string    `json:"env,omitempty"`
 	Capacity    *CapacityDescription `json:"capacity,omitempty"`
+	Logging     *LogDescription      `json:"logging,omitempty"`
 }
 
 const (
@@ -125,10 +126,21 @@ func (c *ContainerDescription) init() {
 	c.Capacity.init()
 }
 
+func (c *ContainerDescription) LoggingTypes() []string {
+	if c.Logging == nil {
+		return nil
+	}
+	return c.Logging.Types
+}
+
 func MemoryTShirtSizeToUInt(size string) uint {
 	return 1 << (MemoryCapacitySpecifications[size] + MemBase)
 }
 
 func CPUTShirtSizeToUInt(size string) uint {
 	return 1 << (CPUCapacitySpecifications[size] + CPUBase)
+}
+
+type LogDescription struct {
+	Types []string `json:"types"`
 }
