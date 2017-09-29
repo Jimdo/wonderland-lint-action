@@ -52,7 +52,7 @@ func (d *DynamoDBCronStore) Save(name, res string, desc *cron.CronDescription, s
 }
 
 func (d *DynamoDBCronStore) GetResourceName(name string) (string, error) {
-	cron, err := d.getByName(name)
+	cron, err := d.GetByName(name)
 	if err != nil {
 		return "", err
 	}
@@ -77,7 +77,7 @@ func (d *DynamoDBCronStore) Delete(name string) error {
 }
 
 func (d *DynamoDBCronStore) SetDeployStatus(name, msg string) error {
-	cron, err := d.getByName(name)
+	cron, err := d.GetByName(name)
 	if err != nil {
 		return fmt.Errorf("Could not fetch cron: %s", err)
 	}
@@ -125,7 +125,7 @@ func (d *DynamoDBCronStore) getAll() ([]*Cron, error) {
 	return result, nil
 }
 
-func (d *DynamoDBCronStore) getByName(name string) (*Cron, error) {
+func (d *DynamoDBCronStore) GetByName(name string) (*Cron, error) {
 	cron := &Cron{}
 
 	res, err := d.Client.GetItem(&dynamodb.GetItemInput{
