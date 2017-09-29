@@ -38,9 +38,8 @@ type Service struct {
 }
 
 type CronStatus struct {
-	Name           string
+	Cron           *store.Cron
 	Status         string
-	Schedule       string
 	LastExecutions []Executions
 }
 
@@ -155,9 +154,8 @@ func (s *Service) Status(cronName string) (*CronStatus, error) {
 		return nil, err
 	}
 	status := &CronStatus{
-		Name:     cronName,
-		Status:   "not implemented yet",
-		Schedule: cron.Description.Schedule,
+		Cron:   cron,
+		Status: "not implemented yet",
 	}
 
 	return status, nil
