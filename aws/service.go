@@ -29,7 +29,7 @@ type CronStore interface {
 
 type Service struct {
 	cm        RuleCronManager
-	store     CronStore
+	cronStore CronStore
 	tds       TaskDefinitionStore
 	validator CronValidator
 }
@@ -37,7 +37,7 @@ type Service struct {
 func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s CronStore) *Service {
 	return &Service{
 		cm:        cm,
-		store:     s,
+		cronStore: s,
 		tds:       tds,
 		validator: v,
 	}
@@ -51,14 +51,14 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 		return err
 	}
 
-	resourceName, err := s.store.GetResourceName(name)
+	resourceName, err := s.cronStore.GetResourceName(name)
 	if err != nil {
 		if err != store.ErrCronNotFound {
 			return err
 		}
 
 		resourceName = cron.GetResourceByName(name)
-		if err := s.store.Save(name, resourceName, cronDescription, StatusCreating); err != nil {
+		if err := s.cronStore.Save(name, resourceName, cronDescription, StatusCreating); err != nil {
 			log.WithError(err).WithFields(log.Fields{
 				"cron": name,
 			}).Error("Could not create cron in DynamoDB")
@@ -68,7 +68,7 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 
 	taskDefinitionARN, err := s.tds.AddRevisionFromCronDescription(name, resourceName, cronDescription)
 	if err != nil {
-		if err := s.store.SetDeployStatus(name, StatusTaskDefinitionCreationFailed); err != nil {
+		if err := s.cronStore.SetDeployStatus(name, StatusTaskDefinitionCreationFailed); err != nil {
 			log.WithError(err).WithFields(log.Fields{
 				"cron":   name,
 				"status": StatusTaskDefinitionCreationFailed,
@@ -78,7 +78,7 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 	}
 
 	if err := s.cm.RunTaskDefinitionWithSchedule(resourceName, taskDefinitionARN, cronDescription.Schedule); err != nil {
-		if err := s.store.SetDeployStatus(name, StatusRuleCreationFailed); err != nil {
+		if err := s.cronStore.SetDeployStatus(name, StatusRuleCreationFailed); err != nil {
 			log.WithError(err).WithFields(log.Fields{
 				"cron":   name,
 				"status": StatusRuleCreationFailed,
@@ -87,7 +87,7 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 		return err
 	}
 
-	if err := s.store.Save(name, resourceName, cronDescription, StatusSuccess); err != nil {
+	if err := s.cronStore.Save(name, resourceName, cronDescription, StatusSuccess); err != nil {
 		log.WithError(err).WithFields(log.Fields{
 			"cron":   name,
 			"status": StatusSuccess,
@@ -99,7 +99,7 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 }
 
 func (s *Service) Delete(cronName string) error {
-	resourceName, err := s.store.GetResourceName(cronName)
+	resourceName, err := s.cronStore.GetResourceName(cronName)
 	if err != nil {
 		if err == store.ErrCronNotFound {
 			return nil
@@ -121,7 +121,7 @@ func (s *Service) Delete(cronName string) error {
 		return errors[0]
 	}
 
-	if err := s.store.Delete(cronName); err != nil {
+	if err := s.cronStore.Delete(cronName); err != nil {
 		return err
 	}
 
@@ -129,5 +129,5 @@ func (s *Service) Delete(cronName string) error {
 }
 
 func (s *Service) List() ([]string, error) {
-	return s.store.List()
+	return s.cronStore.List()
 }
