@@ -181,6 +181,16 @@
 			"Rev": "960dd6034cbdac0e9716bfa66d91de88b286889f"
 		},
 		{
+			"ImportPath": "github.com/aws/aws-sdk-go/service/sqs",
+			"Comment": "v1.10.38",
+			"Rev": "960dd6034cbdac0e9716bfa66d91de88b286889f"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/service/sqs/sqsiface",
+			"Comment": "v1.10.38",
+			"Rev": "960dd6034cbdac0e9716bfa66d91de88b286889f"
+		},
+		{
 			"ImportPath": "github.com/aws/aws-sdk-go/service/sts",
 			"Comment": "v1.10.38",
 			"Rev": "960dd6034cbdac0e9716bfa66d91de88b286889f"
