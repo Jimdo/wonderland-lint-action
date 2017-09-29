@@ -36,6 +36,7 @@ func (a *API) Register() {
 	a.config.Router.HandleFunc("/crons", api.HandlerWithDefaultTimeout(a.ListCrons)).Methods("GET")
 	a.config.Router.HandleFunc("/crons/{name}", api.HandlerWithDefaultTimeout(a.DeleteHandler)).Methods("DELETE")
 	a.config.Router.HandleFunc("/crons/{name}", api.HandlerWithDefaultTimeout(a.PutHandler)).Methods("PUT")
+	a.config.Router.HandleFunc("/crons/{name}", api.HandlerWithDefaultTimeout(a.CronStatus)).Methods("GET")
 }
 
 func (a *API) StatusHandler(w http.ResponseWriter, req *http.Request) {}
@@ -87,4 +88,18 @@ func (a *API) ListCrons(ctx context.Context, w http.ResponseWriter, req *http.Re
 	}
 
 	sendJSON(w, crons, http.StatusOK)
+}
+
+func (a *API) CronStatus(ctx context.Context, w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	cronName := vars["name"]
+
+	status, err := a.config.Service.Status(cronName)
+	if err != nil {
+		sendServerError(w, fmt.Errorf("Unable to get status of cron %s: %s", cronName, err))
+		return
+	}
+
+	sendJSON(w, status, http.StatusOK)
+
 }
