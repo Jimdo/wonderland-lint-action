@@ -5,11 +5,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Jimdo/wonderland-crons/aws/mock"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/golang/mock/gomock"
+
+	"github.com/Jimdo/wonderland-crons/aws/mock"
 )
 
 var (
