@@ -1,8 +1,6 @@
 package aws
 
 import (
-	"time"
-
 	log "github.com/sirupsen/logrus"
 
 	"github.com/Jimdo/wonderland-crons/cron"
@@ -30,32 +28,31 @@ type CronStore interface {
 	GetByName(string) (*store.Cron, error)
 }
 
+type CronTaskStore interface {
+	GetTaskExecutions(string, int64) ([]*store.Task, error)
+}
+
 type Service struct {
 	cm        RuleCronManager
 	cronStore CronStore
 	tds       TaskDefinitionStore
 	validator CronValidator
+	taskStore CronTaskStore
 }
 
 type CronStatus struct {
-	Cron           *store.Cron
-	Status         string
-	LastExecutions []Executions
+	Cron       *store.Cron
+	Status     string
+	Executions []*store.Task
 }
 
-type Executions struct {
-	Id        string
-	StartedAt time.Time
-	Durdation time.Duration
-	Status    string
-}
-
-func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s CronStore) *Service {
+func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s CronStore, ts CronTaskStore) *Service {
 	return &Service{
 		cm:        cm,
 		cronStore: s,
 		tds:       tds,
 		validator: v,
+		taskStore: ts,
 	}
 }
 
@@ -153,9 +150,11 @@ func (s *Service) Status(cronName string) (*CronStatus, error) {
 	if err != nil {
 		return nil, err
 	}
+	executions, err := s.taskStore.GetTaskExecutions(cronName, 3)
 	status := &CronStatus{
-		Cron:   cron,
-		Status: "not implemented yet",
+		Cron:       cron,
+		Status:     "not implemented yet",
+		Executions: executions,
 	}
 
 	return status, nil

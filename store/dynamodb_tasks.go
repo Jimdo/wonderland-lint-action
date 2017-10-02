@@ -90,6 +90,39 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 	return nil
 }
 
+func (ts *DynamoDBTaskStore) GetTaskExecutions(cronName string, count int64) ([]*Task, error) {
+	tasks := []*Task{}
+
+	// TODO: pagination
+	res, err := ts.Client.Query(&dynamodb.QueryInput{
+		TableName: aws.String(ts.TableName),
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":name": {
+				S: aws.String(cronName),
+			},
+		},
+		ExpressionAttributeNames: map[string]*string{
+			"#N": aws.String("Name"),
+		},
+		KeyConditionExpression: aws.String("#N = :name"),
+		Limit:            aws.Int64(count),
+		ScanIndexForward: aws.Bool(false),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("Could not fetch tasks from DynamoDB: %s", err)
+	}
+
+	if res.Items == nil {
+		return nil, fmt.Errorf("No tasks for cron found")
+	}
+
+	if err := dynamodbattribute.UnmarshalListOfMaps(res.Items, &tasks); err != nil {
+		return nil, fmt.Errorf("Could not unmarshal cron: %s", err)
+	}
+	return tasks, nil
+
+}
+
 func (ts *DynamoDBTaskStore) calcExpiry(t *ecs.Task) int64 {
 	ttl := aws.TimeValue(t.CreatedAt).Add(24 * time.Hour * daysToKeepTasks)
 	return ttl.Unix()

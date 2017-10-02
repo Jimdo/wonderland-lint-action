@@ -246,7 +246,7 @@ func main() {
 
 	v2.New(&v2.Config{
 		Router:  router.PathPrefix("/v2").Subrouter(),
-		Service: aws.NewService(validator, cloudwatchcm, ecstds, dynamoDBCronStore),
+		Service: aws.NewService(validator, cloudwatchcm, ecstds, dynamoDBCronStore, dynamoDBTaskStore),
 	}).Register()
 
 	router.HandleFunc("/debug/pprof/profile", pprof.Profile)
