@@ -115,6 +115,11 @@ func (ts *DynamoDBTaskStore) GetTaskExecutions(cronName string, count int64) ([]
 		}
 
 		result = append(result, tasks...)
+		// DynamoDB limit results are different when using pagination, so bail out once we have the requested items
+		if int64(len(result)) >= count {
+			return false
+		}
+
 		return !last
 	})
 	if err != nil {
@@ -123,6 +128,12 @@ func (ts *DynamoDBTaskStore) GetTaskExecutions(cronName string, count int64) ([]
 
 	if queryError != nil {
 		return nil, queryError
+	}
+
+	// Due to the behaviour of paginated DynamoDB queries, we might have more results than requested.
+	// We have to remove then manually
+	for int64(len(result)) > count {
+		result = result[:len(result)-1]
 	}
 
 	return result, nil
