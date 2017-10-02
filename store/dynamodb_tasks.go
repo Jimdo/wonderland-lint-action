@@ -91,10 +91,10 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 }
 
 func (ts *DynamoDBTaskStore) GetTaskExecutions(cronName string, count int64) ([]*Task, error) {
-	tasks := []*Task{}
+	var result []*Task
+	var queryError error
 
-	// TODO: pagination
-	res, err := ts.Client.Query(&dynamodb.QueryInput{
+	err := ts.Client.QueryPages(&dynamodb.QueryInput{
 		TableName: aws.String(ts.TableName),
 		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
 			":name": {
@@ -107,20 +107,25 @@ func (ts *DynamoDBTaskStore) GetTaskExecutions(cronName string, count int64) ([]
 		KeyConditionExpression: aws.String("#N = :name"),
 		Limit:            aws.Int64(count),
 		ScanIndexForward: aws.Bool(false),
+	}, func(out *dynamodb.QueryOutput, last bool) bool {
+		var tasks []*Task
+		if err := dynamodbattribute.UnmarshalListOfMaps(out.Items, &tasks); err != nil {
+			queryError = fmt.Errorf("Could not unmarshal cron: %s", err)
+			return false
+		}
+
+		result = append(result, tasks...)
+		return !last
 	})
 	if err != nil {
 		return nil, fmt.Errorf("Could not fetch tasks from DynamoDB: %s", err)
 	}
 
-	if res.Items == nil {
-		return nil, fmt.Errorf("No tasks for cron found")
+	if queryError != nil {
+		return nil, queryError
 	}
 
-	if err := dynamodbattribute.UnmarshalListOfMaps(res.Items, &tasks); err != nil {
-		return nil, fmt.Errorf("Could not unmarshal cron: %s", err)
-	}
-	return tasks, nil
-
+	return result, nil
 }
 
 func (ts *DynamoDBTaskStore) calcExpiry(t *ecs.Task) int64 {
