@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 
@@ -94,7 +95,22 @@ func (a *API) CronStatus(ctx context.Context, w http.ResponseWriter, req *http.R
 	vars := mux.Vars(req)
 	cronName := vars["name"]
 
-	status, err := a.config.Service.Status(cronName)
+	params := req.URL.Query()
+	configuredExecutions := params.Get("executions")
+
+	var executions int64
+	var err error
+
+	if configuredExecutions == "" {
+		executions = 10
+	} else {
+		executions, err = strconv.ParseInt(configuredExecutions, 10, 64)
+		if err != nil {
+			sendServerError(w, fmt.Errorf("Could not convert executions into int64: %s", err))
+		}
+	}
+
+	status, err := a.config.Service.Status(cronName, executions)
 	if err != nil {
 		sendServerError(w, fmt.Errorf("Unable to get status of cron %s: %s", cronName, err))
 		return

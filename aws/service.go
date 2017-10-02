@@ -145,12 +145,12 @@ func (s *Service) List() ([]string, error) {
 	return s.cronStore.List()
 }
 
-func (s *Service) Status(cronName string) (*CronStatus, error) {
+func (s *Service) Status(cronName string, executionCount int64) (*CronStatus, error) {
 	cron, err := s.cronStore.GetByName(cronName)
 	if err != nil {
 		return nil, err
 	}
-	executions, err := s.taskStore.GetTaskExecutions(cronName, 3)
+	executions, err := s.taskStore.GetTaskExecutions(cronName, executionCount)
 	status := &CronStatus{
 		Cron:       cron,
 		Status:     "not implemented yet",
