@@ -90,7 +90,7 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 	return nil
 }
 
-func (ts *DynamoDBTaskStore) GetTaskExecutions(cronName string, count int64) ([]*Task, error) {
+func (ts *DynamoDBTaskStore) GetLastNTaskExecutions(cronName string, count int64) ([]*Task, error) {
 	var result []*Task
 	var queryError error
 

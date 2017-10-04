@@ -29,7 +29,7 @@ type CronStore interface {
 }
 
 type CronTaskStore interface {
-	GetTaskExecutions(string, int64) ([]*store.Task, error)
+	GetLastNTaskExecutions(string, int64) ([]*store.Task, error)
 }
 
 type Service struct {
@@ -150,7 +150,7 @@ func (s *Service) Status(cronName string, executionCount int64) (*CronStatus, er
 	if err != nil {
 		return nil, err
 	}
-	executions, err := s.taskStore.GetTaskExecutions(cronName, executionCount)
+	executions, err := s.taskStore.GetLastNTaskExecutions(cronName, executionCount)
 	status := &CronStatus{
 		Cron:       cron,
 		Status:     "not implemented yet",
