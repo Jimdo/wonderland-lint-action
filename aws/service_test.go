@@ -19,7 +19,8 @@ func TestService_Apply_Creation(t *testing.T) {
 	cm := mock.NewMockRuleCronManager(ctrl)
 	tds := mock.NewMockTaskDefinitionStore(ctrl)
 	s := mock.NewMockCronStore(ctrl)
-	service := NewService(v, cm, tds, s)
+	ts := mock.NewMockCronTaskStore(ctrl)
+	service := NewService(v, cm, tds, s, ts)
 
 	cronDesc := &cron.CronDescription{
 		Schedule: "* * * * *",
@@ -62,7 +63,8 @@ func TestService_Apply_Update(t *testing.T) {
 	cm := mock.NewMockRuleCronManager(ctrl)
 	tds := mock.NewMockTaskDefinitionStore(ctrl)
 	s := mock.NewMockCronStore(ctrl)
-	service := NewService(v, cm, tds, s)
+	ts := mock.NewMockCronTaskStore(ctrl)
+	service := NewService(v, cm, tds, s, ts)
 
 	cronDesc := &cron.CronDescription{
 		Schedule: "* * * * *",
@@ -105,7 +107,8 @@ func TestService_Apply_Error_OnStoreGetResourceName(t *testing.T) {
 	cm := mock.NewMockRuleCronManager(ctrl)
 	tds := mock.NewMockTaskDefinitionStore(ctrl)
 	s := mock.NewMockCronStore(ctrl)
-	service := NewService(v, cm, tds, s)
+	ts := mock.NewMockCronTaskStore(ctrl)
+	service := NewService(v, cm, tds, s, ts)
 
 	cronDesc := &cron.CronDescription{}
 
@@ -127,7 +130,8 @@ func TestService_Apply_Error_InvalidCronName(t *testing.T) {
 	cm := mock.NewMockRuleCronManager(ctrl)
 	tds := mock.NewMockTaskDefinitionStore(ctrl)
 	s := mock.NewMockCronStore(ctrl)
-	service := NewService(v, cm, tds, s)
+	ts := mock.NewMockCronTaskStore(ctrl)
+	service := NewService(v, cm, tds, s, ts)
 
 	v.EXPECT().ValidateCronName("test-cron").Return(errors.New("foo"))
 
@@ -145,7 +149,8 @@ func TestService_Apply_Error_InvalidCronDescription(t *testing.T) {
 	cm := mock.NewMockRuleCronManager(ctrl)
 	tds := mock.NewMockTaskDefinitionStore(ctrl)
 	s := mock.NewMockCronStore(ctrl)
-	service := NewService(v, cm, tds, s)
+	ts := mock.NewMockCronTaskStore(ctrl)
+	service := NewService(v, cm, tds, s, ts)
 
 	cronDesc := &cron.CronDescription{}
 	v.EXPECT().ValidateCronName("test-cron")
@@ -165,7 +170,8 @@ func TestService_Apply_Error_AddTaskDefinitionRevision(t *testing.T) {
 	cm := mock.NewMockRuleCronManager(ctrl)
 	tds := mock.NewMockTaskDefinitionStore(ctrl)
 	s := mock.NewMockCronStore(ctrl)
-	service := NewService(v, cm, tds, s)
+	ts := mock.NewMockCronTaskStore(ctrl)
+	service := NewService(v, cm, tds, s, ts)
 
 	cronDesc := &cron.CronDescription{}
 	v.EXPECT().ValidateCronName("test-cron")
@@ -189,7 +195,8 @@ func TestService_Apply_Error_RunTaskDefinitionWithSchedule(t *testing.T) {
 	cm := mock.NewMockRuleCronManager(ctrl)
 	tds := mock.NewMockTaskDefinitionStore(ctrl)
 	s := mock.NewMockCronStore(ctrl)
-	service := NewService(v, cm, tds, s)
+	ts := mock.NewMockCronTaskStore(ctrl)
+	service := NewService(v, cm, tds, s, ts)
 
 	cronDesc := &cron.CronDescription{}
 	v.EXPECT().ValidateCronName("test-cron")
@@ -217,7 +224,8 @@ func TestService_Delete(t *testing.T) {
 	cm := mock.NewMockRuleCronManager(ctrl)
 	tds := mock.NewMockTaskDefinitionStore(ctrl)
 	s := mock.NewMockCronStore(ctrl)
-	service := NewService(v, cm, tds, s)
+	ts := mock.NewMockCronTaskStore(ctrl)
+	service := NewService(v, cm, tds, s, ts)
 
 	resourceName := "cron--test-cron"
 
@@ -240,7 +248,8 @@ func TestService_Delete_Error_OnRuleDeletionError(t *testing.T) {
 	cm := mock.NewMockRuleCronManager(ctrl)
 	tds := mock.NewMockTaskDefinitionStore(ctrl)
 	s := mock.NewMockCronStore(ctrl)
-	service := NewService(v, cm, tds, s)
+	ts := mock.NewMockCronTaskStore(ctrl)
+	service := NewService(v, cm, tds, s, ts)
 
 	resourceName := "cron--test-cron"
 
@@ -262,7 +271,8 @@ func TestService_Delete_Error_OnTaskDefinitionDeletionError(t *testing.T) {
 	cm := mock.NewMockRuleCronManager(ctrl)
 	tds := mock.NewMockTaskDefinitionStore(ctrl)
 	s := mock.NewMockCronStore(ctrl)
-	service := NewService(v, cm, tds, s)
+	ts := mock.NewMockCronTaskStore(ctrl)
+	service := NewService(v, cm, tds, s, ts)
 
 	resourceName := "cron--test-cron"
 
@@ -284,7 +294,8 @@ func TestService_Delete_Error_OnlyFirstErrorReturned(t *testing.T) {
 	cm := mock.NewMockRuleCronManager(ctrl)
 	tds := mock.NewMockTaskDefinitionStore(ctrl)
 	s := mock.NewMockCronStore(ctrl)
-	service := NewService(v, cm, tds, s)
+	ts := mock.NewMockCronTaskStore(ctrl)
+	service := NewService(v, cm, tds, s, ts)
 
 	resourceName := "cron--test-cron"
 
@@ -309,7 +320,8 @@ func TestService_Delete_Error_OnStoreDelete(t *testing.T) {
 	cm := mock.NewMockRuleCronManager(ctrl)
 	tds := mock.NewMockTaskDefinitionStore(ctrl)
 	s := mock.NewMockCronStore(ctrl)
-	service := NewService(v, cm, tds, s)
+	ts := mock.NewMockCronTaskStore(ctrl)
+	service := NewService(v, cm, tds, s, ts)
 
 	resourceName := "cron--test-cron"
 
@@ -332,7 +344,8 @@ func TestService_Delete_NoError_CronNotFound(t *testing.T) {
 	cm := mock.NewMockRuleCronManager(ctrl)
 	tds := mock.NewMockTaskDefinitionStore(ctrl)
 	s := mock.NewMockCronStore(ctrl)
-	service := NewService(v, cm, tds, s)
+	ts := mock.NewMockCronTaskStore(ctrl)
+	service := NewService(v, cm, tds, s, ts)
 
 	s.EXPECT().GetResourceName("test-cron").Return("", store.ErrCronNotFound)
 
@@ -350,7 +363,8 @@ func TestService_Delete_Error_OnStoreGetResourceName(t *testing.T) {
 	cm := mock.NewMockRuleCronManager(ctrl)
 	tds := mock.NewMockTaskDefinitionStore(ctrl)
 	s := mock.NewMockCronStore(ctrl)
-	service := NewService(v, cm, tds, s)
+	ts := mock.NewMockCronTaskStore(ctrl)
+	service := NewService(v, cm, tds, s, ts)
 
 	s.EXPECT().GetResourceName("test-cron").Return("", errors.New("foo"))
 

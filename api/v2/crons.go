@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 
 	"github.com/Jimdo/wonderland-crons/api"
 	"github.com/Jimdo/wonderland-crons/aws"
 	"github.com/Jimdo/wonderland-crons/cron"
+	"github.com/Jimdo/wonderland-crons/store"
 	"github.com/Jimdo/wonderland-crons/validation"
 )
 
@@ -36,6 +38,7 @@ func (a *API) Register() {
 	a.config.Router.HandleFunc("/crons", api.HandlerWithDefaultTimeout(a.ListCrons)).Methods("GET")
 	a.config.Router.HandleFunc("/crons/{name}", api.HandlerWithDefaultTimeout(a.DeleteHandler)).Methods("DELETE")
 	a.config.Router.HandleFunc("/crons/{name}", api.HandlerWithDefaultTimeout(a.PutHandler)).Methods("PUT")
+	a.config.Router.HandleFunc("/crons/{name}", api.HandlerWithDefaultTimeout(a.CronStatus)).Methods("GET")
 }
 
 func (a *API) StatusHandler(w http.ResponseWriter, req *http.Request) {}
@@ -87,4 +90,37 @@ func (a *API) ListCrons(ctx context.Context, w http.ResponseWriter, req *http.Re
 	}
 
 	sendJSON(w, crons, http.StatusOK)
+}
+
+func (a *API) CronStatus(ctx context.Context, w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	cronName := vars["name"]
+
+	params := req.URL.Query()
+	configuredExecutions := params.Get("executions")
+
+	var executions int64
+	var err error
+
+	if configuredExecutions == "" {
+		executions = 10
+	} else {
+		executions, err = strconv.ParseInt(configuredExecutions, 10, 64)
+		if err != nil {
+			sendServerError(w, fmt.Errorf("Could not convert executions into int64: %s", err))
+			return
+		}
+	}
+
+	status, err := a.config.Service.Status(cronName, executions)
+	if err != nil {
+		if err == store.ErrCronNotFound {
+			sendError(w, fmt.Errorf("Cron not found"), http.StatusNotFound)
+		} else {
+			sendServerError(w, fmt.Errorf("Unable to get status of cron %s: %s", cronName, err))
+		}
+		return
+	}
+
+	sendJSON(w, status, http.StatusOK)
 }

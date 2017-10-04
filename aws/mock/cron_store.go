@@ -5,6 +5,7 @@ package mock
 
 import (
 	cron "github.com/Jimdo/wonderland-crons/cron"
+	store "github.com/Jimdo/wonderland-crons/store"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -37,6 +38,17 @@ func (_m *MockCronStore) Delete(_param0 string) error {
 
 func (_mr *_MockCronStoreRecorder) Delete(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "Delete", arg0)
+}
+
+func (_m *MockCronStore) GetByName(_param0 string) (*store.Cron, error) {
+	ret := _m.ctrl.Call(_m, "GetByName", _param0)
+	ret0, _ := ret[0].(*store.Cron)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+func (_mr *_MockCronStoreRecorder) GetByName(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetByName", arg0)
 }
 
 func (_m *MockCronStore) GetResourceName(_param0 string) (string, error) {

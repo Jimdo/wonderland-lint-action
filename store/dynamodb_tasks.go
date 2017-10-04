@@ -90,6 +90,55 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 	return nil
 }
 
+func (ts *DynamoDBTaskStore) GetLastNTaskExecutions(cronName string, count int64) ([]*Task, error) {
+	var result []*Task
+	var queryError error
+
+	err := ts.Client.QueryPages(&dynamodb.QueryInput{
+		TableName: aws.String(ts.TableName),
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":name": {
+				S: aws.String(cronName),
+			},
+		},
+		ExpressionAttributeNames: map[string]*string{
+			"#N": aws.String("Name"),
+		},
+		KeyConditionExpression: aws.String("#N = :name"),
+		Limit:            aws.Int64(count),
+		ScanIndexForward: aws.Bool(false),
+	}, func(out *dynamodb.QueryOutput, last bool) bool {
+		var tasks []*Task
+		if err := dynamodbattribute.UnmarshalListOfMaps(out.Items, &tasks); err != nil {
+			queryError = fmt.Errorf("Could not unmarshal cron: %s", err)
+			return false
+		}
+
+		result = append(result, tasks...)
+		// DynamoDB limit results are different when using pagination, so bail out once we have the requested items
+		if int64(len(result)) >= count {
+			return false
+		}
+
+		return !last
+	})
+	if err != nil {
+		return nil, fmt.Errorf("Could not fetch tasks from DynamoDB: %s", err)
+	}
+
+	if queryError != nil {
+		return nil, queryError
+	}
+
+	// Due to the behaviour of paginated DynamoDB queries, we might have more results than requested.
+	// We have to remove them manually
+	if int64(len(result)) > count {
+		result = result[:count]
+	}
+
+	return result, nil
+}
+
 func (ts *DynamoDBTaskStore) calcExpiry(t *ecs.Task) int64 {
 	ttl := aws.TimeValue(t.CreatedAt).Add(24 * time.Hour * daysToKeepTasks)
 	return ttl.Unix()
