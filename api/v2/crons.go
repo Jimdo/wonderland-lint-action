@@ -12,6 +12,7 @@ import (
 	"github.com/Jimdo/wonderland-crons/api"
 	"github.com/Jimdo/wonderland-crons/aws"
 	"github.com/Jimdo/wonderland-crons/cron"
+	"github.com/Jimdo/wonderland-crons/store"
 	"github.com/Jimdo/wonderland-crons/validation"
 )
 
@@ -107,15 +108,19 @@ func (a *API) CronStatus(ctx context.Context, w http.ResponseWriter, req *http.R
 		executions, err = strconv.ParseInt(configuredExecutions, 10, 64)
 		if err != nil {
 			sendServerError(w, fmt.Errorf("Could not convert executions into int64: %s", err))
+			return
 		}
 	}
 
 	status, err := a.config.Service.Status(cronName, executions)
 	if err != nil {
-		sendServerError(w, fmt.Errorf("Unable to get status of cron %s: %s", cronName, err))
+		if err == store.ErrCronNotFound {
+			sendError(w, fmt.Errorf("Cron not found"), http.StatusNotFound)
+		} else {
+			sendServerError(w, fmt.Errorf("Unable to get status of cron %s: %s", cronName, err))
+		}
 		return
 	}
 
 	sendJSON(w, status, http.StatusOK)
-
 }
