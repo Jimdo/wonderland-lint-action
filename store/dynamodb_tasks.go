@@ -131,9 +131,9 @@ func (ts *DynamoDBTaskStore) GetLastNTaskExecutions(cronName string, count int64
 	}
 
 	// Due to the behaviour of paginated DynamoDB queries, we might have more results than requested.
-	// We have to remove then manually
-	for int64(len(result)) > count {
-		result = result[:len(result)-1]
+	// We have to remove them manually
+	if int64(len(result)) > count {
+		result = result[:count]
 	}
 
 	return result, nil
