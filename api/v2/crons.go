@@ -25,6 +25,7 @@ func New(c *Config) *API {
 type Config struct {
 	Router  *mux.Router
 	Service *aws.Service
+	URI     *URIGenerator
 }
 
 type API struct {
@@ -39,6 +40,7 @@ func (a *API) Register() {
 	a.config.Router.HandleFunc("/crons/{name}", api.HandlerWithDefaultTimeout(a.DeleteHandler)).Methods("DELETE")
 	a.config.Router.HandleFunc("/crons/{name}", api.HandlerWithDefaultTimeout(a.PutHandler)).Methods("PUT")
 	a.config.Router.HandleFunc("/crons/{name}", api.HandlerWithDefaultTimeout(a.CronStatus)).Methods("GET")
+	a.config.Router.HandleFunc("/crons/{name}/logs", api.HandlerWithDefaultTimeout(a.CronLogs)).Methods(http.MethodGet)
 }
 
 func (a *API) StatusHandler(w http.ResponseWriter, req *http.Request) {}
@@ -123,4 +125,24 @@ func (a *API) CronStatus(ctx context.Context, w http.ResponseWriter, req *http.R
 	}
 
 	sendJSON(w, status, http.StatusOK)
+}
+
+func (a *API) CronLogs(ctx context.Context, w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	cronName := vars["name"]
+
+	exists, err := a.config.Service.Exists(cronName)
+	if err != nil {
+		sendServerError(w, fmt.Errorf("Unable to check if cron %s exists: %s", cronName, err))
+		return
+	} else if !exists {
+		sendError(w, fmt.Errorf("Cron not found"), http.StatusNotFound)
+		return
+	}
+
+	cronLogsInformation := CronLogsInformation{
+		HTMLLink: a.config.URI.CronLogsHTML(cronName),
+	}
+
+	sendJSON(w, cronLogsInformation, http.StatusOK)
 }

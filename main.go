@@ -78,6 +78,10 @@ var (
 		ECSEventQueuePollInterval     time.Duration `flag:"ecs-events-queue-poll-interval" default:"1s" description:"The interval in which to poll new ECS events"`
 		CronsTableName                string        `flag:"crons-table-name" env:"CRONS_TABLE_NAME" description:"Name of the DynamoDB Table used for storing crons"`
 		TasksTableName                string        `flag:"tasks-table-name" env:"TASKS_TABLE_NAME" description:"Name of the DynamoDB Table used for storing tasks"`
+
+		// Logz.io
+		LogzioURL       string `flag:"logzio-url" env:"LOGZIO_URL" default:"https://app-eu.logz.io" description:"The URL of the Logz.io endpoint to use for Kibana and other services"`
+		LogzioAccountID string `flag:"logzio-account-id" env:"LOGZIO_ACCOUNT_ID" description:"The Logz.io account ID to use for Kibana URLs"`
 	}
 	programIdentifier = "wonderland-crons"
 	programVersion    = "dev"
@@ -247,6 +251,10 @@ func main() {
 	v2.New(&v2.Config{
 		Router:  router.PathPrefix("/v2").Subrouter(),
 		Service: aws.NewService(validator, cloudwatchcm, ecstds, dynamoDBCronStore, dynamoDBTaskStore),
+		URI: &v2.URIGenerator{
+			LogzioAccountID: config.LogzioAccountID,
+			LogzioURL:       config.LogzioURL,
+		},
 	}).Register()
 
 	router.HandleFunc("/debug/pprof/profile", pprof.Profile)

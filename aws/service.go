@@ -159,3 +159,15 @@ func (s *Service) Status(cronName string, executionCount int64) (*CronStatus, er
 
 	return status, nil
 }
+
+func (s *Service) Exists(cronName string) (bool, error) {
+	_, err := s.cronStore.GetByName(cronName)
+	if err != nil {
+		if err == store.ErrCronNotFound {
+			return false, nil
+		}
+		return false, err
+	}
+
+	return true, nil
+}
