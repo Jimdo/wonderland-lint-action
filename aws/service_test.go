@@ -373,3 +373,72 @@ func TestService_Delete_Error_OnStoreGetResourceName(t *testing.T) {
 		t.Fatalf("expected an error when resource name could not be fetched from DynamoDB, but got none")
 	}
 }
+
+func TestService_Exists_Success_ExistingService(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	v := mock.NewMockCronValidator(ctrl)
+	cm := mock.NewMockRuleCronManager(ctrl)
+	tds := mock.NewMockTaskDefinitionStore(ctrl)
+	s := mock.NewMockCronStore(ctrl)
+	ts := mock.NewMockCronTaskStore(ctrl)
+	service := NewService(v, cm, tds, s, ts)
+
+	s.EXPECT().GetByName("test-cron").Return(nil, nil)
+
+	exists, err := service.Exists("test-cron")
+	if err != nil {
+		t.Fatalf("expected no error when checking for an existing service, but got: %s", s)
+	}
+
+	if !exists {
+		t.Fatalf("expected a check for a existing service to be true, but got false instead")
+	}
+}
+
+func TestService_Exists_Success_NotExistingService(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	v := mock.NewMockCronValidator(ctrl)
+	cm := mock.NewMockRuleCronManager(ctrl)
+	tds := mock.NewMockTaskDefinitionStore(ctrl)
+	s := mock.NewMockCronStore(ctrl)
+	ts := mock.NewMockCronTaskStore(ctrl)
+	service := NewService(v, cm, tds, s, ts)
+
+	s.EXPECT().GetByName("test-cron").Return(nil, store.ErrCronNotFound)
+
+	exists, err := service.Exists("test-cron")
+	if err != nil {
+		t.Fatalf("expected no error when checking for an existing service, but got: %s", s)
+	}
+
+	if exists {
+		t.Fatalf("expected a check for a not existing service to be false, but got true instead")
+	}
+}
+
+func TestService_Exists_Error_UnkownError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	v := mock.NewMockCronValidator(ctrl)
+	cm := mock.NewMockRuleCronManager(ctrl)
+	tds := mock.NewMockTaskDefinitionStore(ctrl)
+	s := mock.NewMockCronStore(ctrl)
+	ts := mock.NewMockCronTaskStore(ctrl)
+	service := NewService(v, cm, tds, s, ts)
+
+	s.EXPECT().GetByName("test-cron").Return(nil, errors.New("some error that is unknown"))
+
+	exists, err := service.Exists("test-cron")
+	if err == nil {
+		t.Fatal("expected error when checking for a service, but got none")
+	}
+
+	if exists {
+		t.Fatalf("expected a check for a service to be false when an unexpected error happens, but got true instead")
+	}
+}
