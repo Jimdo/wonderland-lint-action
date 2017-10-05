@@ -82,12 +82,16 @@ func (w *Worker) handleMessage(m *sqs.Message) error {
 			return fmt.Errorf("could not decode task state event: %s", err)
 		}
 
-		ok, err := cron.IsCron(task)
+		userContainer := cron.GetUserContainerFromTask(task)
+		if userContainer == nil {
+			return fmt.Errorf("could not determine user container")
+		}
+		ok, err := cron.IsCron(userContainer)
 		if err != nil {
 			return fmt.Errorf("could not validate if task is a cron: %s", err)
 		}
 		if ok {
-			cronName := cron.GetNameByResource(aws.StringValue(task.Containers[0].Name))
+			cronName := cron.GetNameByResource(aws.StringValue(userContainer.Name))
 			if err := w.TaskStore.Update(cronName, task); err != nil {
 				return fmt.Errorf("Storing task in DynamoDB failed: %s", err)
 			}

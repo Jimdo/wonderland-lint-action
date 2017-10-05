@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Jimdo/wonderland-crons/cron"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -47,19 +48,23 @@ func NewDynamoDBTaskStore(dynamoDBClient dynamodbiface.DynamoDBAPI, tableName st
 }
 
 func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
+	cronContainer := cron.GetUserContainerFromTask(t)
+	timeoutContainer := cron.GetTimeoutContainerFromTask(t)
+
 	task := &Task{
 		Name:       cronName,
 		StartTime:  aws.TimeValue(t.CreatedAt),
 		EndTime:    aws.TimeValue(t.StoppedAt),
 		TaskArn:    aws.StringValue(t.TaskArn),
-		ExitCode:   t.Containers[0].ExitCode,
+		ExitCode:   cronContainer.ExitCode,
 		ExitReason: aws.StringValue(t.StoppedReason),
 		Status:     aws.StringValue(t.LastStatus),
 		Version:    aws.Int64Value(t.Version),
 		ExpiryTime: ts.calcExpiry(t),
 	}
-	if len(t.Containers) > 1 {
-		task.TimeoutExitCode = t.Containers[1].ExitCode
+
+	if timeoutContainer != nil {
+		task.TimeoutExitCode = timeoutContainer.ExitCode
 	}
 
 	data, err := dynamodbattribute.MarshalMap(task)
@@ -75,11 +80,17 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 	logger := log.WithFields(log.Fields{
 		"name":        cronName,
 		"task_arn":    aws.StringValue(t.TaskArn),
-		"exit_code":   t.Containers[0].ExitCode,
+		"exit_code":   cronContainer.ExitCode,
 		"exit_reason": aws.StringValue(t.StoppedReason),
 		"status":      aws.StringValue(t.LastStatus),
 		"version":     aws.Int64Value(t.Version),
 	})
+
+	if timeoutContainer != nil {
+		logger = log.WithFields(log.Fields{
+			"timeout_exit_code": timeoutContainer.ExitCode,
+		})
+	}
 
 	for i, container := range t.Containers {
 		logger = logger.WithFields(log.Fields{
