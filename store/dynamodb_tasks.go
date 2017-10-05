@@ -18,15 +18,16 @@ const (
 )
 
 type Task struct {
-	Name       string
-	StartTime  time.Time
-	EndTime    time.Time
-	TaskArn    string
-	ExitCode   *int64
-	ExitReason string
-	Status     string
-	Version    int64
-	ExpiryTime int64
+	Name            string
+	StartTime       time.Time
+	EndTime         time.Time
+	TaskArn         string
+	ExitCode        *int64
+	ExitReason      string
+	Status          string
+	Version         int64
+	ExpiryTime      int64
+	TimeoutExitCode *int64
 }
 
 type DynamoDBTaskStore struct {
@@ -57,6 +58,9 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 		Version:    aws.Int64Value(t.Version),
 		ExpiryTime: ts.calcExpiry(t),
 	}
+	if len(t.Containers) > 1 {
+		task.TimeoutExitCode = t.Containers[1].ExitCode
+	}
 
 	data, err := dynamodbattribute.MarshalMap(task)
 	if err != nil {
@@ -79,14 +83,19 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 	if err != nil {
 		if err, ok := err.(awserr.Error); ok {
 			if err.Code() == dynamodb.ErrCodeConditionalCheckFailedException {
-				log.WithFields(log.Fields{
+				logger := log.WithFields(log.Fields{
 					"name":        cronName,
 					"task_arn":    aws.StringValue(t.TaskArn),
 					"exit_code":   t.Containers[0].ExitCode,
 					"exit_reason": aws.StringValue(t.StoppedReason),
 					"status":      aws.StringValue(t.LastStatus),
 					"version":     aws.Int64Value(t.Version),
-				}).Debugf("Task version is lower than stored task version, skipping update")
+				})
+
+				for i, container := range t.Containers {
+					logger = logger.WithField(fmt.Sprintf("container_%d_arn", i), aws.StringValue(container.ContainerArn))
+				}
+				logger.Debugf("Task version is lower than stored task version, skipping update")
 				return nil
 			}
 		}
