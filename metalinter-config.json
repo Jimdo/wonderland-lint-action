@@ -24,6 +24,9 @@
         "unused",
         "staticcheck"
     ],
+    "Skip": [
+        "mock"
+    ],
     "Exclude": [
         "should have comment.* or be unexported"
     ],
