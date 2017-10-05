@@ -72,6 +72,22 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 		return fmt.Errorf("Could not convert version %d into DynamoDB value: %s", task.Version, err)
 	}
 
+	logger := log.WithFields(log.Fields{
+		"name":        cronName,
+		"task_arn":    aws.StringValue(t.TaskArn),
+		"exit_code":   t.Containers[0].ExitCode,
+		"exit_reason": aws.StringValue(t.StoppedReason),
+		"status":      aws.StringValue(t.LastStatus),
+		"version":     aws.Int64Value(t.Version),
+	})
+
+	for i, container := range t.Containers {
+		logger = logger.WithFields(log.Fields{
+			fmt.Sprintf("container_%d_arn", i):  aws.StringValue(container.ContainerArn),
+			fmt.Sprintf("container_%d_name", i): aws.StringValue(container.Name),
+		})
+	}
+
 	_, err = ts.Client.PutItem(&dynamodb.PutItemInput{
 		TableName:           aws.String(ts.TableName),
 		Item:                data,
@@ -83,18 +99,6 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 	if err != nil {
 		if err, ok := err.(awserr.Error); ok {
 			if err.Code() == dynamodb.ErrCodeConditionalCheckFailedException {
-				logger := log.WithFields(log.Fields{
-					"name":        cronName,
-					"task_arn":    aws.StringValue(t.TaskArn),
-					"exit_code":   t.Containers[0].ExitCode,
-					"exit_reason": aws.StringValue(t.StoppedReason),
-					"status":      aws.StringValue(t.LastStatus),
-					"version":     aws.Int64Value(t.Version),
-				})
-
-				for i, container := range t.Containers {
-					logger = logger.WithField(fmt.Sprintf("container_%d_arn", i), aws.StringValue(container.ContainerArn))
-				}
 				logger.Debugf("Task version is lower than stored task version, skipping update")
 				return nil
 			}
@@ -102,6 +106,8 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 
 		return fmt.Errorf("Could not update DynamoDB: %s", err)
 	}
+
+	logger.Debugf("Task updated")
 
 	return nil
 }
