@@ -79,7 +79,14 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 	if err != nil {
 		if err, ok := err.(awserr.Error); ok {
 			if err.Code() == dynamodb.ErrCodeConditionalCheckFailedException {
-				log.Debugf("Task version is lower than stored task version, skipping update")
+				log.WithFields(log.Fields{
+					"name":        cronName,
+					"task_arn":    aws.StringValue(t.TaskArn),
+					"exit_code":   t.Containers[0].ExitCode,
+					"exit_reason": aws.StringValue(t.StoppedReason),
+					"status":      aws.StringValue(t.LastStatus),
+					"version":     aws.Int64Value(t.Version),
+				}).Debugf("Task version is lower than stored task version, skipping update")
 				return nil
 			}
 		}
