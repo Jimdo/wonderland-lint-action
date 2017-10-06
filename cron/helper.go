@@ -8,7 +8,8 @@ import (
 )
 
 const (
-	cronPrefix = "cron--"
+	cronPrefix      = "cron--"
+	TimeoutExitCode = 201
 )
 
 func GetNameByResource(resourceName string) string {

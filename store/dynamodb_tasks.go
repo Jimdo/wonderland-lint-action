@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Jimdo/wonderland-crons/cron"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -12,6 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/Jimdo/wonderland-crons/cron"
 )
 
 const (
@@ -99,6 +100,8 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 		})
 	}
 
+	task.Status = ts.getStatusByExitCodes(task)
+
 	_, err = ts.Client.PutItem(&dynamodb.PutItemInput{
 		TableName:           aws.String(ts.TableName),
 		Item:                data,
@@ -121,6 +124,37 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 	logger.Debugf("Task updated")
 
 	return nil
+}
+
+func (ts *DynamoDBTaskStore) getStatusByExitCodes(t *Task) string {
+	logger := log.WithFields(log.Fields{
+		"name":        t.Name,
+		"task_arn":    t.TaskArn,
+		"exit_code":   t.ExitCode,
+		"exit_reason": t.ExitReason,
+		"status":      t.Status,
+		"version":     t.Version,
+	})
+
+	if t.Status == ecs.DesiredStatusStopped {
+		logger.Debug("setStatusByExitCodes: Got stopped task to set status by exit code")
+		if t.TimeoutExitCode != nil && aws.Int64Value(t.TimeoutExitCode) == cron.TimeoutExitCode {
+			logger.Debug("setStatusByExitCodes: set status to timeout")
+			return "TIMEOUT"
+		}
+		if t.ExitCode == nil {
+			logger.Debug("setStatusByExitCodes: set status to unknown")
+			return "UNKNOWN"
+		}
+		if aws.Int64Value(t.ExitCode) == 0 {
+			logger.Debug("setStatusByExitCodes: set status to unknown")
+			return "SUCCESS"
+		}
+		logger.Debug("setStatusByExitCodes: set status to failed")
+		return "FAILED"
+	}
+	logger.Debug("setStatusByExitCodes: Got task that is not stopped")
+	return t.Status
 }
 
 func (ts *DynamoDBTaskStore) GetLastNTaskExecutions(cronName string, count int64) ([]*Task, error) {
