@@ -232,10 +232,8 @@ func main() {
 		SQS:          sqsClient,
 		TaskStore:    dynamoDBTaskStore,
 	}
-	done := make(chan interface{})
-	defer close(done)
 	go func() {
-		if err := w.Run(done); err != nil {
+		if err := w.Run(); err != nil {
 			log.Fatalf("Error consuming ECS events: %s", err)
 		}
 	}()

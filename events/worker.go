@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Jimdo/wonderland-crons/cron"
+	"github.com/Jimdo/wonderland-crons/locking"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -23,13 +24,54 @@ type TaskStore interface {
 }
 
 type Worker struct {
+	LockManager  locking.LockManager
 	PollInterval time.Duration
 	QueueURL     string
 	SQS          sqsiface.SQSAPI
 	TaskStore    TaskStore
 }
 
-func (w *Worker) Run(done chan interface{}) error {
+func (w *Worker) Run() error {
+	acquireLeadership := time.NewTicker(1 * time.Minute)
+	stopLeader := make(chan struct{})
+	leaderErrors := make(chan error)
+	defer func() {
+		close(stopLeader)
+		close(leaderErrors)
+		acquireLeadership.Stop()
+		w.LockManager.Release("wonderland-logs")
+	}()
+
+	for range acquireLeadership.C {
+		if err := w.LockManager.Acquire("wonderland-crons", 1*time.Minute); err != nil {
+			if err != locking.ErrLeadershipAlreadyTaken {
+				return err
+			} else {
+				continue
+			}
+		}
+
+		go w.runInLeaderMode(stopLeader, leaderErrors)
+
+		refreshLeadership := time.NewTicker(1 * time.Minute)
+		defer refreshLeadership.Stop()
+		for {
+			select {
+			case <-refreshLeadership.C:
+				if err := w.LockManager.Refresh("wonderland-crons", 1*time.Minute); err != nil {
+					stopLeader <- struct{}{}
+					return err
+				}
+			case err := <-leaderErrors:
+				stopLeader <- struct{}{}
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (w *Worker) runInLeaderMode(stop chan struct{}, errChan chan error) {
 	pollSQSTicker := time.NewTicker(w.PollInterval)
 	defer pollSQSTicker.Stop()
 
@@ -37,10 +79,11 @@ func (w *Worker) Run(done chan interface{}) error {
 		select {
 		case <-pollSQSTicker.C:
 			if err := w.pollQueue(); err != nil {
-				return err
+				errChan <- err
+				return
 			}
-		case <-done:
-			return nil
+		case <-stop:
+			return
 		}
 	}
 }
