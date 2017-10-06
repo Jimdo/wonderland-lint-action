@@ -36,6 +36,10 @@ var CPUCapacitySpecifications = map[string]uint{
 var MinCPUCapacity = CPUTShirtSizeToUInt("XS")
 var MaxCPUCapacity = CPUTShirtSizeToUInt("3XL")
 
+var (
+	defaultTimeout = int64(60 * 60 * 24) // 24h
+)
+
 func NewCronDescriptionFromJSON(data []byte) (*CronDescription, error) {
 	desc := &CronDescription{}
 	if err := json.Unmarshal(data, desc); err != nil {
@@ -50,7 +54,9 @@ func (d *CronDescription) Init() {
 	if d.Description == nil {
 		return
 	}
-
+	if d.Timeout == nil {
+		d.Timeout = &defaultTimeout
+	}
 	d.Description.init()
 }
 
@@ -60,6 +66,7 @@ type CronDescription struct {
 	Name        string                `json:"name"`
 	Schedule    string                `json:"schedule"`
 	Description *ContainerDescription `json:"description"`
+	Timeout     *int64                `json:"timeout"`
 }
 
 type ContainerDescription struct {

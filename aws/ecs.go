@@ -36,9 +36,10 @@ func (tds *ECSTaskDefinitionStore) AddRevisionFromCronDescription(cronName, fami
 	}
 
 	// add timeout sidecar container
+	timeoutCmd := fmt.Sprintf("sleep %d; exit 201", desc.Timeout)
 	sidecarCapacity := &cron.CapacityDescription{}
 	timeoutSidecarDefinition := &ecs.ContainerDefinition{
-		Command: awssdk.StringSlice([]string{"/bin/sh", "-c", "sleep 10; exit 201"}),
+		Command: awssdk.StringSlice([]string{"/bin/sh", "-c", timeoutCmd}),
 		Cpu:     awssdk.Int64(int64(sidecarCapacity.CPULimit())),
 		DockerLabels: map[string]*string{
 			"com.jimdo.wonderland.cron": awssdk.String(cronName),
