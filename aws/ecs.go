@@ -29,7 +29,6 @@ func NewECSTaskDefinitionStore(e ecsiface.ECSAPI, tdm *ECSTaskDefinitionMapper) 
 }
 
 func (tds *ECSTaskDefinitionStore) AddRevisionFromCronDescription(cronName, family string, desc *cron.CronDescription) (string, error) {
-
 	rtdInput := &ecs.RegisterTaskDefinitionInput{
 		ContainerDefinitions: []*ecs.ContainerDefinition{tds.tdm.ContainerDefinitionFromCronDescription(family, desc, cronName)},
 		Family:               awssdk.String(family),
@@ -37,15 +36,14 @@ func (tds *ECSTaskDefinitionStore) AddRevisionFromCronDescription(cronName, fami
 
 	// add timeout sidecar container
 	timeoutCmd := fmt.Sprintf("sleep %d; exit %d", desc.Timeout, cron.TimeoutExitCode)
-	sidecarCapacity := &cron.CapacityDescription{}
 	timeoutSidecarDefinition := &ecs.ContainerDefinition{
 		Command: awssdk.StringSlice([]string{"/bin/sh", "-c", timeoutCmd}),
-		Cpu:     awssdk.Int64(int64(sidecarCapacity.CPULimit())),
+		Cpu:     awssdk.Int64(int64(16)),
 		DockerLabels: map[string]*string{
 			"com.jimdo.wonderland.cron": awssdk.String(cronName),
 		},
 		Image:  awssdk.String("alpine:3.6"),
-		Memory: awssdk.Int64(int64(sidecarCapacity.MemoryLimit())),
+		Memory: awssdk.Int64(int64(32)),
 		Name:   awssdk.String("timeout"),
 	}
 
