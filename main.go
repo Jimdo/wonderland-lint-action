@@ -33,6 +33,7 @@ import (
 	"github.com/Jimdo/wonderland-crons/aws"
 	"github.com/Jimdo/wonderland-crons/cron"
 	"github.com/Jimdo/wonderland-crons/events"
+	"github.com/Jimdo/wonderland-crons/locking"
 	"github.com/Jimdo/wonderland-crons/nomad"
 	"github.com/Jimdo/wonderland-crons/store"
 	"github.com/Jimdo/wonderland-crons/validation"
@@ -70,14 +71,16 @@ var (
 		QuayRegistryPass          string `flag:"query-registry-pass" env:"QUAY_REGISTRY_PASS" description:"The passwordfor the Quay registry"`
 
 		// AWS
-		AWSRegion                     string        `flag:"region" env:"AWS_REGION" default:"eu-west-1" description:"The AWS region to use"`
-		CronRoleARN                   string        `flag:"cron-role-arn" env:"CRON_ROLE_ARN" description:"The IAM Role that grants Cloudwatch access to ECS"`
-		ECSClusterARN                 string        `flag:"cluster-arn" env:"ECS_CLUSTER_ARN" description:"The ARN of the ECS cluster crons should run on"`
-		RefreshAWSCredentialsInterval time.Duration `flag:"aws-credentials-interval" env:"AWS_CREDENTIALS_INTERVAL" default:"10m" description:"Interval in which to fetch new AWS credentials from Vault"`
-		ECSEventsQueueURL             string        `flag:"ecs-events-queue-url" env:"ECS_EVENTS_QUEUE_URL" description:"The URL of the SQS queue receiving ECS events"`
-		ECSEventQueuePollInterval     time.Duration `flag:"ecs-events-queue-poll-interval" default:"1s" description:"The interval in which to poll new ECS events"`
-		CronsTableName                string        `flag:"crons-table-name" env:"CRONS_TABLE_NAME" description:"Name of the DynamoDB Table used for storing crons"`
-		TasksTableName                string        `flag:"tasks-table-name" env:"TASKS_TABLE_NAME" description:"Name of the DynamoDB Table used for storing tasks"`
+		AWSRegion                       string        `flag:"region" env:"AWS_REGION" default:"eu-west-1" description:"The AWS region to use"`
+		CronRoleARN                     string        `flag:"cron-role-arn" env:"CRON_ROLE_ARN" description:"The IAM Role that grants Cloudwatch access to ECS"`
+		ECSClusterARN                   string        `flag:"cluster-arn" env:"ECS_CLUSTER_ARN" description:"The ARN of the ECS cluster crons should run on"`
+		RefreshAWSCredentialsInterval   time.Duration `flag:"aws-credentials-interval" env:"AWS_CREDENTIALS_INTERVAL" default:"10m" description:"Interval in which to fetch new AWS credentials from Vault"`
+		ECSEventsQueueURL               string        `flag:"ecs-events-queue-url" env:"ECS_EVENTS_QUEUE_URL" description:"The URL of the SQS queue receiving ECS events"`
+		ECSEventQueuePollInterval       time.Duration `flag:"ecs-events-queue-poll-interval" default:"1s" description:"The interval in which to poll new ECS events"`
+		CronsTableName                  string        `flag:"crons-table-name" env:"CRONS_TABLE_NAME" description:"Name of the DynamoDB Table used for storing crons"`
+		TasksTableName                  string        `flag:"tasks-table-name" env:"TASKS_TABLE_NAME" description:"Name of the DynamoDB Table used for storing tasks"`
+		WorkerLeaderLockRefreshInterval time.Duration `flag:"worker-leader-lock-refresh-interval" default:"1m" description:"The interval in which to refresh the workers leader lock"`
+		WorkerLeaderLockTableName       string        `flag:"worker-loader-lock-table-name" env:"WORKER_LEADER_LOCK_TABLE_NAME" description:"Name of the DynamoDB Table used for worker leadership locking"`
 
 		// Logz.io
 		LogzioURL       string `flag:"logzio-url" env:"LOGZIO_URL" default:"https://app-eu.logz.io" description:"The URL of the Logz.io endpoint to use for Kibana and other services"`
@@ -226,12 +229,10 @@ func main() {
 		log.Fatalf("Failed to initialize Task store: %s", err)
 	}
 
-	w := &events.Worker{
-		PollInterval: config.ECSEventQueuePollInterval,
-		QueueURL:     config.ECSEventsQueueURL,
-		SQS:          sqsClient,
-		TaskStore:    dynamoDBTaskStore,
-	}
+	lm := locking.NewDynamoDBLockManager(dynamoDBClient, config.WorkerLeaderLockTableName)
+	w := events.NewWorker(lm, sqsClient, config.ECSEventsQueueURL, dynamoDBTaskStore,
+		events.WithPollInterval(config.ECSEventQueuePollInterval),
+		events.WithLockRefreshInterval(config.WorkerLeaderLockRefreshInterval))
 	go func() {
 		if err := w.Run(); err != nil {
 			log.Fatalf("Error consuming ECS events: %s", err)
