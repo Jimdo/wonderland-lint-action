@@ -90,7 +90,7 @@ func (l *DynamoDBLockManager) getCurrentLock(name string) (*dynamoDBLockRecord, 
 		TableName: aws.String(l.table),
 	})
 	if err != nil {
-		if awserr, ok := err.(awserr.Error); ok && awserr.Code() == "ResourceNotFoundException" {
+		if sdkError, ok := err.(awserr.Error); ok && sdkError.Code() == "ResourceNotFoundException" {
 			return nil, nil
 		}
 		return nil, err
