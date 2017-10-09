@@ -11,18 +11,18 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 )
 
-func NewDynamoDBLockManager(tn, an string, dynamodb dynamodbiface.DynamoDBAPI) *DynamoDBLockManager {
+const dynamoDBNameAttribute = "name"
+
+func NewDynamoDBLockManager(dynamoDB dynamodbiface.DynamoDBAPI, table string) *DynamoDBLockManager {
 	return &DynamoDBLockManager{
-		tableName:     tn,
-		attributeName: an,
-		dynamodb:      dynamodb,
+		dynamoDB: dynamoDB,
+		table:    table,
 	}
 }
 
 type DynamoDBLockManager struct {
-	tableName     string
-	attributeName string
-	dynamodb      dynamodbiface.DynamoDBAPI
+	dynamoDB dynamodbiface.DynamoDBAPI
+	table    string
 }
 
 type dynamoDBLockRecord struct {
@@ -65,13 +65,13 @@ func (l *DynamoDBLockManager) Refresh(name string, timeout time.Duration) error 
 }
 
 func (l *DynamoDBLockManager) Release(name string) error {
-	_, err := l.dynamodb.DeleteItem(&dynamodb.DeleteItemInput{
+	_, err := l.dynamoDB.DeleteItem(&dynamodb.DeleteItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
-			l.attributeName: {
+			dynamoDBNameAttribute: {
 				S: aws.String(name),
 			},
 		},
-		TableName: aws.String(l.tableName),
+		TableName: aws.String(l.table),
 	})
 	if err != nil {
 		return err
@@ -81,13 +81,13 @@ func (l *DynamoDBLockManager) Release(name string) error {
 }
 
 func (l *DynamoDBLockManager) getCurrentLock(name string) (*dynamoDBLockRecord, error) {
-	out, err := l.dynamodb.GetItem(&dynamodb.GetItemInput{
+	out, err := l.dynamoDB.GetItem(&dynamodb.GetItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
-			l.attributeName: {
+			dynamoDBNameAttribute: {
 				S: aws.String(name),
 			},
 		},
-		TableName: aws.String(l.tableName),
+		TableName: aws.String(l.table),
 	})
 	if err != nil {
 		if awserr, ok := err.(awserr.Error); ok && awserr.Code() == "ResourceNotFoundException" {
@@ -117,8 +117,8 @@ func (l *DynamoDBLockManager) setLock(name string, timeout time.Duration) error 
 		return err
 	}
 
-	_, err = l.dynamodb.PutItem(&dynamodb.PutItemInput{
-		TableName: aws.String(l.tableName),
+	_, err = l.dynamoDB.PutItem(&dynamodb.PutItemInput{
+		TableName: aws.String(l.table),
 		Item:      item,
 	})
 	return err
@@ -134,12 +134,12 @@ func (l *DynamoDBLockManager) setLockIfNotExists(name string, timeout time.Durat
 		return err
 	}
 
-	_, err = l.dynamodb.PutItem(&dynamodb.PutItemInput{
-		TableName:           aws.String(l.tableName),
+	_, err = l.dynamoDB.PutItem(&dynamodb.PutItemInput{
+		TableName:           aws.String(l.table),
 		Item:                item,
 		ConditionExpression: aws.String("attribute_not_exists(#n)"),
 		ExpressionAttributeNames: map[string]*string{
-			"#n": aws.String(l.attributeName),
+			"#n": aws.String(dynamoDBNameAttribute),
 		},
 	})
 
