@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/golang/mock/gomock"
 
-	"github.com/Jimdo/wonderland-crons/aws/mock"
+	"github.com/Jimdo/wonderland-crons/mock"
 )
 
 var (
