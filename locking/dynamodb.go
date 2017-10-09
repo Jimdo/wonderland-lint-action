@@ -33,16 +33,16 @@ type dynamoDBLockRecord struct {
 func (l *DynamoDBLockManager) Acquire(name string, timeout time.Duration) error {
 	lock, err := l.getCurrentLock(name)
 	if err != nil {
-		return fmt.Errorf("Could not retrieve current lock %s: %s", name, err)
+		return fmt.Errorf("could not retrieve current lock %s: %s", name, err)
 	}
 	if lock != nil && lock.ExpiresAt.Before(time.Now()) {
 		if err := l.Release(name); err != nil {
-			return fmt.Errorf("Could not release current lock %s: %s", name, err)
+			return fmt.Errorf("could not release current lock %s: %s", name, err)
 		}
 	}
 
 	if err := l.setLockIfNotExists(name, timeout); err != nil {
-		return fmt.Errorf("Could not set lock %s: %s", name, err)
+		return fmt.Errorf("could not set lock %s: %s", name, err)
 	}
 
 	return nil
@@ -51,14 +51,14 @@ func (l *DynamoDBLockManager) Acquire(name string, timeout time.Duration) error 
 func (l *DynamoDBLockManager) Refresh(name string, timeout time.Duration) error {
 	lock, err := l.getCurrentLock(name)
 	if err != nil {
-		return fmt.Errorf("Could not retrieve current lock %s: %s", name, err)
+		return fmt.Errorf("could not retrieve current lock %s: %s", name, err)
 	}
 	if lock == nil {
-		return fmt.Errorf("Cannot refresh non-existing lock %s", name)
+		return fmt.Errorf("cannot refresh non-existing lock %s", name)
 	}
 
 	if err := l.setLock(name, timeout); err != nil {
-		return fmt.Errorf("Could not refresh lock %s: %s", name, err)
+		return fmt.Errorf("could not refresh lock %s: %s", name, err)
 	}
 
 	return nil
