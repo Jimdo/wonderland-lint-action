@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-var ErrLeadershipAlreadyTaken = errors.New("Leadership is already taken")
+var ErrLockAlreadyTaken = errors.New("the lock is already taken by someone else")
 
 type LockManager interface {
 	Acquire(name string, duration time.Duration) error

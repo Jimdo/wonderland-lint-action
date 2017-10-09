@@ -145,7 +145,7 @@ func (l *DynamoDBLockManager) setLockIfNotExists(name string, timeout time.Durat
 
 	if sdkError, ok := err.(awserr.Error); ok {
 		if sdkError.Code() == dynamodb.ErrCodeConditionalCheckFailedException {
-			return ErrLeadershipAlreadyTaken
+			return ErrLockAlreadyTaken
 		}
 	}
 	return err
