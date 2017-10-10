@@ -115,6 +115,10 @@ func main() {
 		abort("Please pass a tasks DynamoDB table name")
 	}
 
+	if config.WorkerLeaderLockTableName == "" {
+		abort("Please pass a lock DynamoDB table name")
+	}
+
 	router := mux.NewRouter()
 
 	nomadURI, err := url.Parse(config.NomadURI)
