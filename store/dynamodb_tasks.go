@@ -69,6 +69,7 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 	}
 
 	task.Status = ts.getStatusByExitCodes(task)
+	logger.Task(task).Debugf("Updated task status")
 
 	data, err := dynamodbattribute.MarshalMap(task)
 	if err != nil {
@@ -106,23 +107,23 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 
 func (ts *DynamoDBTaskStore) getStatusByExitCodes(t *Task) string {
 	if t.Status == ecs.DesiredStatusStopped {
-		logger.Task(t).Debug("setStatusByExitCodes: Got stopped task to set status by exit code")
+		logger.Task(t).Debug("Got stopped task to set status by exit code")
 		if t.TimeoutExitCode != nil && aws.Int64Value(t.TimeoutExitCode) == cron.TimeoutExitCode {
-			logger.Task(t).Debug("setStatusByExitCodes: set status to timeout")
+			logger.Task(t).Debug("Task status will be set to timeout")
 			return "TIMEOUT"
 		}
 		if t.ExitCode == nil {
-			logger.Task(t).Debug("setStatusByExitCodes: set status to unknown")
+			logger.Task(t).Debug("Task status will be set to unknown")
 			return "UNKNOWN"
 		}
 		if aws.Int64Value(t.ExitCode) == 0 {
-			logger.Task(t).Debug("setStatusByExitCodes: set status to unknown")
+			logger.Task(t).Debug("Task status will be set to success")
 			return "SUCCESS"
 		}
-		logger.Task(t).Debug("setStatusByExitCodes: set status to failed")
+		logger.Task(t).Debug("Task status will be set to failed")
 		return "FAILED"
 	}
-	logger.Task(t).Debug("setStatusByExitCodes: Got task that is not stopped")
+	logger.Task(t).Debug("Got task that is not stopped")
 	return t.Status
 }
 
