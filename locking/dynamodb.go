@@ -42,6 +42,11 @@ func (l *DynamoDBLockManager) Acquire(name string, timeout time.Duration) error 
 	}
 
 	if err := l.setLockIfNotExists(name, timeout); err != nil {
+		if sdkError, ok := err.(awserr.Error); ok {
+			if sdkError.Code() == dynamodb.ErrCodeConditionalCheckFailedException {
+				return ErrLockAlreadyTaken
+			}
+		}
 		return fmt.Errorf("could not set lock %s: %s", name, err)
 	}
 
@@ -142,11 +147,5 @@ func (l *DynamoDBLockManager) setLockIfNotExists(name string, timeout time.Durat
 			"#n": aws.String(dynamoDBNameAttribute),
 		},
 	})
-
-	if sdkError, ok := err.(awserr.Error); ok {
-		if sdkError.Code() == dynamodb.ErrCodeConditionalCheckFailedException {
-			return ErrLockAlreadyTaken
-		}
-	}
 	return err
 }
