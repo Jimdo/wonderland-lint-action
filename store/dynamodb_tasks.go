@@ -88,7 +88,7 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 	})
 
 	if timeoutContainer != nil {
-		logger = log.WithFields(log.Fields{
+		logger = logger.WithFields(log.Fields{
 			"timeout_exit_code": timeoutContainer.ExitCode,
 		})
 	}
@@ -135,6 +135,11 @@ func (ts *DynamoDBTaskStore) getStatusByExitCodes(t *Task) string {
 		"status":      t.Status,
 		"version":     t.Version,
 	})
+	if t.TimeoutExitCode != nil {
+		logger = logger.WithFields(log.Fields{
+			"timeout_exit_code": t.TimeoutExitCode,
+		})
+	}
 
 	if t.Status == ecs.DesiredStatusStopped {
 		logger.Debug("setStatusByExitCodes: Got stopped task to set status by exit code")
