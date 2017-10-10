@@ -68,6 +68,8 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 		task.TimeoutExitCode = timeoutContainer.ExitCode
 	}
 
+	task.Status = ts.getStatusByExitCodes(task)
+
 	data, err := dynamodbattribute.MarshalMap(task)
 	if err != nil {
 		return fmt.Errorf("Could not marshal task into DynamoDB value: %s", err)
@@ -99,8 +101,6 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 			fmt.Sprintf("container_%d_name", i): aws.StringValue(container.Name),
 		})
 	}
-
-	task.Status = ts.getStatusByExitCodes(task)
 
 	_, err = ts.Client.PutItem(&dynamodb.PutItemInput{
 		TableName:           aws.String(ts.TableName),
