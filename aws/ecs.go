@@ -34,8 +34,19 @@ func (tds *ECSTaskDefinitionStore) AddRevisionFromCronDescription(cronName, fami
 		Family:               awssdk.String(family),
 	}
 
-	// add timeout sidecar container
-	timeoutCmd := fmt.Sprintf("sleep %d & wait $! &&exit %d", desc.Timeout, cron.TimeoutExitCode)
+	timeoutSidecarDefinition := tds.createTimeoutSidecarDefinition(cronName, desc)
+
+	rtdInput.ContainerDefinitions = append(rtdInput.ContainerDefinitions, timeoutSidecarDefinition)
+	out, err := tds.ecs.RegisterTaskDefinition(rtdInput)
+	if err != nil {
+		return "", fmt.Errorf("could not register task definition for family %q with error: %s", family, err)
+	}
+	return awssdk.StringValue(out.TaskDefinition.TaskDefinitionArn), nil
+}
+
+func (tds *ECSTaskDefinitionStore) createTimeoutSidecarDefinition(cronName string, desc *cron.CronDescription) *ecs.ContainerDefinition {
+	timeoutCmd := fmt.Sprintf("sleep %d & wait $! && exit %d", desc.Timeout, cron.TimeoutExitCode)
+
 	timeoutSidecarDefinition := &ecs.ContainerDefinition{
 		Command: awssdk.StringSlice([]string{"/bin/sh", "-c", timeoutCmd}),
 		Cpu:     awssdk.Int64(int64(16)),
@@ -47,12 +58,8 @@ func (tds *ECSTaskDefinitionStore) AddRevisionFromCronDescription(cronName, fami
 		Name:   awssdk.String("timeout"),
 	}
 
-	rtdInput.ContainerDefinitions = append(rtdInput.ContainerDefinitions, timeoutSidecarDefinition)
-	out, err := tds.ecs.RegisterTaskDefinition(rtdInput)
-	if err != nil {
-		return "", fmt.Errorf("could not register task definition for family %q with error: %s", family, err)
-	}
-	return awssdk.StringValue(out.TaskDefinition.TaskDefinitionArn), nil
+	return timeoutSidecarDefinition
+
 }
 
 func (tds *ECSTaskDefinitionStore) DeleteByFamily(family string) error {
