@@ -141,8 +141,7 @@ func (ts *DynamoDBTaskStore) GetLastNTaskExecutions(cronName string, count int64
 			"#N": aws.String("Name"),
 		},
 		KeyConditionExpression: aws.String("#N = :name"),
-		Limit:            aws.Int64(count),
-		ScanIndexForward: aws.Bool(false),
+		ScanIndexForward:       aws.Bool(false),
 	}, func(out *dynamodb.QueryOutput, last bool) bool {
 		var tasks []*Task
 		if err := dynamodbattribute.UnmarshalListOfMaps(out.Items, &tasks); err != nil {
