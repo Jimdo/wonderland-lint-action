@@ -86,14 +86,17 @@ func (w *Worker) Run() error {
 	}()
 
 	for range acquireLeadership.C {
+		log.Debug("Trying to acquire leadership")
 		if err := w.LockManager.Acquire(w.LockName, lockTTL); err != nil {
 			if err != locking.ErrLockAlreadyTaken {
 				return err
 			} else {
+				log.Debugf("Leadership already taken. Going into follower mode for %s", w.LockRefreshInterval)
 				continue
 			}
 		}
 
+		log.Debug("Got leadership. Entering leader mode.")
 		go w.runInLeaderMode(stopLeader, leaderErrors)
 
 		refreshLeadership := time.NewTicker(w.LockRefreshInterval)
@@ -101,6 +104,7 @@ func (w *Worker) Run() error {
 		for {
 			select {
 			case <-refreshLeadership.C:
+				log.Debug("Refreshing leadership for %s", lockTTL)
 				if err := w.LockManager.Refresh(w.LockName, lockTTL); err != nil {
 					stopLeader <- struct{}{}
 					return err
