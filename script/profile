@@ -1,7 +1,7 @@
 #!/bin/bash
 #/ Profile crons service using pprof.
 #/
-#/ Usage: scripts/profile [options]
+#/ Usage: script/profile [options]
 #/
 #/     -h, --help               show help text
 #/     -s, --stage              switch to stage environment
@@ -10,9 +10,9 @@
 #/
 #/ Examples:
 #/
-#/     $ scripts/profile --path profile
-#/     $ scripts/profile --path heap -o "-alloc_space -files"
-#/     $ scripts/profile --stage -o -top
+#/     $ script/profile --path profile
+#/     $ script/profile --path heap -o "-alloc_space -files"
+#/     $ script/profile --stage -o -top
 
 set -e
 set -o pipefail

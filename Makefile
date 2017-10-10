@@ -3,8 +3,10 @@ PROJECT_NAME=wonderland-crons
 TEST_TAGS=integration
 
 BRANCH ?= master
-CRONS_IMAGE  = $(PROJECT_NAME)
-AUTH_PROXY_IMAGE=auth-proxy
+
+CRONS_IMAGE = $(PROJECT_NAME)
+CRONS_TEST_IMAGE = $(CRONS_IMAGE).test
+AUTH_PROXY_IMAGE = auth-proxy
 
 JIMDO_ENVIRONMENT=stage
 ZONE=jimdo-platform-stage.net
@@ -58,12 +60,17 @@ deploy: set-credentials dinah
 unit-test: TEST_TAGS=""
 unit-test: test
 
-test: container
-	docker run --rm \
-		-i \
+test-container:
+	docker build \
+		-t $(CRONS_TEST_IMAGE) \
+		-f Dockerfile.test \
+		.
+
+test: test-container
+	docker run --rm -i \
+		-v $(PWD):/go/src/github.com/Jimdo/$(PROJECT_NAME) \
 		-e TEST_TAGS=$(TEST_TAGS) \
-		--entrypoint ./scripts/test \
-		$(CRONS_IMAGE)
+		$(CRONS_TEST_IMAGE)
 
 container:
 	docker build -t $(CRONS_IMAGE) .

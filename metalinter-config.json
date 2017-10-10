@@ -1,0 +1,37 @@
+
+{
+    "Enable": [
+        "vet",
+        "vetshadow",
+        "deadcode",
+        "gocyclo",
+        "golint",
+        "varcheck",
+        "structcheck",
+        "aligncheck",
+        "errcheck",
+        "dupl",
+        "ineffassign",
+        "interfacer",
+        "goconst",
+        "gas",
+        "gofmt",
+        "goimports",
+        "gosimple",
+        "lll",
+        "misspell",
+        "unparam",
+        "unused",
+        "staticcheck"
+    ],
+    "Skip": [
+        "mock"
+    ],
+    "Exclude": [
+        "should have comment.* or be unexported"
+    ],
+    "LineLength": 120,
+    "Vendor": true,
+    "Test": true,
+    "Deadline": "5m"
+}
