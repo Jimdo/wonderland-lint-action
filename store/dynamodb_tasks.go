@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/Jimdo/wonderland-crons/cron"
+	"github.com/Jimdo/wonderland-crons/logger"
 )
 
 const (
@@ -80,28 +80,6 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 		return fmt.Errorf("Could not convert version %d into DynamoDB value: %s", task.Version, err)
 	}
 
-	logger := log.WithFields(log.Fields{
-		"name":        cronName,
-		"task_arn":    aws.StringValue(t.TaskArn),
-		"exit_code":   cronContainer.ExitCode,
-		"exit_reason": aws.StringValue(t.StoppedReason),
-		"status":      aws.StringValue(t.LastStatus),
-		"version":     aws.Int64Value(t.Version),
-	})
-
-	if timeoutContainer != nil {
-		logger = logger.WithFields(log.Fields{
-			"timeout_exit_code": timeoutContainer.ExitCode,
-		})
-	}
-
-	for i, container := range t.Containers {
-		logger = logger.WithFields(log.Fields{
-			fmt.Sprintf("container_%d_arn", i):  aws.StringValue(container.ContainerArn),
-			fmt.Sprintf("container_%d_name", i): aws.StringValue(container.Name),
-		})
-	}
-
 	_, err = ts.Client.PutItem(&dynamodb.PutItemInput{
 		TableName:           aws.String(ts.TableName),
 		Item:                data,
@@ -113,7 +91,7 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 	if err != nil {
 		if err, ok := err.(awserr.Error); ok {
 			if err.Code() == dynamodb.ErrCodeConditionalCheckFailedException {
-				logger.Debugf("Task version is lower than stored task version, skipping update")
+				logger.Task(task).Debugf("Task version is lower than stored task version, skipping update")
 				return nil
 			}
 		}
@@ -121,44 +99,30 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 		return fmt.Errorf("Could not update DynamoDB: %s", err)
 	}
 
-	logger.Debugf("Task updated")
+	logger.Task(task).Debugf("Task updated")
 
 	return nil
 }
 
 func (ts *DynamoDBTaskStore) getStatusByExitCodes(t *Task) string {
-	logger := log.WithFields(log.Fields{
-		"name":        t.Name,
-		"task_arn":    t.TaskArn,
-		"exit_code":   t.ExitCode,
-		"exit_reason": t.ExitReason,
-		"status":      t.Status,
-		"version":     t.Version,
-	})
-	if t.TimeoutExitCode != nil {
-		logger = logger.WithFields(log.Fields{
-			"timeout_exit_code": t.TimeoutExitCode,
-		})
-	}
-
 	if t.Status == ecs.DesiredStatusStopped {
-		logger.Debug("setStatusByExitCodes: Got stopped task to set status by exit code")
+		logger.Task(t).Debug("setStatusByExitCodes: Got stopped task to set status by exit code")
 		if t.TimeoutExitCode != nil && aws.Int64Value(t.TimeoutExitCode) == cron.TimeoutExitCode {
-			logger.Debug("setStatusByExitCodes: set status to timeout")
+			logger.Task(t).Debug("setStatusByExitCodes: set status to timeout")
 			return "TIMEOUT"
 		}
 		if t.ExitCode == nil {
-			logger.Debug("setStatusByExitCodes: set status to unknown")
+			logger.Task(t).Debug("setStatusByExitCodes: set status to unknown")
 			return "UNKNOWN"
 		}
 		if aws.Int64Value(t.ExitCode) == 0 {
-			logger.Debug("setStatusByExitCodes: set status to unknown")
+			logger.Task(t).Debug("setStatusByExitCodes: set status to unknown")
 			return "SUCCESS"
 		}
-		logger.Debug("setStatusByExitCodes: set status to failed")
+		logger.Task(t).Debug("setStatusByExitCodes: set status to failed")
 		return "FAILED"
 	}
-	logger.Debug("setStatusByExitCodes: Got task that is not stopped")
+	logger.Task(t).Debug("setStatusByExitCodes: Got task that is not stopped")
 	return t.Status
 }
 
