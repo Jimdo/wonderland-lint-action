@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 )
 
-const dynamoDBNameAttribute = "name"
+const dynamoDBNameAttribute = "Name"
 
 func NewDynamoDBLockManager(dynamoDB dynamodbiface.DynamoDBAPI, table string) *DynamoDBLockManager {
 	return &DynamoDBLockManager{
@@ -26,8 +26,8 @@ type DynamoDBLockManager struct {
 }
 
 type dynamoDBLockRecord struct {
-	Name      string    `json:"name"`
-	ExpiresAt time.Time `json:"expiry"`
+	Name      string    `json:"Name"`
+	ExpiresAt time.Time `json:"Expiry"`
 }
 
 func (l *DynamoDBLockManager) Acquire(name string, timeout time.Duration) error {
