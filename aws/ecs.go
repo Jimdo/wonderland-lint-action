@@ -35,7 +35,7 @@ func (tds *ECSTaskDefinitionStore) AddRevisionFromCronDescription(cronName, fami
 	}
 
 	// add timeout sidecar container
-	timeoutCmd := fmt.Sprintf("sleep %d; exit %d", desc.Timeout, cron.TimeoutExitCode)
+	timeoutCmd := fmt.Sprintf("sleep %d & wait $! &&exit %d", desc.Timeout, cron.TimeoutExitCode)
 	timeoutSidecarDefinition := &ecs.ContainerDefinition{
 		Command: awssdk.StringSlice([]string{"/bin/sh", "-c", timeoutCmd}),
 		Cpu:     awssdk.Int64(int64(16)),
