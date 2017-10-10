@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecs"
 
 	"github.com/Jimdo/wonderland-crons/cron"
-	"github.com/Jimdo/wonderland-crons/logger"
 )
 
 const (
@@ -69,7 +68,7 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 	}
 
 	task.Status = ts.getStatusByExitCodes(task)
-	logger.Task(task).Debugf("Updated task status")
+	taskLogger(task).Debugf("Updated task status")
 
 	data, err := dynamodbattribute.MarshalMap(task)
 	if err != nil {
@@ -92,7 +91,7 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 	if err != nil {
 		if err, ok := err.(awserr.Error); ok {
 			if err.Code() == dynamodb.ErrCodeConditionalCheckFailedException {
-				logger.Task(task).Debugf("Task version is lower than stored task version, skipping update")
+				taskLogger(task).Debugf("Task version is lower than stored task version, skipping update")
 				return nil
 			}
 		}
@@ -100,30 +99,30 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 		return fmt.Errorf("Could not update DynamoDB: %s", err)
 	}
 
-	logger.Task(task).Debugf("Task updated")
+	taskLogger(task).Debugf("Task updated")
 
 	return nil
 }
 
 func (ts *DynamoDBTaskStore) getStatusByExitCodes(t *Task) string {
 	if t.Status == ecs.DesiredStatusStopped {
-		logger.Task(t).Debug("Got stopped task to set status by exit code")
+		taskLogger(t).Debug("Got stopped task to set status by exit code")
 		if t.TimeoutExitCode != nil && aws.Int64Value(t.TimeoutExitCode) == cron.TimeoutExitCode {
-			logger.Task(t).Debug("Task status will be set to timeout")
+			taskLogger(t).Debug("Task status will be set to timeout")
 			return "TIMEOUT"
 		}
 		if t.ExitCode == nil {
-			logger.Task(t).Debug("Task status will be set to unknown")
+			taskLogger(t).Debug("Task status will be set to unknown")
 			return "UNKNOWN"
 		}
 		if aws.Int64Value(t.ExitCode) == 0 {
-			logger.Task(t).Debug("Task status will be set to success")
+			taskLogger(t).Debug("Task status will be set to success")
 			return "SUCCESS"
 		}
-		logger.Task(t).Debug("Task status will be set to failed")
+		taskLogger(t).Debug("Task status will be set to failed")
 		return "FAILED"
 	}
-	logger.Task(t).Debug("Got task that is not stopped")
+	taskLogger(t).Debug("Got task that is not stopped")
 	return t.Status
 }
 

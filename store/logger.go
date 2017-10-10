@@ -1,11 +1,10 @@
-package logger
+package store
 
 import (
-	"github.com/Jimdo/wonderland-crons/store"
 	log "github.com/sirupsen/logrus"
 )
 
-func Task(t *store.Task) *log.Entry {
+func taskLogger(t *Task) *log.Entry {
 	logger := log.WithFields(log.Fields{
 		"name":              t.Name,
 		"task_arn":          t.TaskArn,
