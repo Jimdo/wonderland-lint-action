@@ -4,7 +4,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func taskLogger(t *Execution) *log.Entry {
+func executionLogger(t *Execution) *log.Entry {
 	logger := log.WithFields(log.Fields{
 		"name":              t.Name,
 		"task_arn":          t.TaskArn,

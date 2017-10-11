@@ -65,7 +65,7 @@ func (es *DynamoDBExecutionStore) Update(cronName string, t *ecs.Task) error {
 	}
 
 	execution.Status = es.getStatusByExitCodes(execution)
-	taskLogger(execution).Debugf("Updated execution status")
+	executionLogger(execution).Debugf("Updated execution status")
 
 	data, err := dynamodbattribute.MarshalMap(execution)
 	if err != nil {
@@ -88,7 +88,7 @@ func (es *DynamoDBExecutionStore) Update(cronName string, t *ecs.Task) error {
 	if err != nil {
 		if err, ok := err.(awserr.Error); ok {
 			if err.Code() == dynamodb.ErrCodeConditionalCheckFailedException {
-				taskLogger(execution).Debugf("Execution version is lower than stored execution version, skipping update")
+				executionLogger(execution).Debugf("Execution version is lower than stored execution version, skipping update")
 				return nil
 			}
 		}
@@ -96,30 +96,30 @@ func (es *DynamoDBExecutionStore) Update(cronName string, t *ecs.Task) error {
 		return fmt.Errorf("Could not update DynamoDB: %s", err)
 	}
 
-	taskLogger(execution).Debugf("Execution updated")
+	executionLogger(execution).Debugf("Execution updated")
 
 	return nil
 }
 
 func (es *DynamoDBExecutionStore) getStatusByExitCodes(t *Execution) string {
 	if t.Status == ecs.DesiredStatusStopped {
-		taskLogger(t).Debug("Got stopped execution to set status by exit code")
+		executionLogger(t).Debug("Got stopped execution to set status by exit code")
 		if t.ExitCode == nil || t.TimeoutExitCode == nil {
-			taskLogger(t).Debug("Execution status will be set to unknown")
+			executionLogger(t).Debug("Execution status will be set to unknown")
 			return "UNKNOWN"
 		}
 		if aws.Int64Value(t.TimeoutExitCode) == cron.TimeoutExitCode {
-			taskLogger(t).Debug("Execution status will be set to timeout")
+			executionLogger(t).Debug("Execution status will be set to timeout")
 			return "TIMEOUT"
 		}
 		if aws.Int64Value(t.ExitCode) == 0 {
-			taskLogger(t).Debug("Execution status will be set to success")
+			executionLogger(t).Debug("Execution status will be set to success")
 			return "SUCCESS"
 		}
-		taskLogger(t).Debug("Execution status will be set to failed")
+		executionLogger(t).Debug("Execution status will be set to failed")
 		return "FAILED"
 	}
-	taskLogger(t).Debug("Got execution that is not stopped")
+	executionLogger(t).Debug("Got execution that is not stopped")
 	return t.Status
 }
 
