@@ -123,7 +123,7 @@ func (es *DynamoDBExecutionStore) getStatusByExitCodes(t *Execution) string {
 	return t.Status
 }
 
-func (es *DynamoDBExecutionStore) GetLastNTaskExecutions(cronName string, count int64) ([]*Execution, error) {
+func (es *DynamoDBExecutionStore) GetLastNExecutions(cronName string, count int64) ([]*Execution, error) {
 	var result []*Execution
 	var queryError error
 
