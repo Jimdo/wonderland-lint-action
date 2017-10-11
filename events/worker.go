@@ -96,7 +96,7 @@ func (w *Worker) Run() error {
 		for {
 			select {
 			case <-refreshLeadership.C:
-				log.Debug("Refreshing leadership for %s", lockTTL)
+				log.Debugf("Refreshing leadership for %s", lockTTL)
 				if err := w.lockManager.Refresh(LeaderLockName, lockTTL); err != nil {
 					refreshLeadership.Stop()
 					return err
