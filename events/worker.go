@@ -99,11 +99,9 @@ func (w *Worker) Run() error {
 			case <-refreshLeadership.C:
 				log.Debug("Refreshing leadership for %s", lockTTL)
 				if err := w.lockManager.Refresh(LeaderLockName, lockTTL); err != nil {
-					stopLeader <- struct{}{}
 					return err
 				}
 			case err := <-leaderErrors:
-				stopLeader <- struct{}{}
 				return err
 			}
 		}
