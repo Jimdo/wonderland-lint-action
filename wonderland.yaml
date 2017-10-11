@@ -14,6 +14,7 @@ components:
       WONDERLAND_REGISTRY_ADDRESS: '{{env `WONDERLAND_REGISTRY` }}'
       CRONS_TABLE_NAME: '{{env `CRONS_TABLE_NAME` }}'
       TASKS_TABLE_NAME: '{{env `TASKS_TABLE_NAME` }}'
+      WORKER_LEADER_LOCK_TABLE_NAME: '{{env `WORKER_LEADER_LOCK_TABLE_NAME`}}'
       $ref_secrets: vault+secret://vault.{{env `ZONE`}}/wonderland/crons
     capacity:
       memory: M

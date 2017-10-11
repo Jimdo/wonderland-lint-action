@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/golang/mock/gomock"
 
-	"github.com/Jimdo/wonderland-crons/aws/mock"
+	"github.com/Jimdo/wonderland-crons/mock"
 )
 
 var (
@@ -20,7 +20,7 @@ var (
 	taskDefinitionArn = "arn:aws:ecs:eu-west-1:062052581233:task-definition/wonderland-docs:241"
 )
 
-func TestWorker_Run(t *testing.T) {
+func TestWorker_runInLeaderMode(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -51,15 +51,20 @@ func TestWorker_Run(t *testing.T) {
 	taskStore := mock.NewMockTaskStore(ctrl)
 
 	worker := &Worker{
-		PollInterval: pollInterval,
-		QueueURL:     queueURL,
-		TaskStore:    taskStore,
-		SQS:          sqsClient,
+		pollInterval: pollInterval,
+		queueURL:     queueURL,
+		taskStore:    taskStore,
+		sqs:          sqsClient,
 	}
-	done := make(chan interface{})
+	done := make(chan struct{})
+	errChan := make(chan error)
 	go func() {
-		if err := worker.Run(done); err != nil {
-			t.Fatalf("should not return an error: %s", err)
+		worker.runInLeaderMode(done, errChan)
+		for {
+			select {
+			case err := <-errChan:
+				t.Fatalf("should not return an error: %s", err)
+			}
 		}
 	}()
 	defer close(done)

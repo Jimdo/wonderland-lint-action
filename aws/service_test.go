@@ -6,7 +6,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 
-	"github.com/Jimdo/wonderland-crons/aws/mock"
+	"github.com/Jimdo/wonderland-crons/mock"
 	"github.com/Jimdo/wonderland-crons/cron"
 	"github.com/Jimdo/wonderland-crons/store"
 )

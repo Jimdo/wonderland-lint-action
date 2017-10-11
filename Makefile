@@ -89,10 +89,11 @@ dinah:
 	@curl -sSL https://gist.github.com/white--rabbit/bca70b3215991e9e45905a1195388d09/raw | bash
 
 gen-mocks:
-	mockgen -package mock github.com/Jimdo/wonderland-crons/aws CronValidator > aws/mock/cron_validator.go
-	mockgen -package mock github.com/Jimdo/wonderland-crons/aws RuleCronManager > aws/mock/rule_cron_manager.go
-	mockgen -package mock github.com/Jimdo/wonderland-crons/aws TaskDefinitionStore > aws/mock/task_definition_store.go
-	mockgen -package mock github.com/Jimdo/wonderland-crons/aws CronStore > aws/mock/cron_store.go
-	mockgen -package mock github.com/Jimdo/wonderland-crons/aws CronTaskStore > aws/mock/cron_task_store.go
-	mockgen -package mock github.com/Jimdo/wonderland-crons/events TaskStore > aws/mock/task_store.go
-	mockgen -package mock github.com/aws/aws-sdk-go/service/sqs/sqsiface SQSAPI > aws/mock/sqsapi.go
+	mockgen -package mock github.com/Jimdo/wonderland-crons/aws CronValidator > mock/cron_validator.go
+	mockgen -package mock github.com/Jimdo/wonderland-crons/aws RuleCronManager > mock/rule_cron_manager.go
+	mockgen -package mock github.com/Jimdo/wonderland-crons/aws TaskDefinitionStore > mock/task_definition_store.go
+	mockgen -package mock github.com/Jimdo/wonderland-crons/aws CronStore > mock/cron_store.go
+	mockgen -package mock github.com/Jimdo/wonderland-crons/aws CronTaskStore > mock/cron_task_store.go
+	mockgen -package mock github.com/Jimdo/wonderland-crons/events TaskStore > mock/task_store.go
+	mockgen -package mock github.com/Jimdo/wonderland-crons/events TaskStore > mock/task_store.go
+	mockgen -package mock github.com/aws/aws-sdk-go/service/sqs/sqsiface SQSAPI > mock/sqsapi.go
