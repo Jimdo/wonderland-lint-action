@@ -41,7 +41,7 @@ import (
 
 var (
 	config struct {
-		LogLevel string `flag:"log" default:"debug" description:"The minimum LogLevel of messages to write. Possible values: []"`
+		LogLevel string `flag:"log" default:"info" description:"The minimum LogLevel of messages to write. Possible values: []"`
 
 		// Server
 		Addr            string        `flag:"addr" default:":8000" description:"The address/port combination to listen on"`
