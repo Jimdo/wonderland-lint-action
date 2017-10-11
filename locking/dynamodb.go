@@ -78,11 +78,7 @@ func (l *DynamoDBLockManager) Release(name string) error {
 		},
 		TableName: aws.String(l.table),
 	})
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func (l *DynamoDBLockManager) getCurrentLock(name string) (*dynamoDBLockRecord, error) {
