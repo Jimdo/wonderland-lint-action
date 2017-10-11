@@ -27,12 +27,6 @@ type TaskStore interface {
 	Update(string, *ecs.Task) error
 }
 
-type LockManager interface {
-	Acquire(name string, duration time.Duration) error
-	Refresh(name string, duration time.Duration) error
-	Release(name string) error
-}
-
 type Worker struct {
 	LockManager         locking.LockManager
 	LockName            string
@@ -43,7 +37,7 @@ type Worker struct {
 	TaskStore           TaskStore
 }
 
-func NewWorker(lm LockManager, sqs sqsiface.SQSAPI, qURL string, ts TaskStore, options ...func(*Worker)) *Worker {
+func NewWorker(lm locking.LockManager, sqs sqsiface.SQSAPI, qURL string, ts TaskStore, options ...func(*Worker)) *Worker {
 	w := &Worker{
 		LockManager:         lm,
 		LockName:            DefaultLockName,
