@@ -12,4 +12,4 @@ RUN set -ex \
 
 WORKDIR /go/src/github.com/Jimdo/wonderland-crons
 
-CMD ["./script/test"]
+ENTRYPOINT ["./script/test"]

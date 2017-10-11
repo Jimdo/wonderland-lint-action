@@ -3,7 +3,7 @@ sudo: required
 services:
     - docker
 
-script: make test push BRANCH=$TRAVIS_BRANCH
+script: make ci push BRANCH=$TRAVIS_BRANCH
 
 deploy:
   provider: script
