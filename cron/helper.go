@@ -1,7 +1,6 @@
 package cron
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -9,7 +8,9 @@ import (
 )
 
 const (
-	cronPrefix = "cron--"
+	cronPrefix           = "cron--"
+	TimeoutExitCode      = 201
+	TimeoutContainerName = "timeout"
 )
 
 func GetNameByResource(resourceName string) string {
@@ -20,9 +21,24 @@ func GetResourceByName(cronName string) string {
 	return cronPrefix + cronName
 }
 
-func IsCron(task *ecs.Task) (bool, error) {
-	if len(task.Containers) == 0 {
-		return false, fmt.Errorf("Task has no containers defined, cannot discover name")
+func IsCron(container *ecs.Container) (bool, error) {
+	return strings.HasPrefix(aws.StringValue(container.Name), cronPrefix), nil
+}
+
+func GetUserContainerFromTask(t *ecs.Task) *ecs.Container {
+	for _, c := range t.Containers {
+		if aws.StringValue(c.Name) != TimeoutContainerName {
+			return c
+		}
 	}
-	return strings.HasPrefix(aws.StringValue(task.Containers[0].Name), cronPrefix), nil
+	return nil
+}
+
+func GetTimeoutContainerFromTask(t *ecs.Task) *ecs.Container {
+	for _, c := range t.Containers {
+		if aws.StringValue(c.Name) == TimeoutContainerName {
+			return c
+		}
+	}
+	return nil
 }

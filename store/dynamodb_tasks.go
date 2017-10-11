@@ -10,7 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	log "github.com/sirupsen/logrus"
+
+	"github.com/Jimdo/wonderland-crons/cron"
 )
 
 const (
@@ -18,15 +19,16 @@ const (
 )
 
 type Task struct {
-	Name       string
-	StartTime  time.Time
-	EndTime    time.Time
-	TaskArn    string
-	ExitCode   *int64
-	ExitReason string
-	Status     string
-	Version    int64
-	ExpiryTime int64
+	Name            string
+	StartTime       time.Time
+	EndTime         time.Time
+	TaskArn         string
+	ExitCode        *int64
+	ExitReason      string
+	Status          string
+	Version         int64
+	ExpiryTime      int64
+	TimeoutExitCode *int64
 }
 
 type DynamoDBTaskStore struct {
@@ -46,17 +48,27 @@ func NewDynamoDBTaskStore(dynamoDBClient dynamodbiface.DynamoDBAPI, tableName st
 }
 
 func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
+	cronContainer := cron.GetUserContainerFromTask(t)
+	timeoutContainer := cron.GetTimeoutContainerFromTask(t)
+
 	task := &Task{
 		Name:       cronName,
 		StartTime:  aws.TimeValue(t.CreatedAt),
 		EndTime:    aws.TimeValue(t.StoppedAt),
 		TaskArn:    aws.StringValue(t.TaskArn),
-		ExitCode:   t.Containers[0].ExitCode,
+		ExitCode:   cronContainer.ExitCode,
 		ExitReason: aws.StringValue(t.StoppedReason),
 		Status:     aws.StringValue(t.LastStatus),
 		Version:    aws.Int64Value(t.Version),
 		ExpiryTime: ts.calcExpiry(t),
 	}
+
+	if timeoutContainer != nil {
+		task.TimeoutExitCode = timeoutContainer.ExitCode
+	}
+
+	task.Status = ts.getStatusByExitCodes(task)
+	taskLogger(task).Debugf("Updated task status")
 
 	data, err := dynamodbattribute.MarshalMap(task)
 	if err != nil {
@@ -79,7 +91,7 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 	if err != nil {
 		if err, ok := err.(awserr.Error); ok {
 			if err.Code() == dynamodb.ErrCodeConditionalCheckFailedException {
-				log.Debugf("Task version is lower than stored task version, skipping update")
+				taskLogger(task).Debugf("Task version is lower than stored task version, skipping update")
 				return nil
 			}
 		}
@@ -87,7 +99,31 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 		return fmt.Errorf("Could not update DynamoDB: %s", err)
 	}
 
+	taskLogger(task).Debugf("Task updated")
+
 	return nil
+}
+
+func (ts *DynamoDBTaskStore) getStatusByExitCodes(t *Task) string {
+	if t.Status == ecs.DesiredStatusStopped {
+		taskLogger(t).Debug("Got stopped task to set status by exit code")
+		if t.TimeoutExitCode != nil && aws.Int64Value(t.TimeoutExitCode) == cron.TimeoutExitCode {
+			taskLogger(t).Debug("Task status will be set to timeout")
+			return "TIMEOUT"
+		}
+		if t.ExitCode == nil {
+			taskLogger(t).Debug("Task status will be set to unknown")
+			return "UNKNOWN"
+		}
+		if aws.Int64Value(t.ExitCode) == 0 {
+			taskLogger(t).Debug("Task status will be set to success")
+			return "SUCCESS"
+		}
+		taskLogger(t).Debug("Task status will be set to failed")
+		return "FAILED"
+	}
+	taskLogger(t).Debug("Got task that is not stopped")
+	return t.Status
 }
 
 func (ts *DynamoDBTaskStore) GetLastNTaskExecutions(cronName string, count int64) ([]*Task, error) {
@@ -105,8 +141,7 @@ func (ts *DynamoDBTaskStore) GetLastNTaskExecutions(cronName string, count int64
 			"#N": aws.String("Name"),
 		},
 		KeyConditionExpression: aws.String("#N = :name"),
-		Limit:            aws.Int64(count),
-		ScanIndexForward: aws.Bool(false),
+		ScanIndexForward:       aws.Bool(false),
 	}, func(out *dynamodb.QueryOutput, last bool) bool {
 		var tasks []*Task
 		if err := dynamodbattribute.UnmarshalListOfMaps(out.Items, &tasks); err != nil {

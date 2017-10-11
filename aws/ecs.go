@@ -29,14 +29,37 @@ func NewECSTaskDefinitionStore(e ecsiface.ECSAPI, tdm *ECSTaskDefinitionMapper) 
 }
 
 func (tds *ECSTaskDefinitionStore) AddRevisionFromCronDescription(cronName, family string, desc *cron.CronDescription) (string, error) {
-	out, err := tds.ecs.RegisterTaskDefinition(&ecs.RegisterTaskDefinitionInput{
+	rtdInput := &ecs.RegisterTaskDefinitionInput{
 		ContainerDefinitions: []*ecs.ContainerDefinition{tds.tdm.ContainerDefinitionFromCronDescription(family, desc, cronName)},
 		Family:               awssdk.String(family),
-	})
+	}
+
+	timeoutSidecarDefinition := tds.createTimeoutSidecarDefinition(cronName, desc)
+
+	rtdInput.ContainerDefinitions = append(rtdInput.ContainerDefinitions, timeoutSidecarDefinition)
+	out, err := tds.ecs.RegisterTaskDefinition(rtdInput)
 	if err != nil {
 		return "", fmt.Errorf("could not register task definition for family %q with error: %s", family, err)
 	}
 	return awssdk.StringValue(out.TaskDefinition.TaskDefinitionArn), nil
+}
+
+func (tds *ECSTaskDefinitionStore) createTimeoutSidecarDefinition(cronName string, desc *cron.CronDescription) *ecs.ContainerDefinition {
+	timeoutCmd := fmt.Sprintf("trap 'echo got SIGTERM' SIGTERM; sleep %d & wait $! && exit %d", *desc.Timeout, cron.TimeoutExitCode)
+
+	timeoutSidecarDefinition := &ecs.ContainerDefinition{
+		Command: awssdk.StringSlice([]string{"/bin/sh", "-c", timeoutCmd}),
+		Cpu:     awssdk.Int64(int64(16)),
+		DockerLabels: map[string]*string{
+			"com.jimdo.wonderland.cron": awssdk.String(cronName),
+		},
+		Image:  awssdk.String("alpine:3.6"),
+		Memory: awssdk.Int64(int64(32)),
+		Name:   awssdk.String(cron.TimeoutContainerName),
+	}
+
+	return timeoutSidecarDefinition
+
 }
 
 func (tds *ECSTaskDefinitionStore) DeleteByFamily(family string) error {
