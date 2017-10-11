@@ -29,7 +29,7 @@ type CronStore interface {
 }
 
 type CronTaskStore interface {
-	GetLastNTaskExecutions(string, int64) ([]*store.Task, error)
+	GetLastNTaskExecutions(string, int64) ([]*store.Execution, error)
 }
 
 type Service struct {
@@ -43,7 +43,7 @@ type Service struct {
 type CronStatus struct {
 	Cron       *store.Cron
 	Status     string
-	Executions []*store.Task
+	Executions []*store.Execution
 }
 
 func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s CronStore, ts CronTaskStore) *Service {

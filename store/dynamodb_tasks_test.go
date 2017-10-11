@@ -27,7 +27,7 @@ func (m *mockDynamoDBClient) PutItem(input *dynamodb.PutItemInput) (*dynamodb.Pu
 }
 
 func TestStore_UpdateSuccess(t *testing.T) {
-	cronName := "test-task"
+	cronName := "test-execution"
 	taskArn := "arn:aws:ecs:eu-west-1:062052581233:task/3e8a49bb-45b6-4021-93c7-ca541bfe2c88"
 	ecsTask := &ecs.Task{
 		Containers: []*ecs.Container{
@@ -100,8 +100,8 @@ func TestStore_getStatusByExitCodes(t *testing.T) {
 	}
 
 	for expectedStatus, tc := range testCases {
-		task := &Task{
-			Name:            "test-task",
+		execution := &Execution{
+			Name:            "test-execution",
 			ExitCode:        tc.ExitCode,
 			Status:          tc.StatusBefore,
 			TimeoutExitCode: tc.TimeoutExitCode,
@@ -112,7 +112,7 @@ func TestStore_getStatusByExitCodes(t *testing.T) {
 			t.Fatalf("Could not initialize execution store %s", err)
 		}
 
-		status := es.getStatusByExitCodes(task)
+		status := es.getStatusByExitCodes(execution)
 		if status != expectedStatus {
 			t.Fatalf("Expected status to be %s, got %s", expectedStatus, status)
 		}

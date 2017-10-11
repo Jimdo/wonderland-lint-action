@@ -29,9 +29,9 @@ func (_m *MockCronTaskStore) EXPECT() *_MockCronTaskStoreRecorder {
 	return _m.recorder
 }
 
-func (_m *MockCronTaskStore) GetLastNTaskExecutions(_param0 string, _param1 int64) ([]*store.Task, error) {
+func (_m *MockCronTaskStore) GetLastNTaskExecutions(_param0 string, _param1 int64) ([]*store.Execution, error) {
 	ret := _m.ctrl.Call(_m, "GetLastNTaskExecutions", _param0, _param1)
-	ret0, _ := ret[0].([]*store.Task)
+	ret0, _ := ret[0].([]*store.Execution)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

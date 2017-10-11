@@ -18,7 +18,7 @@ const (
 	daysToKeepTasks = 14
 )
 
-type Task struct {
+type Execution struct {
 	Name            string
 	StartTime       time.Time
 	EndTime         time.Time
@@ -51,7 +51,7 @@ func (es *DynamoDBExecutionStore) Update(cronName string, t *ecs.Task) error {
 	cronContainer := cron.GetUserContainerFromTask(t)
 	timeoutContainer := cron.GetTimeoutContainerFromTask(t)
 
-	task := &Task{
+	execution := &Execution{
 		Name:            cronName,
 		StartTime:       aws.TimeValue(t.CreatedAt),
 		EndTime:         aws.TimeValue(t.StoppedAt),
@@ -64,17 +64,17 @@ func (es *DynamoDBExecutionStore) Update(cronName string, t *ecs.Task) error {
 		TimeoutExitCode: timeoutContainer.ExitCode,
 	}
 
-	task.Status = es.getStatusByExitCodes(task)
-	taskLogger(task).Debugf("Updated task status")
+	execution.Status = es.getStatusByExitCodes(execution)
+	taskLogger(execution).Debugf("Updated execution status")
 
-	data, err := dynamodbattribute.MarshalMap(task)
+	data, err := dynamodbattribute.MarshalMap(execution)
 	if err != nil {
-		return fmt.Errorf("Could not marshal task into DynamoDB value: %s", err)
+		return fmt.Errorf("Could not marshal execution into DynamoDB value: %s", err)
 	}
 
-	versionDBA, err := dynamodbattribute.ConvertTo(task.Version)
+	versionDBA, err := dynamodbattribute.ConvertTo(execution.Version)
 	if err != nil {
-		return fmt.Errorf("Could not convert version %d into DynamoDB value: %s", task.Version, err)
+		return fmt.Errorf("Could not convert version %d into DynamoDB value: %s", execution.Version, err)
 	}
 
 	_, err = es.Client.PutItem(&dynamodb.PutItemInput{
@@ -88,7 +88,7 @@ func (es *DynamoDBExecutionStore) Update(cronName string, t *ecs.Task) error {
 	if err != nil {
 		if err, ok := err.(awserr.Error); ok {
 			if err.Code() == dynamodb.ErrCodeConditionalCheckFailedException {
-				taskLogger(task).Debugf("Task version is lower than stored task version, skipping update")
+				taskLogger(execution).Debugf("Execution version is lower than stored execution version, skipping update")
 				return nil
 			}
 		}
@@ -96,35 +96,35 @@ func (es *DynamoDBExecutionStore) Update(cronName string, t *ecs.Task) error {
 		return fmt.Errorf("Could not update DynamoDB: %s", err)
 	}
 
-	taskLogger(task).Debugf("Task updated")
+	taskLogger(execution).Debugf("Execution updated")
 
 	return nil
 }
 
-func (es *DynamoDBExecutionStore) getStatusByExitCodes(t *Task) string {
+func (es *DynamoDBExecutionStore) getStatusByExitCodes(t *Execution) string {
 	if t.Status == ecs.DesiredStatusStopped {
-		taskLogger(t).Debug("Got stopped task to set status by exit code")
+		taskLogger(t).Debug("Got stopped execution to set status by exit code")
 		if t.ExitCode == nil || t.TimeoutExitCode == nil {
-			taskLogger(t).Debug("Task status will be set to unknown")
+			taskLogger(t).Debug("Execution status will be set to unknown")
 			return "UNKNOWN"
 		}
 		if aws.Int64Value(t.TimeoutExitCode) == cron.TimeoutExitCode {
-			taskLogger(t).Debug("Task status will be set to timeout")
+			taskLogger(t).Debug("Execution status will be set to timeout")
 			return "TIMEOUT"
 		}
 		if aws.Int64Value(t.ExitCode) == 0 {
-			taskLogger(t).Debug("Task status will be set to success")
+			taskLogger(t).Debug("Execution status will be set to success")
 			return "SUCCESS"
 		}
-		taskLogger(t).Debug("Task status will be set to failed")
+		taskLogger(t).Debug("Execution status will be set to failed")
 		return "FAILED"
 	}
-	taskLogger(t).Debug("Got task that is not stopped")
+	taskLogger(t).Debug("Got execution that is not stopped")
 	return t.Status
 }
 
-func (es *DynamoDBExecutionStore) GetLastNTaskExecutions(cronName string, count int64) ([]*Task, error) {
-	var result []*Task
+func (es *DynamoDBExecutionStore) GetLastNTaskExecutions(cronName string, count int64) ([]*Execution, error) {
+	var result []*Execution
 	var queryError error
 
 	err := es.Client.QueryPages(&dynamodb.QueryInput{
@@ -140,13 +140,13 @@ func (es *DynamoDBExecutionStore) GetLastNTaskExecutions(cronName string, count 
 		KeyConditionExpression: aws.String("#N = :name"),
 		ScanIndexForward:       aws.Bool(false),
 	}, func(out *dynamodb.QueryOutput, last bool) bool {
-		var tasks []*Task
-		if err := dynamodbattribute.UnmarshalListOfMaps(out.Items, &tasks); err != nil {
+		var executions []*Execution
+		if err := dynamodbattribute.UnmarshalListOfMaps(out.Items, &executions); err != nil {
 			queryError = fmt.Errorf("Could not unmarshal cron: %s", err)
 			return false
 		}
 
-		result = append(result, tasks...)
+		result = append(result, executions...)
 		// DynamoDB limit results are different when using pagination, so bail out once we have the requested items
 		if int64(len(result)) >= count {
 			return false
@@ -155,7 +155,7 @@ func (es *DynamoDBExecutionStore) GetLastNTaskExecutions(cronName string, count 
 		return !last
 	})
 	if err != nil {
-		return nil, fmt.Errorf("Could not fetch tasks from DynamoDB: %s", err)
+		return nil, fmt.Errorf("Could not fetch executions from DynamoDB: %s", err)
 	}
 
 	if queryError != nil {
