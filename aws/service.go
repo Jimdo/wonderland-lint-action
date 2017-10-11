@@ -151,6 +151,9 @@ func (s *Service) Status(cronName string, executionCount int64) (*CronStatus, er
 		return nil, err
 	}
 	executions, err := s.executionStore.GetLastNExecutions(cronName, executionCount)
+	if err != nil {
+		return nil, err
+	}
 	status := &CronStatus{
 		Cron:       cron,
 		Status:     "not implemented yet",
