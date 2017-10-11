@@ -66,7 +66,7 @@ func WithPollInterval(pi time.Duration) func(*Worker) {
 	}
 }
 
-func (w *Worker) Run() error {
+func (w *Worker) Run(stop chan struct{}) error {
 	lockTTL := w.lockRefreshInterval * 2
 	acquireLeadership := time.NewTicker(w.lockRefreshInterval)
 	stopLeader := make(chan struct{})
@@ -78,36 +78,42 @@ func (w *Worker) Run() error {
 		w.lockManager.Release(LeaderLockName)
 	}()
 
-	for range acquireLeadership.C {
-		log.Debug("Trying to acquire leadership")
-		if err := w.lockManager.Acquire(LeaderLockName, lockTTL); err != nil {
-			if err != locking.ErrLockAlreadyTaken {
-				return err
-			} else {
-				log.Debugf("Leadership already taken. Going into follower mode for %s", w.lockRefreshInterval)
-				continue
+	for {
+		select {
+		case <-acquireLeadership.C:
+			log.Debug("Trying to acquire leadership")
+			if err := w.lockManager.Acquire(LeaderLockName, lockTTL); err != nil {
+				if err != locking.ErrLockAlreadyTaken {
+					return err
+				} else {
+					log.Debugf("Leadership already taken. Going into follower mode for %s", w.lockRefreshInterval)
+					continue
+				}
 			}
-		}
 
-		log.Debug("Got leadership. Entering leader mode.")
-		go w.runInLeaderMode(stopLeader, leaderErrors)
+			log.Debug("Got leadership. Entering leader mode.")
+			go w.runInLeaderMode(stopLeader, leaderErrors)
 
-		refreshLeadership := time.NewTicker(w.lockRefreshInterval)
-		for {
-			select {
-			case <-refreshLeadership.C:
-				log.Debugf("Refreshing leadership for %s", lockTTL)
-				if err := w.lockManager.Refresh(LeaderLockName, lockTTL); err != nil {
+			refreshLeadership := time.NewTicker(w.lockRefreshInterval)
+			for {
+				select {
+				case <-refreshLeadership.C:
+					log.Debugf("Refreshing leadership for %s", lockTTL)
+					if err := w.lockManager.Refresh(LeaderLockName, lockTTL); err != nil {
+						refreshLeadership.Stop()
+						return err
+					}
+				case err := <-leaderErrors:
 					refreshLeadership.Stop()
 					return err
+				case <-stop:
+					return nil
 				}
-			case err := <-leaderErrors:
-				refreshLeadership.Stop()
-				return err
 			}
+		case <-stop:
+			return nil
 		}
 	}
-	return nil
 }
 
 func (w *Worker) runInLeaderMode(stop chan struct{}, errChan chan error) {

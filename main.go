@@ -28,6 +28,9 @@ import (
 	wonderlandValidator "github.com/Jimdo/wonderland-validator/validator"
 	"github.com/Jimdo/wonderland-vault/lib/role-credential-manager"
 
+	"os/signal"
+	"syscall"
+
 	"github.com/Jimdo/wonderland-crons/api/v1"
 	"github.com/Jimdo/wonderland-crons/api/v2"
 	"github.com/Jimdo/wonderland-crons/aws"
@@ -237,8 +240,10 @@ func main() {
 	w := events.NewWorker(lm, sqsClient, config.ECSEventsQueueURL, dynamoDBTaskStore,
 		events.WithPollInterval(config.ECSEventQueuePollInterval),
 		events.WithLockRefreshInterval(config.WorkerLeaderLockRefreshInterval))
+	stopWorker := make(chan struct{})
+	defer close(stopWorker)
 	go func() {
-		if err := w.Run(); err != nil {
+		if err := w.Run(stopWorker); err != nil {
 			log.Fatalf("Error consuming ECS events: %s", err)
 		}
 	}()
@@ -264,6 +269,13 @@ func main() {
 	router.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
 	router.HandleFunc("/debug/pprof/trace", pprof.Trace)
 	router.PathPrefix("/debug/pprof/").HandlerFunc(pprof.Index)
+
+	signals := make(chan os.Signal, 1)
+	go func() {
+		signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
+		<-signals
+		stopWorker <- struct{}{}
+	}()
 
 	graceful.Run(config.Addr, config.ShutdownTimeout, router)
 }
