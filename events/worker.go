@@ -93,15 +93,16 @@ func (w *Worker) Run() error {
 		go w.runInLeaderMode(stopLeader, leaderErrors)
 
 		refreshLeadership := time.NewTicker(w.lockRefreshInterval)
-		defer refreshLeadership.Stop()
 		for {
 			select {
 			case <-refreshLeadership.C:
 				log.Debug("Refreshing leadership for %s", lockTTL)
 				if err := w.lockManager.Refresh(LeaderLockName, lockTTL); err != nil {
+					refreshLeadership.Stop()
 					return err
 				}
 			case err := <-leaderErrors:
+				refreshLeadership.Stop()
 				return err
 			}
 		}
