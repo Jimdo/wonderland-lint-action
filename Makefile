@@ -72,13 +72,13 @@ test: test-container
 		-e TEST_TAGS=$(TEST_TAGS) \
 		$(CRONS_TEST_IMAGE) test
 
-qa: test-container
+lint: test-container
 	docker run --rm -i \
 		-v $(PWD):/go/src/github.com/Jimdo/$(PROJECT_NAME) \
 		-e TESt_TAGS=$(TEST_TAGS) \
 		$(CRONS_TEST_IMAGE) lint
 
-ci: qa test
+ci: lint test
 
 container:
 	docker build -t $(CRONS_IMAGE) .
