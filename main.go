@@ -236,8 +236,22 @@ func main() {
 		log.Fatalf("Failed to initialize Task store: %s", err)
 	}
 
+	ecstdm := aws.NewECSTaskDefinitionMapper()
+	ecstds := aws.NewECSTaskDefinitionStore(ecsClient, ecstdm)
+	cloudwatchcm := aws.NewCloudwatchRuleCronManager(cwClient, config.ECSClusterARN, config.CronRoleARN)
+	dynamoDBCronStore, err := store.NewDynamoDBCronStore(dynamoDBClient, config.CronsTableName)
+	if err != nil {
+		log.Fatalf("Failed to initialize Cron store: %s", err)
+	}
+
+	service := aws.NewService(validator, cloudwatchcm, ecstds, dynamoDBCronStore, dynamoDBExecutionStore)
+
+	eventDispatcher := events.NewEventDispatcher()
+	eventDispatcher.On(events.EventCronExecutionStarted, events.CronDeactivator())
+	eventDispatcher.On(events.EventCronExecutionStopped, events.CronActivator())
+
 	lm := locking.NewDynamoDBLockManager(dynamoDBClient, config.WorkerLeaderLockTableName)
-	w := events.NewWorker(lm, sqsClient, config.ECSEventsQueueURL, dynamoDBExecutionStore,
+	w := events.NewWorker(lm, sqsClient, config.ECSEventsQueueURL, dynamoDBExecutionStore, eventDispatcher,
 		events.WithPollInterval(config.ECSEventQueuePollInterval),
 		events.WithLockRefreshInterval(config.WorkerLeaderLockRefreshInterval))
 	stopWorker := make(chan struct{})
@@ -248,17 +262,9 @@ func main() {
 		}
 	}()
 
-	ecstdm := aws.NewECSTaskDefinitionMapper()
-	ecstds := aws.NewECSTaskDefinitionStore(ecsClient, ecstdm)
-	cloudwatchcm := aws.NewCloudwatchRuleCronManager(cwClient, config.ECSClusterARN, config.CronRoleARN)
-	dynamoDBCronStore, err := store.NewDynamoDBCronStore(dynamoDBClient, config.CronsTableName)
-	if err != nil {
-		log.Fatalf("Failed to initialize Cron store: %s", err)
-	}
-
 	v2.New(&v2.Config{
 		Router:  router.PathPrefix("/v2").Subrouter(),
-		Service: aws.NewService(validator, cloudwatchcm, ecstds, dynamoDBCronStore, dynamoDBExecutionStore),
+		Service: service,
 		URI: &v2.URIGenerator{
 			LogzioAccountID: config.LogzioAccountID,
 			LogzioURL:       config.LogzioURL,
