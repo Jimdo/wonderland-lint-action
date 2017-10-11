@@ -18,9 +18,10 @@ import (
 const (
 	TaskStateEventType = "ECS Task State Change"
 
-	DefaultLockName            = "wonderland-crons-worker"
 	DefaultLockRefreshInterval = 1 * time.Minute
 	DefaultPollInterval        = 1 * time.Second
+
+	LeaderLockName = "wonderland-crons-worker"
 )
 
 type TaskStore interface {
@@ -29,7 +30,6 @@ type TaskStore interface {
 
 type Worker struct {
 	LockManager         locking.LockManager
-	LockName            string
 	LockRefreshInterval time.Duration
 	PollInterval        time.Duration
 	QueueURL            string
@@ -40,7 +40,6 @@ type Worker struct {
 func NewWorker(lm locking.LockManager, sqs sqsiface.SQSAPI, qURL string, ts TaskStore, options ...func(*Worker)) *Worker {
 	w := &Worker{
 		LockManager:         lm,
-		LockName:            DefaultLockName,
 		LockRefreshInterval: DefaultLockRefreshInterval,
 		PollInterval:        DefaultPollInterval,
 		QueueURL:            qURL,
@@ -76,12 +75,12 @@ func (w *Worker) Run() error {
 		close(stopLeader)
 		close(leaderErrors)
 		acquireLeadership.Stop()
-		w.LockManager.Release(w.LockName)
+		w.LockManager.Release(LeaderLockName)
 	}()
 
 	for range acquireLeadership.C {
 		log.Debug("Trying to acquire leadership")
-		if err := w.LockManager.Acquire(w.LockName, lockTTL); err != nil {
+		if err := w.LockManager.Acquire(LeaderLockName, lockTTL); err != nil {
 			if err != locking.ErrLockAlreadyTaken {
 				return err
 			} else {
@@ -99,7 +98,7 @@ func (w *Worker) Run() error {
 			select {
 			case <-refreshLeadership.C:
 				log.Debug("Refreshing leadership for %s", lockTTL)
-				if err := w.LockManager.Refresh(w.LockName, lockTTL); err != nil {
+				if err := w.LockManager.Refresh(LeaderLockName, lockTTL); err != nil {
 					stopLeader <- struct{}{}
 					return err
 				}
