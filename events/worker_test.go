@@ -51,10 +51,10 @@ func TestWorker_runInLeaderMode(t *testing.T) {
 	taskStore := mock.NewMockTaskStore(ctrl)
 
 	worker := &Worker{
-		PollInterval: pollInterval,
-		QueueURL:     queueURL,
-		TaskStore:    taskStore,
-		SQS:          sqsClient,
+		pollInterval: pollInterval,
+		queueURL:     queueURL,
+		taskStore:    taskStore,
+		sqs:          sqsClient,
 	}
 	done := make(chan struct{})
 	errChan := make(chan error)

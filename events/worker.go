@@ -29,22 +29,22 @@ type TaskStore interface {
 }
 
 type Worker struct {
-	LockManager         locking.LockManager
-	LockRefreshInterval time.Duration
-	PollInterval        time.Duration
-	QueueURL            string
-	SQS                 sqsiface.SQSAPI
-	TaskStore           TaskStore
+	lockManager         locking.LockManager
+	lockRefreshInterval time.Duration
+	pollInterval        time.Duration
+	queueURL            string
+	sqs                 sqsiface.SQSAPI
+	taskStore           TaskStore
 }
 
 func NewWorker(lm locking.LockManager, sqs sqsiface.SQSAPI, qURL string, ts TaskStore, options ...func(*Worker)) *Worker {
 	w := &Worker{
-		LockManager:         lm,
-		LockRefreshInterval: DefaultLockRefreshInterval,
-		PollInterval:        DefaultPollInterval,
-		QueueURL:            qURL,
-		SQS:                 sqs,
-		TaskStore:           ts,
+		lockManager:         lm,
+		lockRefreshInterval: DefaultLockRefreshInterval,
+		pollInterval:        DefaultPollInterval,
+		queueURL:            qURL,
+		sqs:                 sqs,
+		taskStore:           ts,
 	}
 
 	for _, option := range options {
@@ -56,35 +56,35 @@ func NewWorker(lm locking.LockManager, sqs sqsiface.SQSAPI, qURL string, ts Task
 
 func WithLockRefreshInterval(ri time.Duration) func(*Worker) {
 	return func(w *Worker) {
-		w.LockRefreshInterval = ri
+		w.lockRefreshInterval = ri
 	}
 }
 
 func WithPollInterval(pi time.Duration) func(*Worker) {
 	return func(w *Worker) {
-		w.PollInterval = pi
+		w.pollInterval = pi
 	}
 }
 
 func (w *Worker) Run() error {
-	lockTTL := w.LockRefreshInterval * 2
-	acquireLeadership := time.NewTicker(w.LockRefreshInterval)
+	lockTTL := w.lockRefreshInterval * 2
+	acquireLeadership := time.NewTicker(w.lockRefreshInterval)
 	stopLeader := make(chan struct{})
 	leaderErrors := make(chan error)
 	defer func() {
 		close(stopLeader)
 		close(leaderErrors)
 		acquireLeadership.Stop()
-		w.LockManager.Release(LeaderLockName)
+		w.lockManager.Release(LeaderLockName)
 	}()
 
 	for range acquireLeadership.C {
 		log.Debug("Trying to acquire leadership")
-		if err := w.LockManager.Acquire(LeaderLockName, lockTTL); err != nil {
+		if err := w.lockManager.Acquire(LeaderLockName, lockTTL); err != nil {
 			if err != locking.ErrLockAlreadyTaken {
 				return err
 			} else {
-				log.Debugf("Leadership already taken. Going into follower mode for %s", w.LockRefreshInterval)
+				log.Debugf("Leadership already taken. Going into follower mode for %s", w.lockRefreshInterval)
 				continue
 			}
 		}
@@ -92,13 +92,13 @@ func (w *Worker) Run() error {
 		log.Debug("Got leadership. Entering leader mode.")
 		go w.runInLeaderMode(stopLeader, leaderErrors)
 
-		refreshLeadership := time.NewTicker(w.LockRefreshInterval)
+		refreshLeadership := time.NewTicker(w.lockRefreshInterval)
 		defer refreshLeadership.Stop()
 		for {
 			select {
 			case <-refreshLeadership.C:
 				log.Debug("Refreshing leadership for %s", lockTTL)
-				if err := w.LockManager.Refresh(LeaderLockName, lockTTL); err != nil {
+				if err := w.lockManager.Refresh(LeaderLockName, lockTTL); err != nil {
 					stopLeader <- struct{}{}
 					return err
 				}
@@ -112,7 +112,7 @@ func (w *Worker) Run() error {
 }
 
 func (w *Worker) runInLeaderMode(stop chan struct{}, errChan chan error) {
-	pollSQSTicker := time.NewTicker(w.PollInterval)
+	pollSQSTicker := time.NewTicker(w.pollInterval)
 	defer pollSQSTicker.Stop()
 
 	for {
@@ -133,15 +133,15 @@ func isThrottlingException(err error) bool {
 }
 
 func (w *Worker) pollQueue() error {
-	out, err := w.SQS.ReceiveMessage(&sqs.ReceiveMessageInput{
-		QueueUrl: aws.String(w.QueueURL),
+	out, err := w.sqs.ReceiveMessage(&sqs.ReceiveMessageInput{
+		QueueUrl: aws.String(w.queueURL),
 	})
 	if err != nil {
-		return fmt.Errorf("could not receive SQS message: %s", err)
+		return fmt.Errorf("could not receive sqs message: %s", err)
 	}
 	for _, m := range out.Messages {
 		if err := w.handleMessage(m); err != nil {
-			return fmt.Errorf("could not handle SQS message: %s", err)
+			return fmt.Errorf("could not handle sqs message: %s", err)
 		}
 	}
 
@@ -155,7 +155,7 @@ func (w *Worker) handleMessage(m *sqs.Message) error {
 	body := aws.StringValue(m.Body)
 	event := &Event{}
 	if err := json.Unmarshal([]byte(body), &event); err != nil {
-		return fmt.Errorf("could not decode SQS message: %s", err)
+		return fmt.Errorf("could not decode sqs message: %s", err)
 	}
 
 	switch event.DetailType {
@@ -175,7 +175,7 @@ func (w *Worker) handleMessage(m *sqs.Message) error {
 		}
 		if ok {
 			cronName := cron.GetNameByResource(aws.StringValue(userContainer.Name))
-			if err := w.TaskStore.Update(cronName, task); err != nil {
+			if err := w.taskStore.Update(cronName, task); err != nil {
 				return fmt.Errorf("Storing task in DynamoDB failed: %s", err)
 			}
 		}
@@ -189,15 +189,15 @@ func (w *Worker) handleMessage(m *sqs.Message) error {
 	}
 
 	if err := w.acknowledgeMessage(m); err != nil {
-		return fmt.Errorf("could not acknowledge SQS message: %s", err)
+		return fmt.Errorf("could not acknowledge sqs message: %s", err)
 	}
 
 	return nil
 }
 
 func (w *Worker) acknowledgeMessage(m *sqs.Message) error {
-	_, err := w.SQS.DeleteMessage(&sqs.DeleteMessageInput{
-		QueueUrl:      aws.String(w.QueueURL),
+	_, err := w.sqs.DeleteMessage(&sqs.DeleteMessageInput{
+		QueueUrl:      aws.String(w.queueURL),
 		ReceiptHandle: m.ReceiptHandle,
 	})
 	return err
