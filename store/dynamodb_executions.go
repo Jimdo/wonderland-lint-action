@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	daysToKeepTasks = 14
+	daysToKeepExecutions = 14
 )
 
 type Execution struct {
@@ -172,6 +172,6 @@ func (es *DynamoDBExecutionStore) GetLastNExecutions(cronName string, count int6
 }
 
 func (es *DynamoDBExecutionStore) calcExpiry(t *ecs.Task) int64 {
-	ttl := aws.TimeValue(t.CreatedAt).Add(24 * time.Hour * daysToKeepTasks)
+	ttl := aws.TimeValue(t.CreatedAt).Add(24 * time.Hour * daysToKeepExecutions)
 	return ttl.Unix()
 }
