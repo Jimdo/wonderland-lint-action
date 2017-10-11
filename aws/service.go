@@ -28,16 +28,16 @@ type CronStore interface {
 	GetByName(string) (*store.Cron, error)
 }
 
-type CronTaskStore interface {
+type CronExecutionStore interface {
 	GetLastNTaskExecutions(string, int64) ([]*store.Execution, error)
 }
 
 type Service struct {
-	cm        RuleCronManager
-	cronStore CronStore
-	tds       TaskDefinitionStore
-	validator CronValidator
-	taskStore CronTaskStore
+	cm             RuleCronManager
+	cronStore      CronStore
+	tds            TaskDefinitionStore
+	validator      CronValidator
+	executionStore CronExecutionStore
 }
 
 type CronStatus struct {
@@ -46,13 +46,13 @@ type CronStatus struct {
 	Executions []*store.Execution
 }
 
-func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s CronStore, ts CronTaskStore) *Service {
+func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s CronStore, es CronExecutionStore) *Service {
 	return &Service{
-		cm:        cm,
-		cronStore: s,
-		tds:       tds,
-		validator: v,
-		taskStore: ts,
+		cm:             cm,
+		cronStore:      s,
+		tds:            tds,
+		validator:      v,
+		executionStore: es,
 	}
 }
 
@@ -150,7 +150,7 @@ func (s *Service) Status(cronName string, executionCount int64) (*CronStatus, er
 	if err != nil {
 		return nil, err
 	}
-	executions, err := s.taskStore.GetLastNTaskExecutions(cronName, executionCount)
+	executions, err := s.executionStore.GetLastNTaskExecutions(cronName, executionCount)
 	status := &CronStatus{
 		Cron:       cron,
 		Status:     "not implemented yet",

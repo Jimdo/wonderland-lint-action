@@ -93,7 +93,7 @@ gen-mocks:
 	mockgen -package mock github.com/Jimdo/wonderland-crons/aws RuleCronManager > mock/rule_cron_manager.go
 	mockgen -package mock github.com/Jimdo/wonderland-crons/aws TaskDefinitionStore > mock/task_definition_store.go
 	mockgen -package mock github.com/Jimdo/wonderland-crons/aws CronStore > mock/cron_store.go
-	mockgen -package mock github.com/Jimdo/wonderland-crons/aws CronTaskStore > mock/cron_task_store.go
+	mockgen -package mock github.com/Jimdo/wonderland-crons/aws CronExecutionStore > mock/cron_execution_store.go
 	mockgen -package mock github.com/Jimdo/wonderland-crons/events TaskStore > mock/task_store.go
 	mockgen -package mock github.com/Jimdo/wonderland-crons/events TaskStore > mock/task_store.go
 	mockgen -package mock github.com/aws/aws-sdk-go/service/sqs/sqsiface SQSAPI > mock/sqsapi.go
