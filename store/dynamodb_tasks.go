@@ -52,19 +52,16 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 	timeoutContainer := cron.GetTimeoutContainerFromTask(t)
 
 	task := &Task{
-		Name:       cronName,
-		StartTime:  aws.TimeValue(t.CreatedAt),
-		EndTime:    aws.TimeValue(t.StoppedAt),
-		TaskArn:    aws.StringValue(t.TaskArn),
-		ExitCode:   cronContainer.ExitCode,
-		ExitReason: aws.StringValue(t.StoppedReason),
-		Status:     aws.StringValue(t.LastStatus),
-		Version:    aws.Int64Value(t.Version),
-		ExpiryTime: ts.calcExpiry(t),
-	}
-
-	if timeoutContainer != nil {
-		task.TimeoutExitCode = timeoutContainer.ExitCode
+		Name:            cronName,
+		StartTime:       aws.TimeValue(t.CreatedAt),
+		EndTime:         aws.TimeValue(t.StoppedAt),
+		TaskArn:         aws.StringValue(t.TaskArn),
+		ExitCode:        cronContainer.ExitCode,
+		ExitReason:      aws.StringValue(t.StoppedReason),
+		Status:          aws.StringValue(t.LastStatus),
+		Version:         aws.Int64Value(t.Version),
+		ExpiryTime:      ts.calcExpiry(t),
+		TimeoutExitCode: timeoutContainer.ExitCode,
 	}
 
 	task.Status = ts.getStatusByExitCodes(task)
@@ -107,13 +104,13 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 func (ts *DynamoDBTaskStore) getStatusByExitCodes(t *Task) string {
 	if t.Status == ecs.DesiredStatusStopped {
 		taskLogger(t).Debug("Got stopped task to set status by exit code")
-		if t.TimeoutExitCode != nil && aws.Int64Value(t.TimeoutExitCode) == cron.TimeoutExitCode {
-			taskLogger(t).Debug("Task status will be set to timeout")
-			return "TIMEOUT"
-		}
-		if t.ExitCode == nil {
+		if t.ExitCode == nil || t.TimeoutExitCode == nil {
 			taskLogger(t).Debug("Task status will be set to unknown")
 			return "UNKNOWN"
+		}
+		if aws.Int64Value(t.TimeoutExitCode) == cron.TimeoutExitCode {
+			taskLogger(t).Debug("Task status will be set to timeout")
+			return "TIMEOUT"
 		}
 		if aws.Int64Value(t.ExitCode) == 0 {
 			taskLogger(t).Debug("Task status will be set to success")
