@@ -3,17 +3,5 @@
 # Note: Alpine has no /bin/bash
 set -e
 
-case $1 in
-    "lint")
-	gometalinter.v1 --config metalinter-config.json ./... || true
-	;;
-    "test")
-	packages=$(go list ./... | grep -v /vendor/)
-	echo $packages | xargs go test -tags=$TEST_TAGS -v
-	;;
-    *)
-	echo "specify either 'test' or 'lint' as first argument!" >>/dev/stderr
-	exit 1
-esac
-
-
+packages=$(go list ./... | grep -v /vendor/)
+echo $packages | xargs go test -tags=$TEST_TAGS -v
