@@ -8,8 +8,9 @@ import (
 )
 
 const (
-	cronPrefix      = "cron--"
-	TimeoutExitCode = 201
+	cronPrefix           = "cron--"
+	TimeoutExitCode      = 201
+	TimeoutContainerName = "timeout"
 )
 
 func GetNameByResource(resourceName string) string {
@@ -26,7 +27,7 @@ func IsCron(container *ecs.Container) (bool, error) {
 
 func GetUserContainerFromTask(t *ecs.Task) *ecs.Container {
 	for _, c := range t.Containers {
-		if aws.StringValue(c.Name) != "timeout" {
+		if aws.StringValue(c.Name) != TimeoutContainerName {
 			return c
 		}
 	}
@@ -35,7 +36,7 @@ func GetUserContainerFromTask(t *ecs.Task) *ecs.Container {
 
 func GetTimeoutContainerFromTask(t *ecs.Task) *ecs.Container {
 	for _, c := range t.Containers {
-		if aws.StringValue(c.Name) == "timeout" {
+		if aws.StringValue(c.Name) == TimeoutContainerName {
 			return c
 		}
 	}

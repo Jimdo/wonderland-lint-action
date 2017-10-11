@@ -36,7 +36,7 @@ func TestStore_UpdateSuccess(t *testing.T) {
 				ExitCode: aws.Int64(0),
 			},
 			{
-				Name:     aws.String("timeout"),
+				Name:     aws.String(cron.TimeoutContainerName),
 				ExitCode: aws.Int64(143),
 			},
 		},

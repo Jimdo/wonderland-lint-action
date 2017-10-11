@@ -55,7 +55,7 @@ func (tds *ECSTaskDefinitionStore) createTimeoutSidecarDefinition(cronName strin
 		},
 		Image:  awssdk.String("alpine:3.6"),
 		Memory: awssdk.Int64(int64(32)),
-		Name:   awssdk.String("timeout"),
+		Name:   awssdk.String(cron.TimeoutContainerName),
 	}
 
 	return timeoutSidecarDefinition

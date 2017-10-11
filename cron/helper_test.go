@@ -41,7 +41,7 @@ func TestCron_GetUserContainerFromTask(t *testing.T) {
 	task := &ecs.Task{
 		Containers: []*ecs.Container{
 			{
-				Name: aws.String("timeout"),
+				Name: aws.String(TimeoutContainerName),
 			},
 			{
 				Name: aws.String("cron--test"),
@@ -60,7 +60,7 @@ func TestCron_GetTimeoutContainerFromTask(t *testing.T) {
 	task := &ecs.Task{
 		Containers: []*ecs.Container{
 			{
-				Name: aws.String("timeout"),
+				Name: aws.String(TimeoutContainerName),
 			},
 			{
 				Name: aws.String("cron--test"),
@@ -69,8 +69,8 @@ func TestCron_GetTimeoutContainerFromTask(t *testing.T) {
 	}
 
 	timeoutContainer := GetTimeoutContainerFromTask(task)
-	if aws.StringValue(timeoutContainer.Name) != "timeout" {
-		t.Fatalf("Expected timeoutcontainer with name 'timeout', got %q", aws.StringValue(timeoutContainer.Name))
+	if aws.StringValue(timeoutContainer.Name) != TimeoutContainerName {
+		t.Fatalf("Expected timeoutcontainer with name %q, got %q", TimeoutContainerName, aws.StringValue(timeoutContainer.Name))
 	}
 
 }
