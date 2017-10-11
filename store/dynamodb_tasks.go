@@ -31,23 +31,23 @@ type Task struct {
 	TimeoutExitCode *int64
 }
 
-type DynamoDBTaskStore struct {
+type DynamoDBExecutionStore struct {
 	Client    dynamodbiface.DynamoDBAPI
 	TableName string
 }
 
-func NewDynamoDBTaskStore(dynamoDBClient dynamodbiface.DynamoDBAPI, tableName string) (*DynamoDBTaskStore, error) {
+func NewDynamoDBExecutionStore(dynamoDBClient dynamodbiface.DynamoDBAPI, tableName string) (*DynamoDBExecutionStore, error) {
 	if err := validateDynamoDBConnection(dynamoDBClient, tableName); err != nil {
 		return nil, fmt.Errorf("Could not connect to DynamoDB: %s", err)
 	}
 
-	return &DynamoDBTaskStore{
+	return &DynamoDBExecutionStore{
 		Client:    dynamoDBClient,
 		TableName: tableName,
 	}, nil
 }
 
-func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
+func (es *DynamoDBExecutionStore) Update(cronName string, t *ecs.Task) error {
 	cronContainer := cron.GetUserContainerFromTask(t)
 	timeoutContainer := cron.GetTimeoutContainerFromTask(t)
 
@@ -60,11 +60,11 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 		ExitReason:      aws.StringValue(t.StoppedReason),
 		Status:          aws.StringValue(t.LastStatus),
 		Version:         aws.Int64Value(t.Version),
-		ExpiryTime:      ts.calcExpiry(t),
+		ExpiryTime:      es.calcExpiry(t),
 		TimeoutExitCode: timeoutContainer.ExitCode,
 	}
 
-	task.Status = ts.getStatusByExitCodes(task)
+	task.Status = es.getStatusByExitCodes(task)
 	taskLogger(task).Debugf("Updated task status")
 
 	data, err := dynamodbattribute.MarshalMap(task)
@@ -77,8 +77,8 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 		return fmt.Errorf("Could not convert version %d into DynamoDB value: %s", task.Version, err)
 	}
 
-	_, err = ts.Client.PutItem(&dynamodb.PutItemInput{
-		TableName:           aws.String(ts.TableName),
+	_, err = es.Client.PutItem(&dynamodb.PutItemInput{
+		TableName:           aws.String(es.TableName),
 		Item:                data,
 		ConditionExpression: aws.String("attribute_not_exists(Version) OR (Version < :version)"),
 		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
@@ -101,7 +101,7 @@ func (ts *DynamoDBTaskStore) Update(cronName string, t *ecs.Task) error {
 	return nil
 }
 
-func (ts *DynamoDBTaskStore) getStatusByExitCodes(t *Task) string {
+func (es *DynamoDBExecutionStore) getStatusByExitCodes(t *Task) string {
 	if t.Status == ecs.DesiredStatusStopped {
 		taskLogger(t).Debug("Got stopped task to set status by exit code")
 		if t.ExitCode == nil || t.TimeoutExitCode == nil {
@@ -123,12 +123,12 @@ func (ts *DynamoDBTaskStore) getStatusByExitCodes(t *Task) string {
 	return t.Status
 }
 
-func (ts *DynamoDBTaskStore) GetLastNTaskExecutions(cronName string, count int64) ([]*Task, error) {
+func (es *DynamoDBExecutionStore) GetLastNTaskExecutions(cronName string, count int64) ([]*Task, error) {
 	var result []*Task
 	var queryError error
 
-	err := ts.Client.QueryPages(&dynamodb.QueryInput{
-		TableName: aws.String(ts.TableName),
+	err := es.Client.QueryPages(&dynamodb.QueryInput{
+		TableName: aws.String(es.TableName),
 		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
 			":name": {
 				S: aws.String(cronName),
@@ -171,7 +171,7 @@ func (ts *DynamoDBTaskStore) GetLastNTaskExecutions(cronName string, count int64
 	return result, nil
 }
 
-func (ts *DynamoDBTaskStore) calcExpiry(t *ecs.Task) int64 {
+func (es *DynamoDBExecutionStore) calcExpiry(t *ecs.Task) int64 {
 	ttl := aws.TimeValue(t.CreatedAt).Add(24 * time.Hour * daysToKeepTasks)
 	return ttl.Unix()
 }

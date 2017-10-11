@@ -231,13 +231,13 @@ func main() {
 		Router: router.PathPrefix("/v1").Subrouter(),
 	}).Register()
 
-	dynamoDBTaskStore, err := store.NewDynamoDBTaskStore(dynamoDBClient, config.ExecutionsTableName)
+	dynamoDBExecutionStore, err := store.NewDynamoDBExecutionStore(dynamoDBClient, config.ExecutionsTableName)
 	if err != nil {
 		log.Fatalf("Failed to initialize Task store: %s", err)
 	}
 
 	lm := locking.NewDynamoDBLockManager(dynamoDBClient, config.WorkerLeaderLockTableName)
-	w := events.NewWorker(lm, sqsClient, config.ECSEventsQueueURL, dynamoDBTaskStore,
+	w := events.NewWorker(lm, sqsClient, config.ECSEventsQueueURL, dynamoDBExecutionStore,
 		events.WithPollInterval(config.ECSEventQueuePollInterval),
 		events.WithLockRefreshInterval(config.WorkerLeaderLockRefreshInterval))
 	stopWorker := make(chan struct{})
@@ -258,7 +258,7 @@ func main() {
 
 	v2.New(&v2.Config{
 		Router:  router.PathPrefix("/v2").Subrouter(),
-		Service: aws.NewService(validator, cloudwatchcm, ecstds, dynamoDBCronStore, dynamoDBTaskStore),
+		Service: aws.NewService(validator, cloudwatchcm, ecstds, dynamoDBCronStore, dynamoDBExecutionStore),
 		URI: &v2.URIGenerator{
 			LogzioAccountID: config.LogzioAccountID,
 			LogzioURL:       config.LogzioURL,

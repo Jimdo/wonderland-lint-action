@@ -49,12 +49,12 @@ func TestStore_UpdateSuccess(t *testing.T) {
 	}
 
 	client := &mockDynamoDBClient{}
-	ts, err := NewDynamoDBTaskStore(client, "some-table")
+	es, err := NewDynamoDBExecutionStore(client, "some-table")
 	if err != nil {
-		t.Fatalf("Could not initialize taskstore %s", err)
+		t.Fatalf("Could not initialize execution store %s", err)
 	}
 
-	if err := ts.Update(cronName, ecsTask); err != nil {
+	if err := es.Update(cronName, ecsTask); err != nil {
 		t.Fatalf("Expected Update to throw no error, got: %s", err)
 	}
 
@@ -107,12 +107,12 @@ func TestStore_getStatusByExitCodes(t *testing.T) {
 			TimeoutExitCode: tc.TimeoutExitCode,
 		}
 
-		ts, err := NewDynamoDBTaskStore(&mockDynamoDBClient{}, "some-table")
+		es, err := NewDynamoDBExecutionStore(&mockDynamoDBClient{}, "some-table")
 		if err != nil {
-			t.Fatalf("Could not initialize taskstore %s", err)
+			t.Fatalf("Could not initialize execution store %s", err)
 		}
 
-		status := ts.getStatusByExitCodes(task)
+		status := es.getStatusByExitCodes(task)
 		if status != expectedStatus {
 			t.Fatalf("Expected status to be %s, got %s", expectedStatus, status)
 		}
