@@ -45,11 +45,10 @@ func (tds *ECSTaskDefinitionStore) AddRevisionFromCronDescription(cronName, fami
 }
 
 func (tds *ECSTaskDefinitionStore) createTimeoutSidecarDefinition(cronName string, desc *cron.CronDescription) *ecs.ContainerDefinition {
-	trapCmd := "trap 'echo got SIGTERM' SIGTERM;"
-	timeoutCmd := fmt.Sprintf("sleep %d & wait $! && exit %d", *desc.Timeout, cron.TimeoutExitCode)
+	timeoutCmd := fmt.Sprintf("trap 'echo got SIGTERM' SIGTERM; sleep %d & wait $! && exit %d", *desc.Timeout, cron.TimeoutExitCode)
 
 	timeoutSidecarDefinition := &ecs.ContainerDefinition{
-		Command: awssdk.StringSlice([]string{"/bin/sh", "-c", trapCmd, timeoutCmd}),
+		Command: awssdk.StringSlice([]string{"/bin/sh", "-c", timeoutCmd}),
 		Cpu:     awssdk.Int64(int64(16)),
 		DockerLabels: map[string]*string{
 			"com.jimdo.wonderland.cron": awssdk.String(cronName),

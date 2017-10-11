@@ -17,7 +17,7 @@ func Test_createTimeoutSidecarDefinition(t *testing.T) {
 		Timeout: &timeoutValue,
 	}
 	// acutally the command is: /bin/sh -c "trap 'echo got SIGTERM' SIGTERM; sleep 10 & wait $! && exit 201"
-	// but it hard to match a string slice to a string with bash quoting
+	// but it is hard to match a string slice to a string with bash quoting
 	// and the intended purpose is to test the correct variable substitution
 	expectedCommand := `/bin/sh -c trap 'echo got SIGTERM' SIGTERM; sleep 10 & wait $! && exit 201`
 	tds := &ECSTaskDefinitionStore{}
