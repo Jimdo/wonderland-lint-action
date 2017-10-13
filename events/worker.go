@@ -205,12 +205,16 @@ func (w *Worker) handleMessage(m *sqs.Message) error {
 					"task_version":        task.Version,
 				}).Debugf("Received ECS task event for cron %q", cronName)
 
-			// TODO: This block needs error handling
+			eventContext := EventContext{CronName: cronName, Task: task}
 			if aws.Int64Value(task.Version) == 1 {
-				w.eventDispatcher.Fire(EventCronExecutionStarted, EventContext{CronName: cronName, Task: task})
+				if err := w.eventDispatcher.Fire(EventCronExecutionStarted, eventContext); err != nil {
+					return fmt.Errorf("could not handle event for started cron execution: %s", err)
+				}
 			} else if aws.StringValue(task.LastStatus) == ecs.DesiredStatusStopped &&
 				aws.StringValue(task.DesiredStatus) == ecs.DesiredStatusStopped {
-				w.eventDispatcher.Fire(EventCronExecutionStopped, EventContext{CronName: cronName, Task: task})
+				if err := w.eventDispatcher.Fire(EventCronExecutionStopped, eventContext); err != nil {
+					return fmt.Errorf("could not handle event for stopped cron execution: %s", err)
+				}
 			}
 
 			if err := w.taskStore.Update(cronName, task); err != nil {
