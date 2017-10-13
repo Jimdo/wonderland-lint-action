@@ -17,32 +17,37 @@ type EventContext struct {
 type EventListener func(c EventContext) error
 
 type EventDispatcher struct {
-	mapLock sync.RWMutex
-	events  map[TaskEvent][]EventListener
+	mapLock           sync.RWMutex
+	listenersByEvents *sync.Map
 }
 
 func NewEventDispatcher() *EventDispatcher {
 	return &EventDispatcher{
-		events: make(map[TaskEvent][]EventListener),
+		listenersByEvents: &sync.Map{},
 	}
 }
 
-func (ed *EventDispatcher) On(e TaskEvent, l EventListener) {
-	ed.mapLock.Lock()
-	defer ed.mapLock.Unlock()
+func (ed *EventDispatcher) getListenersForEvent(e TaskEvent) []EventListener {
+	var listeners []EventListener
+	val, ok := ed.listenersByEvents.Load(e)
+	if ok {
+		listeners = val.([]EventListener)
+	} else {
+		listeners = []EventListener{}
+	}
+	return listeners
+}
 
-	ed.events[e] = append(ed.events[e], l)
+func (ed *EventDispatcher) On(e TaskEvent, l EventListener) {
+	listeners := ed.getListenersForEvent(e)
+	listeners = append(listeners, l)
+	ed.listenersByEvents.Store(e, listeners)
 }
 
 func (ed *EventDispatcher) Fire(e TaskEvent, c EventContext) error {
-	ed.mapLock.RLock()
-	defer ed.mapLock.RUnlock()
-
-	if listeners, ok := ed.events[e]; ok {
-		for _, listener := range listeners {
-			if err := listener(c); err != nil {
-				return fmt.Errorf("error executing listener for event %s: %s", e, err)
-			}
+	for _, listener := range ed.getListenersForEvent(e) {
+		if err := listener(c); err != nil {
+			return fmt.Errorf("error executing listener for event %s: %s", e, err)
 		}
 	}
 	return nil
