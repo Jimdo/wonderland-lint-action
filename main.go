@@ -81,7 +81,7 @@ var (
 		ECSEventsQueueURL               string        `flag:"ecs-events-queue-url" env:"ECS_EVENTS_QUEUE_URL" description:"The URL of the SQS queue receiving ECS events"`
 		ECSEventQueuePollInterval       time.Duration `flag:"ecs-events-queue-poll-interval" default:"1s" description:"The interval in which to poll new ECS events"`
 		CronsTableName                  string        `flag:"crons-table-name" env:"CRONS_TABLE_NAME" description:"Name of the DynamoDB Table used for storing crons"`
-		TasksTableName                  string        `flag:"tasks-table-name" env:"TASKS_TABLE_NAME" description:"Name of the DynamoDB Table used for storing tasks"`
+		ExecutionsTableName             string        `flag:"executions-table-name" env:"EXECUTIONS_TABLE_NAME" description:"Name of the DynamoDB Table used for storing cron executions"`
 		WorkerLeaderLockRefreshInterval time.Duration `flag:"worker-leader-lock-refresh-interval" default:"1m" description:"The interval in which to refresh the workers leader lock"`
 		WorkerLeaderLockTableName       string        `flag:"worker-leader-lock-table-name" env:"WORKER_LEADER_LOCK_TABLE_NAME" description:"Name of the DynamoDB Table used for worker leadership locking"`
 
@@ -114,8 +114,8 @@ func main() {
 		abort("Please pass a crons DynamoDB table name")
 	}
 
-	if config.TasksTableName == "" {
-		abort("Please pass a tasks DynamoDB table name")
+	if config.ExecutionsTableName == "" {
+		abort("Please pass a executions DynamoDB table name")
 	}
 
 	if config.WorkerLeaderLockTableName == "" {
@@ -231,13 +231,13 @@ func main() {
 		Router: router.PathPrefix("/v1").Subrouter(),
 	}).Register()
 
-	dynamoDBTaskStore, err := store.NewDynamoDBTaskStore(dynamoDBClient, config.TasksTableName)
+	dynamoDBExecutionStore, err := store.NewDynamoDBExecutionStore(dynamoDBClient, config.ExecutionsTableName)
 	if err != nil {
 		log.Fatalf("Failed to initialize Task store: %s", err)
 	}
 
 	lm := locking.NewDynamoDBLockManager(dynamoDBClient, config.WorkerLeaderLockTableName)
-	w := events.NewWorker(lm, sqsClient, config.ECSEventsQueueURL, dynamoDBTaskStore,
+	w := events.NewWorker(lm, sqsClient, config.ECSEventsQueueURL, dynamoDBExecutionStore,
 		events.WithPollInterval(config.ECSEventQueuePollInterval),
 		events.WithLockRefreshInterval(config.WorkerLeaderLockRefreshInterval))
 	stopWorker := make(chan struct{})
@@ -258,7 +258,7 @@ func main() {
 
 	v2.New(&v2.Config{
 		Router:  router.PathPrefix("/v2").Subrouter(),
-		Service: aws.NewService(validator, cloudwatchcm, ecstds, dynamoDBCronStore, dynamoDBTaskStore),
+		Service: aws.NewService(validator, cloudwatchcm, ecstds, dynamoDBCronStore, dynamoDBExecutionStore),
 		URI: &v2.URIGenerator{
 			LogzioAccountID: config.LogzioAccountID,
 			LogzioURL:       config.LogzioURL,

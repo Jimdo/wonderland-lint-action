@@ -27,7 +27,7 @@ func (m *mockDynamoDBClient) PutItem(input *dynamodb.PutItemInput) (*dynamodb.Pu
 }
 
 func TestStore_UpdateSuccess(t *testing.T) {
-	cronName := "test-task"
+	cronName := "test-execution"
 	taskArn := "arn:aws:ecs:eu-west-1:062052581233:task/3e8a49bb-45b6-4021-93c7-ca541bfe2c88"
 	ecsTask := &ecs.Task{
 		Containers: []*ecs.Container{
@@ -49,12 +49,12 @@ func TestStore_UpdateSuccess(t *testing.T) {
 	}
 
 	client := &mockDynamoDBClient{}
-	ts, err := NewDynamoDBTaskStore(client, "some-table")
+	es, err := NewDynamoDBExecutionStore(client, "some-table")
 	if err != nil {
-		t.Fatalf("Could not initialize taskstore %s", err)
+		t.Fatalf("Could not initialize execution store %s", err)
 	}
 
-	if err := ts.Update(cronName, ecsTask); err != nil {
+	if err := es.Update(cronName, ecsTask); err != nil {
 		t.Fatalf("Expected Update to throw no error, got: %s", err)
 	}
 
@@ -100,19 +100,19 @@ func TestStore_getStatusByExitCodes(t *testing.T) {
 	}
 
 	for expectedStatus, tc := range testCases {
-		task := &Task{
-			Name:            "test-task",
+		execution := &Execution{
+			Name:            "test-execution",
 			ExitCode:        tc.ExitCode,
 			Status:          tc.StatusBefore,
 			TimeoutExitCode: tc.TimeoutExitCode,
 		}
 
-		ts, err := NewDynamoDBTaskStore(&mockDynamoDBClient{}, "some-table")
+		es, err := NewDynamoDBExecutionStore(&mockDynamoDBClient{}, "some-table")
 		if err != nil {
-			t.Fatalf("Could not initialize taskstore %s", err)
+			t.Fatalf("Could not initialize execution store %s", err)
 		}
 
-		status := ts.getStatusByExitCodes(task)
+		status := es.getStatusByExitCodes(execution)
 		if status != expectedStatus {
 			t.Fatalf("Expected status to be %s, got %s", expectedStatus, status)
 		}
