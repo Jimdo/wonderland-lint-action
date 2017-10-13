@@ -24,8 +24,9 @@ const (
 
 	LeaderLockName = "wonderland-crons-worker"
 
-	EventCronExecutionStarted = "CronExecutionStarted"
-	EventCronExecutionStopped = "CronExecutionStopped"
+	EventCronExecutionStarted      = "CronExecutionStarted"
+	EventCronExecutionStopped      = "CronExecutionStopped"
+	EventCronExecutionStateChanged = "CronExecutionStateChanged"
 )
 
 type TaskStore interface {
@@ -45,18 +46,16 @@ type Worker struct {
 	pollInterval        time.Duration
 	queueURL            string
 	sqs                 sqsiface.SQSAPI
-	taskStore           TaskStore
 	eventDispatcher     *EventDispatcher
 }
 
-func NewWorker(lm locking.LockManager, sqs sqsiface.SQSAPI, qURL string, ts TaskStore, ed *EventDispatcher, options ...func(*Worker)) *Worker {
+func NewWorker(lm locking.LockManager, sqs sqsiface.SQSAPI, qURL string, ed *EventDispatcher, options ...func(*Worker)) *Worker {
 	w := &Worker{
 		lockManager:         lm,
 		lockRefreshInterval: DefaultLockRefreshInterval,
 		pollInterval:        DefaultPollInterval,
 		queueURL:            qURL,
 		sqs:                 sqs,
-		taskStore:           ts,
 		eventDispatcher:     ed,
 	}
 
@@ -214,8 +213,8 @@ func (w *Worker) handleMessage(m *sqs.Message) error {
 				}
 			}
 
-			if err := w.taskStore.Update(cronName, task); err != nil {
-				return fmt.Errorf("Storing task in DynamoDB failed: %s", err)
+			if err := w.eventDispatcher.Fire(EventCronExecutionStateChanged, eventContext); err != nil {
+				return fmt.Errorf("could not handle event %q: %s", derivedEvent, err)
 			}
 		}
 
@@ -262,6 +261,15 @@ func CronActivator() func(c EventContext) error {
 func CronDeactivator() func(c EventContext) error {
 	return func(c EventContext) error {
 		log.Debugf("Deactivating cron %q now", c.CronName)
+		return nil
+	}
+}
+
+func CronExecutionStatePersister(ts TaskStore) func(c EventContext) error {
+	return func(c EventContext) error {
+		if err := ts.Update(c.CronName, c.Task); err != nil {
+			return fmt.Errorf("storing cron execution in DynamoDB failed: %s", err)
+		}
 		return nil
 	}
 }

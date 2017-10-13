@@ -249,9 +249,10 @@ func main() {
 	eventDispatcher := events.NewEventDispatcher()
 	eventDispatcher.On(events.EventCronExecutionStarted, events.CronDeactivator())
 	eventDispatcher.On(events.EventCronExecutionStopped, events.CronActivator())
+	eventDispatcher.On(events.EventCronExecutionStateChanged, events.CronExecutionStatePersister(dynamoDBExecutionStore))
 
 	lm := locking.NewDynamoDBLockManager(dynamoDBClient, config.WorkerLeaderLockTableName)
-	w := events.NewWorker(lm, sqsClient, config.ECSEventsQueueURL, dynamoDBExecutionStore, eventDispatcher,
+	w := events.NewWorker(lm, sqsClient, config.ECSEventsQueueURL, eventDispatcher,
 		events.WithPollInterval(config.ECSEventQueuePollInterval),
 		events.WithLockRefreshInterval(config.WorkerLeaderLockRefreshInterval))
 	stopWorker := make(chan struct{})
