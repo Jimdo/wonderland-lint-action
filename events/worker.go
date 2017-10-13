@@ -33,12 +33,10 @@ type TaskStore interface {
 	Update(string, *ecs.Task) error
 }
 
-/*
 type CronStateToggler interface {
 	Activate(string) error
 	Deactivate(string) error
 }
-*/
 
 type Worker struct {
 	lockManager         locking.LockManager
@@ -251,17 +249,17 @@ func (w *Worker) deriveEventFromECSTask(t *ecs.Task) TaskEvent {
 	return ""
 }
 
-func CronActivator() func(c EventContext) error {
+func CronActivator(cst CronStateToggler) func(c EventContext) error {
 	return func(c EventContext) error {
 		log.Debugf("Activating cron %q now", c.CronName)
-		return nil
+		return cst.Activate(c.CronName)
 	}
 }
 
-func CronDeactivator() func(c EventContext) error {
+func CronDeactivator(cst CronStateToggler) func(c EventContext) error {
 	return func(c EventContext) error {
 		log.Debugf("Deactivating cron %q now", c.CronName)
-		return nil
+		return cst.Deactivate(c.CronName)
 	}
 }
 
