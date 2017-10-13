@@ -209,10 +209,10 @@ func (w *Worker) handleMessage(m *sqs.Message) error {
 			if aws.StringValue(task.LastStatus) == ecs.DesiredStatusPending &&
 				aws.StringValue(task.DesiredStatus) == ecs.DesiredStatusRunning &&
 				aws.Int64Value(task.Version) == 1 {
-				w.eventDispatcher.Fire(EventCronExecutionStarted, EventContext{Target: cronName, Task: task})
+				w.eventDispatcher.Fire(EventCronExecutionStarted, EventContext{CronName: cronName, Task: task})
 			} else if aws.StringValue(task.LastStatus) == ecs.DesiredStatusStopped &&
 				aws.StringValue(task.DesiredStatus) == ecs.DesiredStatusStopped {
-				w.eventDispatcher.Fire(EventCronExecutionStopped, EventContext{Target: cronName, Task: task})
+				w.eventDispatcher.Fire(EventCronExecutionStopped, EventContext{CronName: cronName, Task: task})
 			}
 
 			if err := w.taskStore.Update(cronName, task); err != nil {
@@ -245,14 +245,14 @@ func (w *Worker) acknowledgeMessage(m *sqs.Message) error {
 
 func CronActivator() func(c EventContext) error {
 	return func(c EventContext) error {
-		log.Debugf("Activating cron %q now", c.Target)
+		log.Debugf("Activating cron %q now", c.CronName)
 		return nil
 	}
 }
 
 func CronDeactivator() func(c EventContext) error {
 	return func(c EventContext) error {
-		log.Debugf("Deactivating cron %q now", c.Target)
+		log.Debugf("Deactivating cron %q now", c.CronName)
 		return nil
 	}
 }

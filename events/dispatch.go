@@ -7,35 +7,34 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecs"
 )
 
-type DispatchableEvent string
+type TaskEvent string
+
+type EventContext struct {
+	CronName string
+	Task     *ecs.Task
+}
 
 type EventListener func(c EventContext) error
 
-// TODO: The context should not have knowledge about ECS tasks
-type EventContext struct {
-	Target string
-	Task   *ecs.Task
-}
-
 type EventDispatcher struct {
 	mapLock sync.RWMutex
-	events  map[DispatchableEvent][]EventListener
+	events  map[TaskEvent][]EventListener
 }
 
 func NewEventDispatcher() *EventDispatcher {
 	return &EventDispatcher{
-		events: make(map[DispatchableEvent][]EventListener),
+		events: make(map[TaskEvent][]EventListener),
 	}
 }
 
-func (ed *EventDispatcher) On(e DispatchableEvent, l EventListener) {
+func (ed *EventDispatcher) On(e TaskEvent, l EventListener) {
 	ed.mapLock.Lock()
 	defer ed.mapLock.Unlock()
 
 	ed.events[e] = append(ed.events[e], l)
 }
 
-func (ed *EventDispatcher) Fire(e DispatchableEvent, c EventContext) error {
+func (ed *EventDispatcher) Fire(e TaskEvent, c EventContext) error {
 	ed.mapLock.RLock()
 	defer ed.mapLock.RUnlock()
 
