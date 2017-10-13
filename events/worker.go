@@ -206,9 +206,7 @@ func (w *Worker) handleMessage(m *sqs.Message) error {
 				}).Debugf("Received ECS task event for cron %q", cronName)
 
 			// TODO: This block needs error handling
-			if aws.StringValue(task.LastStatus) == ecs.DesiredStatusPending &&
-				aws.StringValue(task.DesiredStatus) == ecs.DesiredStatusRunning &&
-				aws.Int64Value(task.Version) == 1 {
+			if aws.Int64Value(task.Version) == 1 {
 				w.eventDispatcher.Fire(EventCronExecutionStarted, EventContext{CronName: cronName, Task: task})
 			} else if aws.StringValue(task.LastStatus) == ecs.DesiredStatusStopped &&
 				aws.StringValue(task.DesiredStatus) == ecs.DesiredStatusStopped {
