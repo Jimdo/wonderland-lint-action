@@ -24,8 +24,8 @@ const (
 
 	LeaderLockName = "wonderland-crons-worker"
 
-	EventCronExecutionStarted = "Execution of cron started"
-	EventCronExecutionStopped = "Execution of cron stopped"
+	EventCronExecutionStarted = "CronExecutionStarted"
+	EventCronExecutionStopped = "CronExecutionStopped"
 )
 
 type TaskStore interface {
@@ -206,14 +206,11 @@ func (w *Worker) handleMessage(m *sqs.Message) error {
 				}).Debugf("Received ECS task event for cron %q", cronName)
 
 			eventContext := EventContext{CronName: cronName, Task: task}
-			if aws.Int64Value(task.Version) == 1 {
-				if err := w.eventDispatcher.Fire(EventCronExecutionStarted, eventContext); err != nil {
-					return fmt.Errorf("could not handle event for started cron execution: %s", err)
-				}
-			} else if aws.StringValue(task.LastStatus) == ecs.DesiredStatusStopped &&
-				aws.StringValue(task.DesiredStatus) == ecs.DesiredStatusStopped {
-				if err := w.eventDispatcher.Fire(EventCronExecutionStopped, eventContext); err != nil {
-					return fmt.Errorf("could not handle event for stopped cron execution: %s", err)
+
+			derivedEvent := w.deriveEventFromECSTask(task)
+			if derivedEvent != "" {
+				if err := w.eventDispatcher.Fire(derivedEvent, eventContext); err != nil {
+					return fmt.Errorf("could not handle event %q: %s", derivedEvent, err)
 				}
 			}
 
@@ -243,6 +240,16 @@ func (w *Worker) acknowledgeMessage(m *sqs.Message) error {
 		ReceiptHandle: m.ReceiptHandle,
 	})
 	return err
+}
+
+func (w *Worker) deriveEventFromECSTask(t *ecs.Task) TaskEvent {
+	if aws.Int64Value(t.Version) == 1 {
+		return EventCronExecutionStarted
+	} else if aws.StringValue(t.LastStatus) == ecs.DesiredStatusStopped &&
+		aws.StringValue(t.DesiredStatus) == ecs.DesiredStatusStopped {
+		return EventCronExecutionStopped
+	}
+	return ""
 }
 
 func CronActivator() func(c EventContext) error {
