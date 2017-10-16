@@ -103,4 +103,5 @@ gen-mocks:
 	mockgen -package mock github.com/Jimdo/wonderland-crons/aws CronStore > mock/cron_store.go
 	mockgen -package mock github.com/Jimdo/wonderland-crons/aws CronExecutionStore > mock/cron_execution_store.go
 	mockgen -package mock github.com/Jimdo/wonderland-crons/events TaskStore > mock/task_store.go
+	mockgen -package mock github.com/Jimdo/wonderland-crons/events CronStateToggler > mock/cron_state_toggler.go
 	mockgen -package mock github.com/aws/aws-sdk-go/service/sqs/sqsiface SQSAPI > mock/sqsapi.go
