@@ -1,5 +1,5 @@
 # vim: set syntax=dockerfile:
-FROM golang:1.9.1-alpine
+FROM golang:alpine
 
 ENV CGO_ENABLED=0
 
