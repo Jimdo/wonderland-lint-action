@@ -22,12 +22,15 @@ func (s *CronService) Stop(cronName string) error {
 	return s.Store.Stop(cronName)
 }
 
-func (s *CronService) Run(cron *cron.CronDescription) error {
+func (s *CronService) Run(cronName string, cron *cron.CronDescription) error {
 	if err := s.Validator.ValidateCronDescription(cron); err != nil {
 		return err
 	}
+	if err := s.Validator.ValidateCronName(cronName); err != nil {
+		return err
+	}
 
-	return s.Store.Run(cron)
+	return s.Store.Run(cronName, cron)
 }
 
 func (s *CronService) Allocations(cronName string) ([]*CronAllocation, error) {
