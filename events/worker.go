@@ -181,17 +181,16 @@ func (w *Worker) handleMessage(m *sqs.Message) error {
 		}
 		if ok {
 			cronName := cron.GetNameByResource(aws.StringValue(userContainer.Name))
-			log.
-				WithFields(log.Fields{
-					"task_created_at":     task.CreatedAt,
-					"task_desired_status": task.DesiredStatus,
-					"task_last_status":    task.LastStatus,
-					"task_started_at":     task.StartedAt,
-					"task_started_by":     task.StartedBy,
-					"task_stopped_at":     task.StoppedAt,
-					"task_stopped_reason": task.StoppedReason,
-					"task_version":        task.Version,
-				}).Debugf("Received ECS task event for cron %q", cronName)
+			log.WithFields(log.Fields{
+				"task_created_at":     task.CreatedAt,
+				"task_desired_status": task.DesiredStatus,
+				"task_last_status":    task.LastStatus,
+				"task_started_at":     task.StartedAt,
+				"task_started_by":     task.StartedBy,
+				"task_stopped_at":     task.StoppedAt,
+				"task_stopped_reason": task.StoppedReason,
+				"task_version":        task.Version,
+			}).Debugf("Received ECS task event for cron %q", cronName)
 
 			eventContext := EventContext{CronName: cronName, Task: task}
 
