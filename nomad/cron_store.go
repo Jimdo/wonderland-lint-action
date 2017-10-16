@@ -124,8 +124,8 @@ func (s *CronStore) Stop(cronName string) error {
 	return nil
 }
 
-func (s *CronStore) Run(cron *cron.CronDescription) error {
-	args := []string{"--name", cron.Name}
+func (s *CronStore) Run(cronName string, cron *cron.CronDescription) error {
+	args := []string{"--name", cronName}
 	for env, value := range cron.Description.Environment {
 		args = append(args, "-e", fmt.Sprintf("%s=%s", env, value))
 	}
@@ -142,8 +142,8 @@ func (s *CronStore) Run(cron *cron.CronDescription) error {
 
 	job := structs.Job{
 		Region:      "global",
-		ID:          s.config.CronPrefix + cron.Name,
-		Name:        cron.Name,
+		ID:          s.config.CronPrefix + cronName,
+		Name:        cronName,
 		Type:        structs.JobTypeBatch,
 		Priority:    50,
 		AllAtOnce:   false,

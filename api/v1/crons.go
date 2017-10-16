@@ -8,6 +8,8 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"encoding/json"
+
 	"github.com/Jimdo/wonderland-crons/api"
 	"github.com/Jimdo/wonderland-crons/cron"
 	"github.com/Jimdo/wonderland-crons/nomad"
@@ -97,8 +99,15 @@ func (a *API) RunCron(ctx context.Context, w http.ResponseWriter, req *http.Requ
 		sendError(w, fmt.Errorf("Unable to parse cron description: %s", err), http.StatusBadRequest)
 		return
 	}
+	v1LegacyCronDesc := struct {
+		Name string `json:"name"`
+	}{}
+	if err := json.Unmarshal(body, &v1LegacyCronDesc); err != nil {
+		sendError(w, fmt.Errorf("Unable to parse cron name from description: %s", err), http.StatusBadRequest)
+		return
+	}
 
-	if err := a.config.Service.Run(desc); err != nil {
+	if err := a.config.Service.Run(v1LegacyCronDesc.Name, desc); err != nil {
 		statusCode := http.StatusInternalServerError
 		if _, ok := err.(validation.Error); ok {
 			statusCode = http.StatusBadRequest
