@@ -17,7 +17,6 @@ type EventContext struct {
 type EventListener func(c EventContext) error
 
 type EventDispatcher struct {
-	mapLock           sync.RWMutex
 	listenersByEvents *sync.Map
 }
 
