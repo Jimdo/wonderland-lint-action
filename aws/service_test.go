@@ -442,3 +442,125 @@ func TestService_Exists_Error_UnkownError(t *testing.T) {
 		t.Fatalf("expected a check for a service to be false when an unexpected error happens, but got true instead")
 	}
 }
+
+func TestService_Activate(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	cronName := "test-cron"
+	ruleName := cronName + "-rule"
+
+	service, mocks := createServiceWithMocks(ctrl)
+
+	mocks.cs.EXPECT().GetResourceName(cronName).Return(ruleName, nil)
+	mocks.cm.EXPECT().ActivateRule(ruleName)
+
+	if err := service.Activate(cronName); err != nil {
+		t.Fatalf("expected activation of cron be successful, but got error: %s", err)
+	}
+}
+
+func TestService_Activate_ErrorToFindCronRule(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	cronName := "test-cron"
+
+	service, mocks := createServiceWithMocks(ctrl)
+
+	mocks.cs.EXPECT().GetResourceName(cronName).Return("", errors.New("test-error"))
+
+	if err := service.Activate(cronName); err == nil {
+		t.Fatal("expected activation of cron to be errornous, but got no error")
+	}
+}
+
+func TestService_Activate_ErrorToActivateCronRule(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	cronName := "test-cron"
+	ruleName := cronName + "-rule"
+
+	service, mocks := createServiceWithMocks(ctrl)
+
+	mocks.cs.EXPECT().GetResourceName(cronName).Return(ruleName, nil)
+	mocks.cm.EXPECT().ActivateRule(ruleName).Return(errors.New("test-error"))
+
+	if err := service.Activate(cronName); err == nil {
+		t.Fatal("expected activation of cron to be errornous, but got no error")
+	}
+}
+
+func TestService_Deactivate(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	cronName := "test-cron"
+	ruleName := cronName + "-rule"
+
+	service, mocks := createServiceWithMocks(ctrl)
+
+	mocks.cs.EXPECT().GetResourceName(cronName).Return(ruleName, nil)
+	mocks.cm.EXPECT().DeactivateRule(ruleName)
+
+	if err := service.Deactivate(cronName); err != nil {
+		t.Fatalf("expected deactivation of cron be successful, but got error: %s", err)
+	}
+}
+
+func TestService_Deactivate_ErrorToFindCronRule(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	cronName := "test-cron"
+
+	service, mocks := createServiceWithMocks(ctrl)
+
+	mocks.cs.EXPECT().GetResourceName(cronName).Return("", errors.New("test-error"))
+
+	if err := service.Deactivate(cronName); err == nil {
+		t.Fatal("expected deactivation of cron to be errornous, but got no error")
+	}
+}
+
+func TestService_Deactivate_ErrorToActivateCronRule(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	cronName := "test-cron"
+	ruleName := cronName + "-rule"
+
+	service, mocks := createServiceWithMocks(ctrl)
+
+	mocks.cs.EXPECT().GetResourceName(cronName).Return(ruleName, nil)
+	mocks.cm.EXPECT().DeactivateRule(ruleName).Return(errors.New("test-error"))
+
+	if err := service.Deactivate(cronName); err == nil {
+		t.Fatal("expected deactivation of cron to be errornous, but got no error")
+	}
+}
+
+type mocks struct {
+	v   *mock.MockCronValidator
+	cm  *mock.MockRuleCronManager
+	tds *mock.MockTaskDefinitionStore
+	cs  *mock.MockCronStore
+	ces *mock.MockCronExecutionStore
+}
+
+func createServiceWithMocks(ctrl *gomock.Controller) (*Service, mocks) {
+	v := mock.NewMockCronValidator(ctrl)
+	cm := mock.NewMockRuleCronManager(ctrl)
+	tds := mock.NewMockTaskDefinitionStore(ctrl)
+	cs := mock.NewMockCronStore(ctrl)
+	ces := mock.NewMockCronExecutionStore(ctrl)
+
+	return NewService(v, cm, tds, cs, ces), mocks{
+		v:   v,
+		cm:  cm,
+		tds: tds,
+		cs:  cs,
+		ces: ces,
+	}
+}

@@ -178,10 +178,6 @@ func (s *Service) Exists(cronName string) (bool, error) {
 func (s *Service) Activate(cronName string) error {
 	resourceName, err := s.cronStore.GetResourceName(cronName)
 	if err != nil {
-		if err == store.ErrCronNotFound {
-			// TODO: Not sure if no error should be returned here
-			return nil
-		}
 		return err
 	}
 
@@ -191,10 +187,6 @@ func (s *Service) Activate(cronName string) error {
 func (s *Service) Deactivate(cronName string) error {
 	resourceName, err := s.cronStore.GetResourceName(cronName)
 	if err != nil {
-		if err == store.ErrCronNotFound {
-			// TODO: Not sure if no error should be returned here
-			return nil
-		}
 		return err
 	}
 
