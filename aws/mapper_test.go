@@ -1,12 +1,16 @@
 package aws
 
 import (
+	"errors"
+	"net/url"
 	"testing"
 
 	awssdk "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/golang/mock/gomock"
 
 	"github.com/Jimdo/wonderland-crons/cron"
+	"github.com/Jimdo/wonderland-crons/mock"
 )
 
 func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription(t *testing.T) {
@@ -33,8 +37,17 @@ func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription(t *testi
 		},
 	}
 
-	tdm := NewECSTaskDefinitionMapper()
-	containerDesc := tdm.ContainerDefinitionFromCronDescription(containerName, cronDesc, "test-cron")
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	vsp := mock.NewMockVaultSecretProvider(ctrl)
+
+	tdm := NewECSTaskDefinitionMapper(vsp)
+	containerDesc, err := tdm.ContainerDefinitionFromCronDescription(containerName, cronDesc, "test-cron")
+
+	if err != nil {
+		t.Fatalf("expected description to definition mapping to be successful, but got error: %s", err)
+	}
 
 	if *containerDesc.Name != containerName {
 		t.Fatalf("expected container name to be %q, but got %q", containerName, *containerDesc.Name)
@@ -86,6 +99,120 @@ func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription(t *testi
 
 	if !varInContainerDesc("baz", "fuz", containerDesc.Environment) {
 		t.Fatalf("expected 'baz' to be set to 'fuz' in container description: %#v", containerDesc.Environment)
+	}
+}
+
+func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription_WithVaultValues(t *testing.T) {
+	vaultPath := "vault+secret://some.vault-instance.com/test-path"
+	vaultPathURL, _ := url.Parse(vaultPath)
+	vaultValues := map[string]string{
+		"some_vault_value": "baz",
+	}
+
+	containerName := "python-test"
+	cronDesc := &cron.CronDescription{
+		Schedule: "* * * * *",
+		Description: &cron.ContainerDescription{
+			Image: "python",
+			Capacity: &cron.CapacityDescription{
+				Memory: "l",
+				CPU:    "m",
+			},
+			Environment: map[string]string{
+				"foo":          "bar",
+				"$ref_secrets": vaultPath,
+			},
+		},
+	}
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	vsp := mock.NewMockVaultSecretProvider(ctrl)
+	vsp.EXPECT().GetValues(vaultPathURL).Return(vaultValues, nil)
+
+	tdm := NewECSTaskDefinitionMapper(vsp)
+	containerDesc, err := tdm.ContainerDefinitionFromCronDescription(containerName, cronDesc, "test-cron")
+
+	if err != nil {
+		t.Fatalf("expected description to definition mapping to be successful, but got error: %s", err)
+	}
+
+	if len(containerDesc.Environment) != 2 {
+		t.Fatalf("expected the same count of environment variables, found %d instead of 2.", len(containerDesc.Environment))
+	}
+
+	if !varInContainerDesc("foo", "bar", containerDesc.Environment) {
+		t.Fatalf("expected 'foo' to be set to 'bar' in container description: %#v", containerDesc.Environment)
+	}
+
+	for key, value := range vaultValues {
+		if !varInContainerDesc(key, value, containerDesc.Environment) {
+			t.Fatalf("expected %q to be set to %q in container description: %#v", key, value, containerDesc.Environment)
+		}
+	}
+}
+
+func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription_ErrorInvalidVaultPath(t *testing.T) {
+	invalidVaultPath := "vault+secret://foo%32.com/some-value"
+
+	containerName := "python-test"
+	cronDesc := &cron.CronDescription{
+		Schedule: "* * * * *",
+		Description: &cron.ContainerDescription{
+			Image: "python",
+			Capacity: &cron.CapacityDescription{
+				Memory: "l",
+				CPU:    "m",
+			},
+			Environment: map[string]string{
+				"$ref_secrets": invalidVaultPath,
+			},
+		},
+	}
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	vsp := mock.NewMockVaultSecretProvider(ctrl)
+
+	tdm := NewECSTaskDefinitionMapper(vsp)
+	_, err := tdm.ContainerDefinitionFromCronDescription(containerName, cronDesc, "test-cron")
+
+	if err == nil {
+		t.Fatal("expected an error because of an invalid vault path, but got none")
+	}
+}
+
+func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription_ErrorGettingVaultValues(t *testing.T) {
+	vaultPath := "vault+secret://some.vault-instance.com/test-path"
+
+	containerName := "python-test"
+	cronDesc := &cron.CronDescription{
+		Schedule: "* * * * *",
+		Description: &cron.ContainerDescription{
+			Image: "python",
+			Capacity: &cron.CapacityDescription{
+				Memory: "l",
+				CPU:    "m",
+			},
+			Environment: map[string]string{
+				"$ref_secrets": vaultPath,
+			},
+		},
+	}
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	vsp := mock.NewMockVaultSecretProvider(ctrl)
+	vsp.EXPECT().GetValues(gomock.Any()).Return(nil, errors.New("test error"))
+
+	tdm := NewECSTaskDefinitionMapper(vsp)
+	_, err := tdm.ContainerDefinitionFromCronDescription(containerName, cronDesc, "test-cron")
+
+	if err == nil {
+		t.Fatal("expected an error because of an error when fetching vault values, but got none")
 	}
 }
 
