@@ -156,6 +156,9 @@ func main() {
 	vaultSecretProvider := &vault.SecretProvider{
 		VaultClient: rcm.VaultClient,
 	}
+	vaultAppRoleProvider := &vault.AppRoleProvider{
+		VaultClient: rcm.VaultClient,
+	}
 
 	validator := validation.New(validation.Configuration{
 		WonderlandNameValidator: &wonderlandValidator.WonderlandName{},
@@ -238,7 +241,7 @@ func main() {
 		log.Fatalf("Failed to initialize Task store: %s", err)
 	}
 
-	ecstdm := aws.NewECSTaskDefinitionMapper(vaultSecretProvider)
+	ecstdm := aws.NewECSTaskDefinitionMapper(vaultSecretProvider, vaultAppRoleProvider)
 	ecstds := aws.NewECSTaskDefinitionStore(ecsClient, ecstdm)
 	cloudwatchcm := aws.NewCloudwatchRuleCronManager(cwClient, config.ECSClusterARN, config.CronRoleARN)
 	dynamoDBCronStore, err := store.NewDynamoDBCronStore(dynamoDBClient, config.CronsTableName)

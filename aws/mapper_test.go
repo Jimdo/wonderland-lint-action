@@ -14,6 +14,7 @@ import (
 )
 
 func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription(t *testing.T) {
+	cronName := "test-cron"
 	containerName := "python-test"
 	cronDesc := &cron.CronDescription{
 		Schedule: "* * * * *",
@@ -41,9 +42,11 @@ func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription(t *testi
 	defer ctrl.Finish()
 
 	vsp := mock.NewMockVaultSecretProvider(ctrl)
+	varp := mock.NewMockVaultAppRoleProvider(ctrl)
+	varp.EXPECT().RoleID(cronName)
 
-	tdm := NewECSTaskDefinitionMapper(vsp)
-	containerDesc, err := tdm.ContainerDefinitionFromCronDescription(containerName, cronDesc, "test-cron")
+	tdm := NewECSTaskDefinitionMapper(vsp, varp)
+	containerDesc, err := tdm.ContainerDefinitionFromCronDescription(containerName, cronDesc, cronName)
 
 	if err != nil {
 		t.Fatalf("expected description to definition mapping to be successful, but got error: %s", err)
@@ -109,6 +112,7 @@ func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription_WithVaul
 		"some_vault_value": "baz",
 	}
 
+	cronName := "test-cron"
 	containerName := "python-test"
 	cronDesc := &cron.CronDescription{
 		Schedule: "* * * * *",
@@ -130,9 +134,11 @@ func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription_WithVaul
 
 	vsp := mock.NewMockVaultSecretProvider(ctrl)
 	vsp.EXPECT().GetValues(vaultPathURL).Return(vaultValues, nil)
+	varp := mock.NewMockVaultAppRoleProvider(ctrl)
+	varp.EXPECT().RoleID(cronName)
 
-	tdm := NewECSTaskDefinitionMapper(vsp)
-	containerDesc, err := tdm.ContainerDefinitionFromCronDescription(containerName, cronDesc, "test-cron")
+	tdm := NewECSTaskDefinitionMapper(vsp, varp)
+	containerDesc, err := tdm.ContainerDefinitionFromCronDescription(containerName, cronDesc, cronName)
 
 	if err != nil {
 		t.Fatalf("expected description to definition mapping to be successful, but got error: %s", err)
@@ -175,12 +181,86 @@ func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription_ErrorInv
 	defer ctrl.Finish()
 
 	vsp := mock.NewMockVaultSecretProvider(ctrl)
+	varp := mock.NewMockVaultAppRoleProvider(ctrl)
 
-	tdm := NewECSTaskDefinitionMapper(vsp)
+	tdm := NewECSTaskDefinitionMapper(vsp, varp)
 	_, err := tdm.ContainerDefinitionFromCronDescription(containerName, cronDesc, "test-cron")
 
 	if err == nil {
 		t.Fatal("expected an error because of an invalid vault path, but got none")
+	}
+}
+
+func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription_WithVaultApproleID(t *testing.T) {
+	vaultApproleID := "test-id"
+	vaultAddress := "vault.testserver.com"
+
+	cronName := "test-cron"
+	containerName := "python-test"
+	cronDesc := &cron.CronDescription{
+		Schedule: "* * * * *",
+		Description: &cron.ContainerDescription{
+			Image: "python",
+			Capacity: &cron.CapacityDescription{
+				Memory: "l",
+				CPU:    "m",
+			},
+		},
+	}
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	vsp := mock.NewMockVaultSecretProvider(ctrl)
+	varp := mock.NewMockVaultAppRoleProvider(ctrl)
+	varp.EXPECT().RoleID(cronName).Return(vaultApproleID, nil)
+	varp.EXPECT().VaultAddress().Return(vaultAddress)
+
+	tdm := NewECSTaskDefinitionMapper(vsp, varp)
+	containerDesc, err := tdm.ContainerDefinitionFromCronDescription(containerName, cronDesc, cronName)
+
+	if err != nil {
+		t.Fatalf("expected description to definition mapping to be successful, but got error: %s", err)
+	}
+
+	if len(containerDesc.Environment) != 2 {
+		t.Fatalf("expected the same count of environment variables, found %d instead of 2.", len(containerDesc.Environment))
+	}
+
+	if !varInContainerDesc(envVariableVaultAppRoleID, vaultApproleID, containerDesc.Environment) {
+		t.Fatalf("expected environment variable %q to be set to %q in container description: %#v", envVariableVaultAppRoleID, vaultApproleID, containerDesc.Environment)
+	}
+
+	if !varInContainerDesc(envVariableVaultAddress, vaultAddress, containerDesc.Environment) {
+		t.Fatalf("expected environment variable %q to be set to %q in container description: %#v", envVariableVaultAddress, vaultAddress, containerDesc.Environment)
+	}
+}
+
+func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription_ErrorGettingVaultApproleID(t *testing.T) {
+	containerName := "python-test"
+	cronDesc := &cron.CronDescription{
+		Schedule: "* * * * *",
+		Description: &cron.ContainerDescription{
+			Image: "python",
+			Capacity: &cron.CapacityDescription{
+				Memory: "l",
+				CPU:    "m",
+			},
+		},
+	}
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	vsp := mock.NewMockVaultSecretProvider(ctrl)
+	varp := mock.NewMockVaultAppRoleProvider(ctrl)
+	varp.EXPECT().RoleID(gomock.Any()).Return("", errors.New("test error"))
+
+	tdm := NewECSTaskDefinitionMapper(vsp, varp)
+	_, err := tdm.ContainerDefinitionFromCronDescription(containerName, cronDesc, "test-cron")
+
+	if err == nil {
+		t.Fatal("expected an error because of an error when fetching vault approle ID, but got none")
 	}
 }
 
@@ -207,8 +287,9 @@ func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription_ErrorGet
 
 	vsp := mock.NewMockVaultSecretProvider(ctrl)
 	vsp.EXPECT().GetValues(gomock.Any()).Return(nil, errors.New("test error"))
+	varp := mock.NewMockVaultAppRoleProvider(ctrl)
 
-	tdm := NewECSTaskDefinitionMapper(vsp)
+	tdm := NewECSTaskDefinitionMapper(vsp, varp)
 	_, err := tdm.ContainerDefinitionFromCronDescription(containerName, cronDesc, "test-cron")
 
 	if err == nil {

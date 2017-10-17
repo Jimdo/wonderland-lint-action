@@ -12,6 +12,9 @@ import (
 )
 
 const (
+	envVariableVaultAddress   = "VAULT_ADDR"
+	envVariableVaultAppRoleID = "VAULT_ROLE_ID"
+
 	vaultReferenceKeyPrefix = "$ref"
 	vaultReferenceURLScheme = "vault+secret"
 )
@@ -19,13 +22,21 @@ const (
 type VaultSecretProvider interface {
 	GetValues(src *url.URL) (map[string]string, error)
 }
-type ECSTaskDefinitionMapper struct {
-	vaultProvider VaultSecretProvider
+
+type VaultAppRoleProvider interface {
+	RoleID(string) (string, error)
+	VaultAddress() string
 }
 
-func NewECSTaskDefinitionMapper(vsp VaultSecretProvider) *ECSTaskDefinitionMapper {
+type ECSTaskDefinitionMapper struct {
+	vaultSecretProvider  VaultSecretProvider
+	vaultAppRoleProvider VaultAppRoleProvider
+}
+
+func NewECSTaskDefinitionMapper(vsp VaultSecretProvider, varp VaultAppRoleProvider) *ECSTaskDefinitionMapper {
 	return &ECSTaskDefinitionMapper{
-		vaultProvider: vsp,
+		vaultSecretProvider:  vsp,
+		vaultAppRoleProvider: varp,
 	}
 }
 
@@ -43,7 +54,7 @@ func (tds *ECSTaskDefinitionMapper) ContainerDefinitionFromCronDescription(conta
 		}
 
 		if src.Scheme == vaultReferenceURLScheme {
-			vaultValues, err := tds.vaultProvider.GetValues(src)
+			vaultValues, err := tds.vaultSecretProvider.GetValues(src)
 			if err != nil {
 				return nil, fmt.Errorf("error resolving Vault secrets: %s", err)
 			}
@@ -51,8 +62,15 @@ func (tds *ECSTaskDefinitionMapper) ContainerDefinitionFromCronDescription(conta
 				envVars[vaultKey] = vaultValue
 			}
 		}
+	}
 
-		// TODO: Add App RoleID
+	roleID, err := tds.vaultAppRoleProvider.RoleID(cronName)
+	if err != nil {
+		return nil, fmt.Errorf("unable to retrieve Vault app role ID: %s", err)
+	}
+	if roleID != "" {
+		envVars[envVariableVaultAddress] = tds.vaultAppRoleProvider.VaultAddress()
+		envVars[envVariableVaultAppRoleID] = roleID
 	}
 
 	var containerEnvVars []*ecs.KeyValuePair
