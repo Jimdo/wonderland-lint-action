@@ -50,11 +50,14 @@ func TestWorker_runInLeaderMode(t *testing.T) {
 
 	taskStore := mock.NewMockTaskStore(ctrl)
 
+	ed := NewEventDispatcher()
+	ed.On(EventCronExecutionStateChanged, CronExecutionStatePersister(taskStore))
+
 	worker := &Worker{
-		pollInterval: pollInterval,
-		queueURL:     queueURL,
-		taskStore:    taskStore,
-		sqs:          sqsClient,
+		pollInterval:    pollInterval,
+		queueURL:        queueURL,
+		sqs:             sqsClient,
+		eventDispatcher: ed,
 	}
 	done := make(chan struct{})
 	errChan := make(chan error)

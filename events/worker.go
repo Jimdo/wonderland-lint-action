@@ -6,13 +6,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Jimdo/wonderland-crons/cron"
-	"github.com/Jimdo/wonderland-crons/locking"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/Jimdo/wonderland-crons/cron"
+	"github.com/Jimdo/wonderland-crons/locking"
 )
 
 const (
@@ -22,11 +23,11 @@ const (
 	DefaultPollInterval        = 1 * time.Second
 
 	LeaderLockName = "wonderland-crons-worker"
-)
 
-type TaskStore interface {
-	Update(string, *ecs.Task) error
-}
+	EventCronExecutionStarted      = "CronExecutionStarted"
+	EventCronExecutionStopped      = "CronExecutionStopped"
+	EventCronExecutionStateChanged = "CronExecutionStateChanged"
+)
 
 type Worker struct {
 	lockManager         locking.LockManager
@@ -34,17 +35,17 @@ type Worker struct {
 	pollInterval        time.Duration
 	queueURL            string
 	sqs                 sqsiface.SQSAPI
-	taskStore           TaskStore
+	eventDispatcher     *EventDispatcher
 }
 
-func NewWorker(lm locking.LockManager, sqs sqsiface.SQSAPI, qURL string, ts TaskStore, options ...func(*Worker)) *Worker {
+func NewWorker(lm locking.LockManager, sqs sqsiface.SQSAPI, qURL string, ed *EventDispatcher, options ...func(*Worker)) *Worker {
 	w := &Worker{
 		lockManager:         lm,
 		lockRefreshInterval: DefaultLockRefreshInterval,
 		pollInterval:        DefaultPollInterval,
 		queueURL:            qURL,
 		sqs:                 sqs,
-		taskStore:           ts,
+		eventDispatcher:     ed,
 	}
 
 	for _, option := range options {
@@ -180,8 +181,28 @@ func (w *Worker) handleMessage(m *sqs.Message) error {
 		}
 		if ok {
 			cronName := cron.GetNameByResource(aws.StringValue(userContainer.Name))
-			if err := w.taskStore.Update(cronName, task); err != nil {
-				return fmt.Errorf("Storing task in DynamoDB failed: %s", err)
+			log.WithFields(log.Fields{
+				"task_created_at":     task.CreatedAt,
+				"task_desired_status": task.DesiredStatus,
+				"task_last_status":    task.LastStatus,
+				"task_started_at":     task.StartedAt,
+				"task_started_by":     task.StartedBy,
+				"task_stopped_at":     task.StoppedAt,
+				"task_stopped_reason": task.StoppedReason,
+				"task_version":        task.Version,
+			}).Debugf("Received ECS task event for cron %q", cronName)
+
+			eventContext := EventContext{CronName: cronName, Task: task}
+
+			derivedEvent := w.deriveEventFromECSTask(task)
+			if derivedEvent != "" {
+				if err := w.eventDispatcher.Fire(derivedEvent, eventContext); err != nil {
+					return fmt.Errorf("could not handle event %q: %s", derivedEvent, err)
+				}
+			}
+
+			if err := w.eventDispatcher.Fire(EventCronExecutionStateChanged, eventContext); err != nil {
+				return fmt.Errorf("could not handle event %q: %s", derivedEvent, err)
 			}
 		}
 
@@ -206,4 +227,14 @@ func (w *Worker) acknowledgeMessage(m *sqs.Message) error {
 		ReceiptHandle: m.ReceiptHandle,
 	})
 	return err
+}
+
+func (w *Worker) deriveEventFromECSTask(t *ecs.Task) TaskEvent {
+	if aws.Int64Value(t.Version) == 1 {
+		return EventCronExecutionStarted
+	} else if aws.StringValue(t.LastStatus) == ecs.DesiredStatusStopped &&
+		aws.StringValue(t.DesiredStatus) == ecs.DesiredStatusStopped {
+		return EventCronExecutionStopped
+	}
+	return ""
 }

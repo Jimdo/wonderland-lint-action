@@ -174,3 +174,21 @@ func (s *Service) Exists(cronName string) (bool, error) {
 
 	return true, nil
 }
+
+func (s *Service) Activate(cronName string) error {
+	resourceName, err := s.cronStore.GetResourceName(cronName)
+	if err != nil {
+		return err
+	}
+
+	return s.cm.ActivateRule(resourceName)
+}
+
+func (s *Service) Deactivate(cronName string) error {
+	resourceName, err := s.cronStore.GetResourceName(cronName)
+	if err != nil {
+		return err
+	}
+
+	return s.cm.DeactivateRule(resourceName)
+}
