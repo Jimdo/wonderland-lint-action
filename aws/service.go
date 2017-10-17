@@ -150,10 +150,8 @@ func (s *Service) Status(cronName string, executionCount int64) (*CronStatus, er
 	if err != nil {
 		return nil, err
 	}
-	executions, err := s.executionStore.GetLastNExecutions(cronName, executionCount)
-	if err != nil {
-		return nil, err
-	}
+	// Error is discarded so we can at least continue and respond with something even if we could not get any executions.
+	executions, _ := s.executionStore.GetLastNExecutions(cronName, executionCount)
 	status := &CronStatus{
 		Cron:       cron,
 		Status:     "not implemented yet",
