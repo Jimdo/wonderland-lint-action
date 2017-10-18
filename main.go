@@ -153,6 +153,13 @@ func main() {
 		abort("Could not create Nomad client: %s", err)
 	}
 
+	vaultSecretProvider := &vault.SecretProvider{
+		VaultClient: rcm.VaultClient,
+	}
+	vaultAppRoleProvider := &vault.AppRoleProvider{
+		VaultClient: rcm.VaultClient,
+	}
+
 	validator := validation.New(validation.Configuration{
 		WonderlandNameValidator: &wonderlandValidator.WonderlandName{},
 		DockerImageValidator: &wonderlandValidator.DockerImage{
@@ -176,9 +183,7 @@ func main() {
 			MemoryMaxCapacity:            cron.MaxMemoryCapacity,
 		},
 		EnvironmentVariables: &wonderlandValidator.EnvironmentVariables{
-			VaultSecretProvider: &vault.SecretProvider{
-				VaultClient: rcm.VaultClient,
-			},
+			VaultSecretProvider: vaultSecretProvider,
 		},
 	})
 
@@ -236,7 +241,7 @@ func main() {
 		log.Fatalf("Failed to initialize Task store: %s", err)
 	}
 
-	ecstdm := aws.NewECSTaskDefinitionMapper()
+	ecstdm := aws.NewECSTaskDefinitionMapper(vaultSecretProvider, vaultAppRoleProvider)
 	ecstds := aws.NewECSTaskDefinitionStore(ecsClient, ecstdm)
 	cloudwatchcm := aws.NewCloudwatchRuleCronManager(cwClient, config.ECSClusterARN, config.CronRoleARN)
 	dynamoDBCronStore, err := store.NewDynamoDBCronStore(dynamoDBClient, config.CronsTableName)
