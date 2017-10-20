@@ -187,6 +187,7 @@ func TestService_Delete(t *testing.T) {
 	mocks.cs.EXPECT().GetResourceName("test-cron").Return(resourceName, nil)
 	mocks.cm.EXPECT().DeleteRule(resourceName)
 	mocks.tds.EXPECT().DeleteByFamily(resourceName)
+	mocks.ces.EXPECT().Delete("test-cron")
 	mocks.cs.EXPECT().Delete("test-cron")
 
 	err := service.Delete("test-cron")
@@ -259,6 +260,7 @@ func TestService_Delete_Error_OnStoreDelete(t *testing.T) {
 	mocks.cs.EXPECT().GetResourceName("test-cron").Return(resourceName, nil)
 	mocks.cm.EXPECT().DeleteRule(resourceName)
 	mocks.tds.EXPECT().DeleteByFamily(resourceName)
+	mocks.ces.EXPECT().Delete("test-cron")
 	mocks.cs.EXPECT().Delete("test-cron").Return(errors.New("foo"))
 
 	err := service.Delete("test-cron")
@@ -290,6 +292,24 @@ func TestService_Delete_Error_OnStoreGetResourceName(t *testing.T) {
 	err := service.Delete("test-cron")
 	if err == nil {
 		t.Fatalf("expected an error when resource name could not be fetched from DynamoDB, but got none")
+	}
+}
+
+func TestService_Delete_Error_ExecutionDelete(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	resourceName := "cron--test-cron"
+
+	service, mocks := createServiceWithMocks(ctrl)
+	mocks.cs.EXPECT().GetResourceName("test-cron").Return(resourceName, nil)
+	mocks.cm.EXPECT().DeleteRule(resourceName)
+	mocks.tds.EXPECT().DeleteByFamily(resourceName)
+	mocks.ces.EXPECT().Delete("test-cron").Return(errors.New("foo"))
+
+	err := service.Delete("test-cron")
+	if err == nil {
+		t.Fatal("expected an error when deletion from DynamoDB failed, but got none")
 	}
 }
 

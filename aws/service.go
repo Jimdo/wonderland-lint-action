@@ -30,6 +30,7 @@ type CronStore interface {
 
 type CronExecutionStore interface {
 	GetLastNExecutions(string, int64) ([]*store.Execution, error)
+	Delete(string) error
 }
 
 type Service struct {
@@ -132,6 +133,10 @@ func (s *Service) Delete(cronName string) error {
 	if len(errors) > 0 {
 		//TODO: Add logging for all errors
 		return errors[0]
+	}
+
+	if err := s.executionStore.Delete(cronName); err != nil {
+		return err
 	}
 
 	if err := s.cronStore.Delete(cronName); err != nil {

@@ -2,6 +2,7 @@ package store
 
 import (
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -10,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 	"github.com/aws/aws-sdk-go/service/ecs"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/Jimdo/wonderland-crons/cron"
 )
@@ -147,6 +149,41 @@ func (es *DynamoDBExecutionStore) GetLastNExecutions(cronName string, count int6
 	}
 
 	return result, nil
+}
+
+func (es *DynamoDBExecutionStore) Delete(cronName string) error {
+	executions, err := es.GetLastNExecutions(cronName, math.MaxInt64)
+	if err != nil {
+		return err
+	}
+	// TODO: batch deletions
+
+	for _, execution := range executions {
+		startTimeAWS := aws.String(execution.StartTime.Format(time.RFC3339Nano))
+
+		executionLogger(execution).WithFields(log.Fields{
+			"start_time":     execution.StartTime,
+			"start_time_aws": startTimeAWS,
+		}).Debug("Deleting Execution")
+
+		_, err = es.Client.DeleteItem(&dynamodb.DeleteItemInput{
+			TableName: aws.String(es.TableName),
+			Key: map[string]*dynamodb.AttributeValue{
+				"Name": {
+					S: aws.String(execution.Name),
+				},
+				"StartTime": {
+					S: startTimeAWS,
+				},
+			},
+		})
+
+		if err != nil {
+			return fmt.Errorf("Could not delete executions from DynamoDB: %s", err)
+		}
+	}
+
+	return nil
 }
 
 func (es *DynamoDBExecutionStore) calcExpiry(t *ecs.Task) int64 {
