@@ -156,31 +156,63 @@ func (es *DynamoDBExecutionStore) Delete(cronName string) error {
 	if err != nil {
 		return err
 	}
-	// TODO: batch deletions
+
+	var requests []*dynamodb.WriteRequest
 
 	for _, execution := range executions {
 		startTimeAWS := aws.String(execution.StartTime.Format(time.RFC3339Nano))
-
-		executionLogger(execution).WithFields(log.Fields{
-			"start_time":     execution.StartTime,
-			"start_time_aws": startTimeAWS,
-		}).Debug("Deleting Execution")
-
-		_, err = es.Client.DeleteItem(&dynamodb.DeleteItemInput{
-			TableName: aws.String(es.TableName),
-			Key: map[string]*dynamodb.AttributeValue{
-				"Name": {
-					S: aws.String(execution.Name),
-				},
-				"StartTime": {
-					S: startTimeAWS,
+		request := &dynamodb.WriteRequest{
+			DeleteRequest: &dynamodb.DeleteRequest{
+				Key: map[string]*dynamodb.AttributeValue{
+					"Name": {
+						S: aws.String(execution.Name),
+					},
+					"StartTime": {
+						S: startTimeAWS,
+					},
 				},
 			},
-		})
-
-		if err != nil {
-			return fmt.Errorf("Could not delete executions from DynamoDB: %s", err)
 		}
+
+		requests = append(requests, request)
+
+		if len(requests) == 25 {
+			if err := es.batchDelete(cronName, requests); err != nil {
+				log.WithError(err).WithFields(log.Fields{
+					"write_requests": requests,
+					"name":           cronName,
+				}).Error("Batch Delete failed")
+				return err
+			}
+
+			requests = nil
+		}
+	}
+
+	// delete last batch
+	if err := es.batchDelete(cronName, requests); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (es *DynamoDBExecutionStore) batchDelete(cronName string, r []*dynamodb.WriteRequest) error {
+	log.WithFields(log.Fields{
+		"write_requests": r,
+		"name":           cronName,
+	}).Debug("Deleting Executions")
+
+	input := &dynamodb.BatchWriteItemInput{
+		RequestItems: map[string][]*dynamodb.WriteRequest{
+			es.TableName: r,
+		},
+	}
+
+	// TODO: retry with exponential backoff when ErrCodeProvisionedThroughputExceededException
+	_, err := es.Client.BatchWriteItem(input)
+	if err != nil {
+		return fmt.Errorf("Could not delete executions from DynamoDB: %s", err)
 	}
 
 	return nil
