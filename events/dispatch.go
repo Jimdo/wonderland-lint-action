@@ -7,8 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecs"
 )
 
-type TaskEvent string
-
 type EventContext struct {
 	CronName string
 	Task     *ecs.Task
@@ -26,7 +24,7 @@ func NewEventDispatcher() *EventDispatcher {
 	}
 }
 
-func (ed *EventDispatcher) getListenersForEvent(e TaskEvent) []EventListener {
+func (ed *EventDispatcher) getListenersForEvent(e string) []EventListener {
 	var listeners []EventListener
 	val, ok := ed.listenersByEvents.Load(e)
 	if ok {
@@ -37,13 +35,13 @@ func (ed *EventDispatcher) getListenersForEvent(e TaskEvent) []EventListener {
 	return listeners
 }
 
-func (ed *EventDispatcher) On(e TaskEvent, l EventListener) {
+func (ed *EventDispatcher) On(e string, l EventListener) {
 	listeners := ed.getListenersForEvent(e)
 	listeners = append(listeners, l)
 	ed.listenersByEvents.Store(e, listeners)
 }
 
-func (ed *EventDispatcher) Fire(e TaskEvent, c EventContext) error {
+func (ed *EventDispatcher) Fire(e string, c EventContext) error {
 	for _, listener := range ed.getListenersForEvent(e) {
 		if err := listener(c); err != nil {
 			return fmt.Errorf("error executing listener for event %s: %s", e, err)
