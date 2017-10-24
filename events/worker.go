@@ -3,7 +3,6 @@ package events
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -132,10 +131,6 @@ func (w *Worker) runInLeaderMode(stop chan struct{}, errChan chan error) {
 			return
 		}
 	}
-}
-
-func isThrottlingException(err error) bool {
-	return strings.Contains(err.Error(), "ThrottlingException")
 }
 
 func (w *Worker) pollQueue() error {
