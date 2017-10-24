@@ -209,9 +209,14 @@ func (es *DynamoDBExecutionStore) batchDelete(cronName string, r []*dynamodb.Wri
 		},
 	}
 
-	// TODO: retry with exponential backoff when ErrCodeProvisionedThroughputExceededException
-	_, err := es.Client.BatchWriteItem(input)
+	returned, err := es.Client.BatchWriteItem(input)
 	if err != nil {
+		if returned.UnprocessedItems != nil {
+			log.WithError(err).WithFields(log.Fields{
+				"name":              cronName,
+				"unprocessed_items": returned.UnprocessedItems,
+			}).Error("Could not delete executions, BatchWriteItem returned unprocessed items")
+		}
 		return fmt.Errorf("Could not delete executions from DynamoDB: %s", err)
 	}
 
