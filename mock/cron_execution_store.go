@@ -33,6 +33,18 @@ func (m *MockCronExecutionStore) EXPECT() *MockCronExecutionStoreMockRecorder {
 	return m.recorder
 }
 
+// Delete mocks base method
+func (m *MockCronExecutionStore) Delete(arg0 string) error {
+	ret := m.ctrl.Call(m, "Delete", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Delete indicates an expected call of Delete
+func (mr *MockCronExecutionStoreMockRecorder) Delete(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockCronExecutionStore)(nil).Delete), arg0)
+}
+
 // GetLastNExecutions mocks base method
 func (m *MockCronExecutionStore) GetLastNExecutions(arg0 string, arg1 int64) ([]*store.Execution, error) {
 	ret := m.ctrl.Call(m, "GetLastNExecutions", arg0, arg1)

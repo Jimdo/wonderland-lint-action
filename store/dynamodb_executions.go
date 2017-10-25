@@ -2,6 +2,7 @@ package store
 
 import (
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -10,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 	"github.com/aws/aws-sdk-go/service/ecs"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/Jimdo/wonderland-crons/cron"
 )
@@ -101,28 +103,6 @@ func (es *DynamoDBExecutionStore) Update(cronName string, t *ecs.Task) error {
 	return nil
 }
 
-func (es *DynamoDBExecutionStore) getStatusByExitCodes(t *Execution) string {
-	if t.Status == ecs.DesiredStatusStopped {
-		executionLogger(t).Debug("Got stopped execution to set status by exit code")
-		if t.ExitCode == nil || t.TimeoutExitCode == nil {
-			executionLogger(t).Debug("Execution status will be set to unknown")
-			return "UNKNOWN"
-		}
-		if aws.Int64Value(t.TimeoutExitCode) == cron.TimeoutExitCode {
-			executionLogger(t).Debug("Execution status will be set to timeout")
-			return "TIMEOUT"
-		}
-		if aws.Int64Value(t.ExitCode) == 0 {
-			executionLogger(t).Debug("Execution status will be set to success")
-			return "SUCCESS"
-		}
-		executionLogger(t).Debug("Execution status will be set to failed")
-		return "FAILED"
-	}
-	executionLogger(t).Debug("Got execution that is not stopped")
-	return t.Status
-}
-
 func (es *DynamoDBExecutionStore) GetLastNExecutions(cronName string, count int64) ([]*Execution, error) {
 	var result []*Execution
 	var queryError error
@@ -171,7 +151,101 @@ func (es *DynamoDBExecutionStore) GetLastNExecutions(cronName string, count int6
 	return result, nil
 }
 
+func (es *DynamoDBExecutionStore) Delete(cronName string) error {
+	executions, err := es.GetLastNExecutions(cronName, math.MaxInt64)
+	if err != nil {
+		return err
+	}
+
+	var requests []*dynamodb.WriteRequest
+
+	for _, execution := range executions {
+		startTimeAWS := aws.String(execution.StartTime.Format(time.RFC3339Nano))
+		request := &dynamodb.WriteRequest{
+			DeleteRequest: &dynamodb.DeleteRequest{
+				Key: map[string]*dynamodb.AttributeValue{
+					"Name": {
+						S: aws.String(execution.Name),
+					},
+					"StartTime": {
+						S: startTimeAWS,
+					},
+				},
+			},
+		}
+
+		requests = append(requests, request)
+
+		if len(requests) == 25 {
+			if err := es.batchDelete(cronName, requests); err != nil {
+				log.WithError(err).WithFields(log.Fields{
+					"write_requests": requests,
+					"name":           cronName,
+				}).Error("Batch Delete failed")
+				return err
+			}
+
+			requests = nil
+		}
+	}
+
+	// delete last batch
+	if err := es.batchDelete(cronName, requests); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (es *DynamoDBExecutionStore) batchDelete(cronName string, r []*dynamodb.WriteRequest) error {
+	log.WithFields(log.Fields{
+		"write_requests": r,
+		"name":           cronName,
+	}).Debug("Deleting Executions")
+
+	input := &dynamodb.BatchWriteItemInput{
+		RequestItems: map[string][]*dynamodb.WriteRequest{
+			es.TableName: r,
+		},
+	}
+
+	returned, err := es.Client.BatchWriteItem(input)
+	if err != nil {
+		if returned.UnprocessedItems != nil {
+			log.WithError(err).WithFields(log.Fields{
+				"name":              cronName,
+				"unprocessed_items": returned.UnprocessedItems,
+			}).Error("Could not delete executions, BatchWriteItem returned unprocessed items")
+		}
+		return fmt.Errorf("Could not delete executions from DynamoDB: %s", err)
+	}
+
+	return nil
+}
+
 func (es *DynamoDBExecutionStore) calcExpiry(t *ecs.Task) int64 {
 	ttl := aws.TimeValue(t.CreatedAt).Add(24 * time.Hour * daysToKeepExecutions)
 	return ttl.Unix()
+}
+
+func (es *DynamoDBExecutionStore) getStatusByExitCodes(t *Execution) string {
+	if t.Status == ecs.DesiredStatusStopped {
+		executionLogger(t).Debug("Got stopped execution to set status by exit code")
+		if t.ExitCode == nil || t.TimeoutExitCode == nil {
+			executionLogger(t).Debug("Execution status will be set to unknown")
+			return "UNKNOWN"
+		}
+		if aws.Int64Value(t.TimeoutExitCode) == cron.TimeoutExitCode {
+			executionLogger(t).Debug("Execution status will be set to timeout")
+			return "TIMEOUT"
+		}
+		if aws.Int64Value(t.ExitCode) == 0 {
+			executionLogger(t).Debug("Execution status will be set to success")
+			return "SUCCESS"
+		}
+		executionLogger(t).Debug("Execution status will be set to failed")
+		return "FAILED"
+	}
+	executionLogger(t).Debug("Got execution that is not stopped")
+	return t.Status
 }
