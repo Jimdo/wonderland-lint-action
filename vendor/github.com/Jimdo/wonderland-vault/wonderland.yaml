@@ -1,0 +1,11 @@
+---
+scale: 1
+components:
+  - name: vault-rw-monitoring
+    image: quay.io/jimdo/vault-rw-monitoring
+    env:
+      VAULT_TOKEN: "{{env `VAULT_TOKEN`}}"
+      VAULT_ADDR: "https://vault.{{env `ZONE`}}"
+      PAGERDUTY_KEY: "{{env `PAGERDUTY_KEY`}}"
+notifications:
+  slack: "#werkzeugschmiede-bot"
