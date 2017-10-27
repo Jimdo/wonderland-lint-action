@@ -50,20 +50,14 @@ func TestStore_UpdateSuccess(t *testing.T) {
 
 	client := &mockDynamoDBClient{}
 	es, err := NewDynamoDBExecutionStore(client, "some-table")
-	if err != nil {
-		t.Fatalf("Could not initialize execution store %s", err)
-	}
+	assert.NoError(t, err)
 
-	if err := es.Update(cronName, ecsTask); err != nil {
-		t.Fatalf("Expected Update to throw no error, got: %s", err)
-	}
+	err = es.Update(cronName, ecsTask)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(client.putItemInputs))
 
-	if len(client.putItemInputs) != 1 {
-		t.Fatalf("PutItem wasn't called once, but %d times", len(client.putItemInputs))
-	}
-	if itemStatus := aws.StringValue(client.putItemInputs[0].Item["Status"].S); itemStatus != "SUCCESS" {
-		t.Fatalf("Status of saved item wasn't SUCCESS but %s", itemStatus)
-	}
+	itemStatus := aws.StringValue(client.putItemInputs[0].Item["Status"].S)
+	assert.Equal(t, "SUCCESS", itemStatus)
 }
 
 func TestStore_getStatusByExitCodes(t *testing.T) {
@@ -108,13 +102,9 @@ func TestStore_getStatusByExitCodes(t *testing.T) {
 		}
 
 		es, err := NewDynamoDBExecutionStore(&mockDynamoDBClient{}, "some-table")
-		if err != nil {
-			t.Fatalf("Could not initialize execution store %s", err)
-		}
+		assert.NoError(t, err)
 
 		status := es.getStatusByExitCodes(execution)
-		if status != expectedStatus {
-			t.Fatalf("Expected status to be %s, got %s", expectedStatus, status)
-		}
+		assert.Equal(t, expectedStatus, status)
 	}
 }
