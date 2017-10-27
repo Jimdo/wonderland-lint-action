@@ -1,0 +1,3 @@
+[submodule "dynamodump"]
+	path = dynamodump
+	url = https://github.com/bchew/dynamodump.git

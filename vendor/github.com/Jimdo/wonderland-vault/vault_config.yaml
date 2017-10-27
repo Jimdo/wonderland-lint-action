@@ -1,0 +1,152 @@
+---
+keys:
+
+  # Disable auditing using syslog
+  - key: sys/audit/syslog
+    state: absent
+    values:
+      type: syslog
+
+  # Enable auditing using file for filebeat forwarding
+  - key: sys/audit/file
+    values:
+      type: file
+      file_path: /tmp/vault.audit
+
+  # Write policy for wonderland admins
+  - key: sys/policy/wonderland-admins
+    values:
+      rules: |
+        path "*" { capabilities = ["create", "read", "update", "delete", "list", "sudo"] }
+
+  # Enable and configure Github auth
+  - key: sys/auth/github
+    values:
+      type: github
+  - key: auth/github/config
+    values:
+      organization: Jimdo
+      ttl: 60m
+  - key: auth/github/map/teams/werkzeugschmiede
+    values:
+      value: wonderland-admins
+
+  # Enable and configure AWS secret backend
+  - key: sys/mounts/aws
+    values:
+      type: aws
+  - key: aws/config/root
+    values:
+      access_key: {{env `AWS_ROOT_KEY`}}
+      secret_key: {{env `AWS_ROOT_SECRET`}}
+      region: eu-west-1
+
+  # Enable AWS-Infra secret backend (Configuration is done manually!!!)
+  - key: sys/mounts/aws-infra
+    values:
+      type: aws
+
+  # Enable and configure app-role auth
+  - key: sys/auth/approle
+    values:
+      type: approle
+
+  - key: auth/approle/role/wonderland-prometheus
+    values:
+      bind_secret_id: false
+      bound_cidr_list: 0.0.0.0/0
+      policies: wonderland-instance-lifetime,wonderland-service-pricing
+      period: 300
+
+  - key: auth/approle/role/officeteam-jenkins
+    values:
+      bind_secret_id: false
+      bound_cidr_list: 0.0.0.0/0
+      policies: officeteam-jenkins
+      period: 300
+
+  - key: auth/approle/role/wonderland-ecs-metadata
+    values:
+      bind_secret_id: false
+      bound_cidr_list: 0.0.0.0/0
+      policies: wonderland-ecs-metadata
+      period: 300
+
+  - key: auth/approle/role/wonderland-ecs-prometheus
+    values:
+      bind_secret_id: false
+      bound_cidr_list: 0.0.0.0/0
+      policies: wonderland-ecs-prometheus
+      period: 300
+
+  - key: auth/approle/role/wonderland-elb-prometheus
+    values:
+      bind_secret_id: false
+      bound_cidr_list: 0.0.0.0/0
+      policies: wonderland-elb-prometheus
+      period: 300
+
+  - key: auth/approle/role/wonderland-crons
+    values:
+      bind_secret_id: false
+      bound_cidr_list: 0.0.0.0/0
+      policies: wonderland-crons
+      period: 300
+
+  - key: auth/approle/role/jimdo-jenkins
+    values:
+      bind_secret_id: false
+      bound_cidr_list: 0.0.0.0/0
+      policies: jimdo-jenkins
+      period: 300
+
+  - key: auth/approle/role/wonderland-travis-config
+    values:
+      bind_secret_id: false
+      bound_cidr_list: 0.0.0.0/0
+      policies: wonderland-travis-config
+      period: 300
+
+  - key: auth/approle/role/dashboard-prod
+    values:
+      bind_secret_id: false
+      bound_cidr_list: 0.0.0.0/0
+      policies: dashboard-prod
+      period: 300
+
+  - key: auth/approle/role/dashboard-stable
+    values:
+      bind_secret_id: false
+      bound_cidr_list: 0.0.0.0/0
+      policies: dashboard-stable
+      period: 300
+
+  - key: auth/approle/role/dashboard-dev
+    values:
+      bind_secret_id: false
+      bound_cidr_list: 0.0.0.0/0
+      policies: dashboard-dev
+      period: 300
+
+  - key: auth/approle/role/dashboard-frickel
+    values:
+      bind_secret_id: false
+      bound_cidr_list: 0.0.0.0/0
+      policies: dashboard-frickel
+      period: 300
+
+  # Enable an extra generic backend for OTP secrets
+  - key: sys/mounts/otp
+    values:
+      type: generic
+
+  # Put information about our infrastructure into Vault
+  - key: secret/wonderland/infrastructure/crims
+    values:
+      asg_name: {{env `CRIMS_ASG_NAME`}}
+
+  - key: secret/wonderland/infrastructure/authentication
+    values:
+      WONDERLAND_USER: {{env `WONDERLAND_USER`}}
+      WONDERLAND_PASS: {{env `WONDERLAND_PASS`}}
+

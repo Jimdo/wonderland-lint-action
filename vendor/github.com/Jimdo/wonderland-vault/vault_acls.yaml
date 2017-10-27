@@ -1,0 +1,262 @@
+---
+keys:
+
+  # GitHub teams based policies
+  - key: sys/policy/configuration-managers
+    values:
+      rules: |
+        path "secret/jimdo.conf/*" { capabilities = ["create", "read", "update", "delete", "list"] }
+
+  - key: auth/github/map/teams/configuration-managers
+    values: {value: configuration-managers}
+
+
+  - key: sys/policy/dashing
+    values:
+      rules: |
+        path "secret/dashing/*" { capabilities = ["create", "read", "update", "delete", "list"] }
+
+  - key: auth/github/map/teams/dashing
+    values: {value: dashing}
+
+
+  - key: sys/policy/data
+    values:
+      rules: |
+        path "secret/data/*" { capabilities = ["create", "read", "update", "delete", "list"] }
+
+  - key: auth/github/map/teams/data
+    values: {value: data}
+
+
+  - key: sys/policy/datateam-deploy-readonly
+    values:
+      rules: |
+        path "secret/data/*" { capabilities = ["read", "list"] }
+
+  - key: auth/github/map/teams/datateam-deploy-readonly
+    values: {value: datateam-deploy-readonly}
+
+
+  - key: sys/policy/deck
+    values:
+      rules: |
+        path "secret/deck/*" { capabilities = ["create", "read", "update", "delete", "list"] }
+
+  - key: auth/github/map/teams/deck
+    values: {value: deck}
+
+
+  - key: sys/policy/developer-efficiency
+    values:
+      rules: |
+        path "secret/developer-efficiency/*" { capabilities = ["create", "read", "update", "delete", "list"] }
+
+  - key: auth/github/map/teams/developer-efficiency
+    values: {value: developer-efficiency}
+
+
+  - key: sys/policy/developers
+    values:
+      rules: |
+        path "secret/graylog/*" { capabilities = ["create", "read", "update", "delete", "list"] }
+        path "secret/developers/*" { capabilities = ["create", "read", "update", "delete", "list"] }
+        path "secret/wonderland/infrastructure/authentication" { capabilities = ["read"] }
+
+  - key: auth/github/map/teams/Developers
+    values: {value: developers}
+
+
+  - key: sys/policy/growth
+    values:
+      rules: |
+        path "secret/growth/*" { capabilities = ["create", "read", "update", "delete", "list"] }
+
+  - key: auth/github/map/teams/growth
+    values: {value: growth}
+
+
+  - key: sys/policy/kitty
+    values:
+      rules: |
+        path "secret/kitty/*" { capabilities = ["create", "read", "update", "delete", "list"] }
+
+  - key: auth/github/map/teams/kitty
+    values: {value: kitty}
+
+
+  - key: sys/policy/lunchbuddy
+    values:
+      rules: |
+        path "secret/lunchbuddy/*" { capabilities = ["create", "read", "update", "delete", "list"] }
+
+  - key: auth/github/map/teams/lunchbuddy
+    values: {value: lunchbuddy}
+
+
+  - key: sys/policy/mobile
+    values:
+      rules: |
+        path "secret/mobile/*" { capabilities = ["create", "read", "update", "delete", "list"] }
+
+  - key: auth/github/map/teams/mobile
+    values: {value: mobile}
+
+
+  - key: sys/policy/officeteam
+    values:
+      rules: |
+        path "secret/officeteam/*" { capabilities = ["create", "read", "update", "delete", "list"] }
+
+  - key: auth/github/map/teams/office
+    values: {value: officeteam}
+
+
+  - key: sys/policy/payment
+    values:
+      rules: |
+        path "secret/paymentteam/*" { capabilities = ["create", "read", "update", "delete", "list"] }
+
+  - key: auth/github/map/teams/payment-team
+    values: {value: payment}
+
+
+  - key: sys/policy/platform
+    values:
+      rules: |
+        path "secret/platform/*" { capabilities = ["create", "read", "update", "delete", "list"] }
+
+  - key: auth/github/map/teams/platform
+    values: {value: platform}
+
+
+  - key: sys/policy/wonderland
+    values:
+      rules: |
+        path "secret/wonderland/*" { capabilities = ["create", "read", "update", "delete", "list"] }
+        path "auth/approle/role/*" { capabilities = ["read"] }
+
+  - key: auth/github/map/teams/wonderland
+    values: {value: wonderland}
+
+
+  - key: sys/policy/azubis
+    values:
+      rules: |
+        path "secret/azubis/*" { capabilities = ["create", "read", "update", "delete", "list"] }
+
+  - key: auth/github/map/teams/azubis
+    values: {value: azubis}
+
+
+  - key: sys/policy/team-blue
+    values:
+      rules: |
+        path "secret/team-blue/*" { capabilities = ["create", "read", "update", "delete", "list"] }
+
+  - key: auth/github/map/teams/blue
+    values: {value: team-blue}
+
+  - key: sys/policy/team-red
+    values:
+      rules: |
+        path "secret/team-red/*" { capabilities = ["create", "read", "update", "delete", "list"] }
+
+  - key: auth/github/map/teams/team-red
+    values: {value: team-red}
+
+  - key: sys/policy/wonderland-users
+    values:
+      rules: |
+        path "secret/wonderland/infrastructure/authentication" { capabilities = ["read"] }
+
+  - key: auth/github/map/teams/wonderland-users
+    values: {value: wonderland-users}
+
+  - key: sys/policy/dolphin
+    values:
+      rules: |
+        path "secret/dolphin/*" { capabilities = ["create", "read", "update", "delete", "list"] }
+
+  - key: auth/github/map/teams/dolphin
+    values: {value: dolphin}
+
+
+  # App-Specific policies
+  - key: sys/policy/wonderland-service-pricing
+    values:
+      rules: |
+        path "secret/wonderland/infrastructure/crims" { capabilities = ["read", "list"] }
+        path "aws/sts/wonderland-service-pricing" { capabilities = ["read", "list"] }
+
+  - key: sys/policy/wonderland-instance-lifetime
+    values:
+      rules: |
+        path "aws/sts/wonderland-instance-lifetime" { capabilities = ["read"] }
+
+  - key: sys/policy/officeteam-jenkins
+    values:
+      rules: |
+        path "secret/officeteam/gc-sync" { capabilities = ["read"] }
+        path "secret/officeteam/lastpass-manage" { capabilities = ["read"] }
+        path "secret/wonderland/infrastructure/authentication" { capabilities = ["read"] }
+
+  - key: sys/policy/wonderland-ecs-metadata
+    values:
+      rules: |
+        path "aws/sts/wonderland-ecs-metadata" { capabilities = ["read"] }
+
+  - key: sys/policy/wonderland-ecs-prometheus
+    values:
+      rules: |
+        path "aws/sts/wonderland-ecs-prometheus" { capabilities = ["read"] }
+
+  - key: sys/policy/wonderland-elb-prometheus
+    values:
+      rules: |
+        path "aws/sts/wonderland-elb-prometheus" { capabilities = ["read"] }
+
+  - key: sys/policy/wonderland-crons
+    values:
+      rules: |
+        path "secret/*" { capabilities = ["read"] }
+
+  - key: sys/policy/jimdo-jenkins
+    values:
+      rules: |
+        path "secret/jimdo-jenkins/infrastructure/ansible-vault" { capabilities = ["read"] }
+        path "secret/jimdo-jenkins/github-token" { capabilities = ["read"] }
+        path "secret/jimdo-jenkins/main-aws-credentials" { capabilities = ["read"] }
+        path "secret/jimdo-jenkins/slack-tokens" { capabilities = ["read"] }
+        path "secret/wonderland/infrastructure/authentication" { capabilities = ["read"] }
+        path "aws-infra/sts/jimdo-jenkins" { capabilities = ["read"] }
+        path "secret/team-red/dashboard-*" { capabilities = ["read", "create", "update"] }
+        path "secret/team-red/dashboard-dev" { capabilities = ["read", "create", "update"] }
+
+  - key: sys/policy/wonderland-travis-config
+    values:
+      rules: |
+        path "secret/wonderland/github-publish" { capabilities = ["read"] }
+        path "secret/wonderland/infrastructure/authentication" { capabilities = ["read"] }
+        path "secret/wonderland/wonderland-travis-config" { capabilities = ["read"] }
+        path "secret/wonderland/travis-config/*" { capabilities = ["read"] }
+
+  - key: sys/policy/dashboard-prod
+    values:
+      rules: |
+        path "aws-infra/sts/dashboard-prod" { capabilities = ["read"] }
+
+  - key: sys/policy/dashboard-stable
+    values:
+      rules: |
+        path "aws-infra/sts/dashboard-stable" { capabilities = ["read"] }
+
+  - key: sys/policy/dashboard-dev
+    values:
+      rules: |
+        path "aws-infra/sts/dashboard-dev" { capabilities = ["read"] }
+
+  - key: sys/policy/dashboard-frickel
+    values:
+      rules: |
+        path "aws-infra/sts/dashboard-frickel" { capabilities = ["read"] }
