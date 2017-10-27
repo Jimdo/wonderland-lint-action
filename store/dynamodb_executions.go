@@ -157,6 +157,10 @@ func (es *DynamoDBExecutionStore) Delete(cronName string) error {
 		return err
 	}
 
+	if len(executions) <= 0 {
+		return nil
+	}
+
 	var requests []*dynamodb.WriteRequest
 
 	for _, execution := range executions {
@@ -211,7 +215,7 @@ func (es *DynamoDBExecutionStore) batchDelete(cronName string, r []*dynamodb.Wri
 
 	returned, err := es.Client.BatchWriteItem(input)
 	if err != nil {
-		if returned.UnprocessedItems != nil {
+		if returned != nil && returned.UnprocessedItems != nil {
 			log.WithError(err).WithFields(log.Fields{
 				"name":              cronName,
 				"unprocessed_items": returned.UnprocessedItems,
