@@ -24,6 +24,12 @@
   version = "v1.10.38"
 
 [[projects]]
+  name = "github.com/davecgh/go-spew"
+  packages = ["spew"]
+  revision = "346938d642f2ec3594ed81d874461961cd0faa76"
+  version = "v1.1.0"
+
+[[projects]]
   name = "github.com/docker/distribution"
   packages = [".","context","digestset","reference","registry/api/errcode","registry/api/v2","registry/client","registry/client/auth","registry/client/auth/challenge","registry/client/transport","registry/storage/cache","registry/storage/cache/memory","uuid"]
   revision = "edc3ab29cdff8694dd6feb85cfeb4b5f1b38ed9c"
@@ -157,6 +163,12 @@
   version = "v1.0.0-rc1"
 
 [[projects]]
+  name = "github.com/pmezard/go-difflib"
+  packages = ["difflib"]
+  revision = "792786c7400a136282c1664665ae0a8db921c6c2"
+  version = "v1.0.0"
+
+[[projects]]
   name = "github.com/sethgrid/pester"
   packages = ["."]
   revision = "2a102734c18c43c74fd0664e06cd414cf9602b93"
@@ -171,6 +183,12 @@
   name = "github.com/spf13/pflag"
   packages = ["."]
   revision = "bf8481a6aebc13a8aab52e699ffe2e79771f5a3f"
+
+[[projects]]
+  name = "github.com/stretchr/testify"
+  packages = ["assert"]
+  revision = "69483b4bd14f5845b5a1e55bca19e954e827f1d0"
+  version = "v1.1.4"
 
 [[projects]]
   name = "github.com/ugorji/go"
@@ -217,6 +235,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "3096d4e4849ff1c768eb6fadbf47d2a77345644e7b55b530b272c35478e69f1d"
+  inputs-digest = "047a73eb414ab3451cc2df224389f3baf47e633d82fb9eafa0e12b33e264606e"
   solver-name = "gps-cdcl"
   solver-version = 1
