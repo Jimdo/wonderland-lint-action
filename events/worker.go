@@ -173,7 +173,13 @@ func (w *Worker) handleMessage(m *sqs.Message) error {
 
 		userContainer := cron.GetUserContainerFromTask(task)
 		if userContainer == nil {
-			return fmt.Errorf("could not determine user container")
+			log.WithFields(log.Fields{
+				"task_arn":                    task.TaskArn,
+				"task_cluster_arn":            task.ClusterArn,
+				"task_container_instance_arn": task.ContainerInstanceArn,
+			}).Error("Could not determine user container")
+
+			break
 		}
 		ok, err := cron.IsCron(userContainer)
 		if err != nil {
