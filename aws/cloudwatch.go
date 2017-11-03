@@ -3,6 +3,8 @@ package aws
 import (
 	"fmt"
 
+	"github.com/Jimdo/wonderland-crons/cron"
+
 	awssdk "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
@@ -10,7 +12,7 @@ import (
 )
 
 type RuleCronManager interface {
-	RunTaskDefinitionWithSchedule(string, string, string) error
+	RunTaskDefinitionWithSchedule(string, string, string) (string, error)
 	DeleteRule(string) error
 	ActivateRule(string) error
 	DeactivateRule(string) error
@@ -30,15 +32,17 @@ func NewCloudwatchRuleCronManager(ce cloudwatcheventsiface.CloudWatchEventsAPI, 
 	}
 }
 
-func (cm *CloudwatchRuleCronManager) RunTaskDefinitionWithSchedule(ruleName, taskDefinitionARN, schedule string) error {
-	_, err := cm.cloudwatchEvents.PutRule(&cloudwatchevents.PutRuleInput{
+func (cm *CloudwatchRuleCronManager) RunTaskDefinitionWithSchedule(name, taskDefinitionARN, schedule string) (string, error) {
+	ruleName := cron.GetResourceByName(name)
+
+	out, err := cm.cloudwatchEvents.PutRule(&cloudwatchevents.PutRuleInput{
 		Description:        awssdk.String("Foobar"),
 		Name:               awssdk.String(ruleName),
 		State:              awssdk.String(cloudwatchevents.RuleStateEnabled),
 		ScheduleExpression: awssdk.String(schedule),
 	})
 	if err != nil {
-		return fmt.Errorf("could not put cloudwatch rule %q with error: %s", ruleName, err)
+		return "", fmt.Errorf("could not put cloudwatch rule %q with error: %s", ruleName, err)
 	}
 
 	_, err = cm.cloudwatchEvents.PutTargets(&cloudwatchevents.PutTargetsInput{
@@ -55,13 +59,18 @@ func (cm *CloudwatchRuleCronManager) RunTaskDefinitionWithSchedule(ruleName, tas
 		},
 	})
 	if err != nil {
-		return fmt.Errorf("could not put target for cloudwatch rule %q with error: %s", ruleName, err)
+		return "", fmt.Errorf("could not put target for cloudwatch rule %q with error: %s", ruleName, err)
 	}
 
-	return nil
+	return awssdk.StringValue(out.RuleArn), nil
 }
 
-func (cm *CloudwatchRuleCronManager) DeleteRule(ruleName string) error {
+func (cm *CloudwatchRuleCronManager) DeleteRule(ruleARN string) error {
+	ruleName, err := parseRuleNameFromARN(ruleARN)
+	if err != nil {
+		return err
+	}
+
 	out, err := cm.cloudwatchEvents.ListTargetsByRule(&cloudwatchevents.ListTargetsByRuleInput{
 		Rule: awssdk.String(ruleName),
 	})
@@ -106,15 +115,23 @@ func (cm *CloudwatchRuleCronManager) DeleteRule(ruleName string) error {
 	return nil
 }
 
-func (cm *CloudwatchRuleCronManager) ActivateRule(ruleName string) error {
-	_, err := cm.cloudwatchEvents.EnableRule(&cloudwatchevents.EnableRuleInput{
+func (cm *CloudwatchRuleCronManager) ActivateRule(ruleARN string) error {
+	ruleName, err := parseRuleNameFromARN(ruleARN)
+	if err != nil {
+		return err
+	}
+	_, err = cm.cloudwatchEvents.EnableRule(&cloudwatchevents.EnableRuleInput{
 		Name: awssdk.String(ruleName),
 	})
 	return err
 }
 
-func (cm *CloudwatchRuleCronManager) DeactivateRule(ruleName string) error {
-	_, err := cm.cloudwatchEvents.DisableRule(&cloudwatchevents.DisableRuleInput{
+func (cm *CloudwatchRuleCronManager) DeactivateRule(ruleARN string) error {
+	ruleName, err := parseRuleNameFromARN(ruleARN)
+	if err != nil {
+		return err
+	}
+	_, err = cm.cloudwatchEvents.DisableRule(&cloudwatchevents.DisableRuleInput{
 		Name: awssdk.String(ruleName),
 	})
 	return err

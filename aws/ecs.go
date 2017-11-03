@@ -12,8 +12,8 @@ import (
 )
 
 type TaskDefinitionStore interface {
-	AddRevisionFromCronDescription(cronName, family string, desc *cron.CronDescription) (string, error)
-	DeleteByFamily(family string) error
+	AddRevisionFromCronDescription(string, *cron.CronDescription) (string, string, error)
+	DeleteByFamily(string) error
 }
 
 type ECSTaskDefinitionStore struct {
@@ -28,15 +28,17 @@ func NewECSTaskDefinitionStore(e ecsiface.ECSAPI, tdm *ECSTaskDefinitionMapper) 
 	}
 }
 
-func (tds *ECSTaskDefinitionStore) AddRevisionFromCronDescription(cronName, family string, desc *cron.CronDescription) (string, error) {
-	cd, err := tds.tdm.ContainerDefinitionFromCronDescription(family, desc, cronName)
+func (tds *ECSTaskDefinitionStore) AddRevisionFromCronDescription(cronName string, desc *cron.CronDescription) (string, string, error) {
+	tdFamilyName := cron.GetResourceByName(cronName)
+
+	cd, err := tds.tdm.ContainerDefinitionFromCronDescription(tdFamilyName, desc, cronName)
 	if err != nil {
-		return "", fmt.Errorf("could not generate ECS container definition from cron description: %s", err)
+		return "", "", fmt.Errorf("could not generate ECS container definition from cron description: %s", err)
 	}
 
 	rtdInput := &ecs.RegisterTaskDefinitionInput{
 		ContainerDefinitions: []*ecs.ContainerDefinition{cd},
-		Family:               awssdk.String(family),
+		Family:               awssdk.String(tdFamilyName),
 	}
 
 	timeoutSidecarDefinition := tds.createTimeoutSidecarDefinition(cronName, desc)
@@ -44,9 +46,9 @@ func (tds *ECSTaskDefinitionStore) AddRevisionFromCronDescription(cronName, fami
 	rtdInput.ContainerDefinitions = append(rtdInput.ContainerDefinitions, timeoutSidecarDefinition)
 	out, err := tds.ecs.RegisterTaskDefinition(rtdInput)
 	if err != nil {
-		return "", fmt.Errorf("could not register task definition for family %q with error: %s", family, err)
+		return "", "", fmt.Errorf("could not register task definition for family %q with error: %s", tdFamilyName, err)
 	}
-	return awssdk.StringValue(out.TaskDefinition.TaskDefinitionArn), nil
+	return awssdk.StringValue(out.TaskDefinition.TaskDefinitionArn), tdFamilyName, nil
 }
 
 func (tds *ECSTaskDefinitionStore) createTimeoutSidecarDefinition(cronName string, desc *cron.CronDescription) *ecs.ContainerDefinition {

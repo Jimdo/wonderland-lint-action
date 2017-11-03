@@ -18,10 +18,11 @@ var (
 )
 
 type Cron struct {
-	Name         string
-	ResourceName string
-	Description  *cron.CronDescription
-	DeployStatus string
+	Name                            string
+	RuleARN                         string
+	TaskDefinitionFamily            string
+	LatestTaskDefinitionRevisionARN string
+	Description                     *cron.CronDescription
 }
 
 type DynamoDBCronStore struct {
@@ -40,24 +41,16 @@ func NewDynamoDBCronStore(dynamoDBClient dynamodbiface.DynamoDBAPI, tableName st
 	}, nil
 }
 
-func (d *DynamoDBCronStore) Save(name, res string, desc *cron.CronDescription, status string) error {
+func (d *DynamoDBCronStore) Save(name, ruleARN, latestTaskDefARN, taskDefFamily string, desc *cron.CronDescription) error {
 	cron := &Cron{
-		Name:         name,
-		ResourceName: res,
-		Description:  desc,
-		DeployStatus: status,
+		Name:    name,
+		RuleARN: ruleARN,
+		LatestTaskDefinitionRevisionARN: latestTaskDefARN,
+		TaskDefinitionFamily:            taskDefFamily,
+		Description:                     desc,
 	}
 
 	return d.set(cron)
-}
-
-func (d *DynamoDBCronStore) GetResourceName(name string) (string, error) {
-	cron, err := d.GetByName(name)
-	if err != nil {
-		return "", err
-	}
-
-	return cron.ResourceName, nil
 }
 
 func (d *DynamoDBCronStore) Delete(name string) error {
@@ -74,17 +67,6 @@ func (d *DynamoDBCronStore) Delete(name string) error {
 	}
 
 	return nil
-}
-
-func (d *DynamoDBCronStore) SetDeployStatus(name, msg string) error {
-	cron, err := d.GetByName(name)
-	if err != nil {
-		return fmt.Errorf("Could not fetch cron: %s", err)
-	}
-
-	cron.DeployStatus = msg
-
-	return d.set(cron)
 }
 
 func (d *DynamoDBCronStore) List() ([]string, error) {
