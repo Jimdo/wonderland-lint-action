@@ -231,7 +231,7 @@ func main() {
 	}
 
 	ecstdm := aws.NewECSTaskDefinitionMapper(vaultSecretProvider, vaultAppRoleProvider)
-	ecstds := aws.NewECSTaskDefinitionStore(ecsClient, ecstdm)
+	ecstds := aws.NewECSTaskDefinitionStore(ecsClient, ecstdm, config.ECSClusterARN, fmt.Sprintf("%s/%s", programIdentifier, programVersion))
 	cloudwatchcm := aws.NewCloudwatchRuleCronManager(cwClient, config.ECSClusterARN, config.CronRoleARN)
 	dynamoDBCronStore, err := store.NewDynamoDBCronStore(dynamoDBClient, config.CronsTableName)
 	if err != nil {

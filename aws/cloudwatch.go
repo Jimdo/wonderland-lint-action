@@ -12,10 +12,11 @@ import (
 )
 
 type RuleCronManager interface {
-	RunTaskDefinitionWithSchedule(string, string, string) (string, error)
-	DeleteRule(string) error
 	ActivateRule(string) error
+	CreateRule(name, snsTopicARN, schedule string) (string, error)
 	DeactivateRule(string) error
+	DeleteRule(string) error
+	RunTaskDefinitionWithSchedule(string, string, string) (string, error)
 }
 
 type CloudwatchRuleCronManager struct {
@@ -30,6 +31,34 @@ func NewCloudwatchRuleCronManager(ce cloudwatcheventsiface.CloudWatchEventsAPI, 
 		cronRoleARN:      roleARN,
 		ecsClusterARN:    clusterARN,
 	}
+}
+
+func (cm *CloudwatchRuleCronManager) CreateRule(name, snsTopicARN, schedule string) (string, error) {
+	ruleName := cron.GetResourceByName(name)
+
+	out, err := cm.cloudwatchEvents.PutRule(&cloudwatchevents.PutRuleInput{
+		Name:               awssdk.String(ruleName),
+		State:              awssdk.String(cloudwatchevents.RuleStateEnabled),
+		ScheduleExpression: awssdk.String(schedule),
+	})
+	if err != nil {
+		return "", fmt.Errorf("could not put cloudwatch rule %q with error: %s", ruleName, err)
+	}
+
+	_, err = cm.cloudwatchEvents.PutTargets(&cloudwatchevents.PutTargetsInput{
+		Rule: awssdk.String(ruleName),
+		Targets: []*cloudwatchevents.Target{
+			{
+				Arn: awssdk.String(snsTopicARN),
+				Id:  awssdk.String(ruleName),
+			},
+		},
+	})
+	if err != nil {
+		return "", fmt.Errorf("could not put target for cloudwatch rule %q with error: %s", ruleName, err)
+	}
+
+	return awssdk.StringValue(out.RuleArn), nil
 }
 
 func (cm *CloudwatchRuleCronManager) RunTaskDefinitionWithSchedule(name, taskDefinitionARN, schedule string) (string, error) {

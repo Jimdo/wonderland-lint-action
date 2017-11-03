@@ -131,6 +131,37 @@ func (d *DynamoDBCronStore) GetByName(name string) (*Cron, error) {
 	return cron, nil
 }
 
+func (d *DynamoDBCronStore) GetByRuleARN(ruleARN string) (*Cron, error) {
+	cron := &Cron{}
+
+	res, err := d.Client.Query(&dynamodb.QueryInput{
+		KeyConditionExpression: aws.String("RuleARN = :rule_arn"),
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":rule_arn": {
+				S: aws.String(ruleARN),
+			},
+		},
+		TableName: aws.String(d.TableName),
+		IndexName: aws.String("RuleARNIndex"),
+		Limit:     aws.Int64(1),
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("Could not fetch cron from DynamoDB: %s", err)
+	}
+	if aws.Int64Value(res.Count) <= 0 {
+		return nil, ErrCronNotFound
+	}
+	if res.Items[0] == nil {
+		return nil, ErrCronNotFound
+	}
+
+	if err := dynamodbattribute.UnmarshalMap(res.Items[0], cron); err != nil {
+		return nil, fmt.Errorf("Could not unmarshal cron: %s", err)
+	}
+	return cron, nil
+}
+
 func (d *DynamoDBCronStore) set(cron *Cron) error {
 	data, err := dynamodbattribute.MarshalMap(cron)
 	if err != nil {

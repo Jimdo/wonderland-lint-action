@@ -2,6 +2,8 @@ package v2
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -35,6 +37,8 @@ type API struct {
 func (a *API) Register() {
 	a.config.Router.HandleFunc("/status", a.StatusHandler).Methods("GET")
 
+	a.config.Router.HandleFunc("/aws/sns/execution-trigger", a.ExecutionTriggerHandler).Methods("POST")
+
 	a.config.Router.HandleFunc("/crons/ping", api.HandlerWithDefaultTimeout(a.PingHandler)).Methods("GET")
 	a.config.Router.HandleFunc("/crons", api.HandlerWithDefaultTimeout(a.ListCrons)).Methods("GET")
 	a.config.Router.HandleFunc("/crons/{name}", api.HandlerWithDefaultTimeout(a.DeleteHandler)).Methods("DELETE")
@@ -44,6 +48,64 @@ func (a *API) Register() {
 }
 
 func (a *API) StatusHandler(w http.ResponseWriter, req *http.Request) {}
+
+func (a *API) ExecutionTriggerHandler(w http.ResponseWriter, req *http.Request) {
+	msgType := req.Header.Get("x-amz-sns-message-type")
+	switch msgType {
+	case "SubscriptionConfirmation":
+		var opt struct {
+			SubscribeURL string
+		}
+		if err := json.NewDecoder(req.Body).Decode(&opt); err != nil {
+			sendServerError(w, err)
+			return
+		}
+		resp, err := http.Get(opt.SubscribeURL)
+		if err != nil {
+			sendServerError(w, err)
+			return
+		}
+		if resp.StatusCode != http.StatusOK {
+			sendServerError(w, errors.New(http.StatusText(resp.StatusCode)))
+			return
+		}
+	case "Notification":
+		var notification struct {
+			Type    string
+			Message string
+		}
+		if err := json.NewDecoder(req.Body).Decode(&notification); err != nil {
+			sendServerError(w, err)
+			return
+		}
+
+		var cwEvent struct {
+			DetailType string   `json:"detail-type"`
+			Resources  []string `json:"resources"`
+		}
+		if err := json.Unmarshal([]byte(notification.Message), &cwEvent); err != nil {
+			sendServerError(w, err)
+			return
+		}
+
+		if cwEvent.DetailType != "Scheduled Event" {
+			sendServerError(w, fmt.Errorf("Unhandled event type %q", cwEvent.DetailType))
+			return
+		}
+		if len(cwEvent.Resources) != 1 {
+			sendServerError(w, fmt.Errorf("Event contains not exactly one resource, but %d", len(cwEvent.Resources)))
+			return
+		}
+
+		ruleARN := cwEvent.Resources[0]
+		if err := a.config.Service.TriggerExecution(ruleARN); err != nil {
+			sendServerError(w, err)
+			return
+		}
+	default:
+		sendServerError(w, fmt.Errorf("Unsupported message type %q", msgType))
+	}
+}
 
 func (a *API) PingHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) {
 	sendJSON(w, "pong", http.StatusOK)

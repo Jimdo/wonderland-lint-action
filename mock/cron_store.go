@@ -59,6 +59,19 @@ func (mr *MockCronStoreMockRecorder) GetByName(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByName", reflect.TypeOf((*MockCronStore)(nil).GetByName), arg0)
 }
 
+// GetByRuleARN mocks base method
+func (m *MockCronStore) GetByRuleARN(arg0 string) (*store.Cron, error) {
+	ret := m.ctrl.Call(m, "GetByRuleARN", arg0)
+	ret0, _ := ret[0].(*store.Cron)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetByRuleARN indicates an expected call of GetByRuleARN
+func (mr *MockCronStoreMockRecorder) GetByRuleARN(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByRuleARN", reflect.TypeOf((*MockCronStore)(nil).GetByRuleARN), arg0)
+}
+
 // List mocks base method
 func (m *MockCronStore) List() ([]string, error) {
 	ret := m.ctrl.Call(m, "List")

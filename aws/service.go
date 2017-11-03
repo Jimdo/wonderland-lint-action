@@ -17,6 +17,7 @@ type CronStore interface {
 	Delete(string) error
 	List() ([]string, error)
 	GetByName(string) (*store.Cron, error)
+	GetByRuleARN(string) (*store.Cron, error)
 }
 
 type CronExecutionStore interface {
@@ -64,13 +65,14 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 		return err
 	}
 
-	ruleARN, err := s.cm.RunTaskDefinitionWithSchedule(name, latestTaskDefARN, cronDescription.Schedule)
+	snsTopic := "arn:aws:sns:eu-west-1:062052581233:side-test"
+	ruleARN, err := s.cm.CreateRule(name, snsTopic, cronDescription.Schedule)
 	if err != nil {
 		log.WithError(err).WithFields(log.Fields{
-			"cron":     name,
-			"task_arn": latestTaskDefARN,
-			"schedule": cronDescription.Schedule,
-		}).Error("Could not run CloudWatch rule for TaskDefinition")
+			"cron":      name,
+			"sns_topic": snsTopic,
+			"schedule":  cronDescription.Schedule,
+		}).Error("Could not trigger CloudWatch rule for SNS topic")
 		return err
 	}
 
@@ -171,4 +173,28 @@ func (s *Service) Deactivate(cronName string) error {
 	}
 
 	return s.cm.DeactivateRule(cron.RuleARN)
+}
+
+func (s *Service) TriggerExecution(cronRuleARN string) error {
+	cron, err := s.cronStore.GetByRuleARN(cronRuleARN)
+	if err != nil {
+		return err
+	}
+
+	executions, err := s.executionStore.GetLastNExecutions(cron.Name, 1)
+	if err != nil {
+		return err
+	}
+
+	startExecution := len(executions) == 0 || !executions[0].IsRunning()
+	log.WithFields(log.Fields{
+		"cron_name": cron.Name,
+		"rule_arn":  cron.RuleARN,
+	}).Infof("Trigger cron execution, started: %t", startExecution)
+
+	if startExecution {
+		return s.tds.RunTaskDefinition(cron.LatestTaskDefinitionRevisionARN)
+	}
+
+	return nil
 }

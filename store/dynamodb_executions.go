@@ -33,6 +33,13 @@ type Execution struct {
 	TimeoutExitCode *int64
 }
 
+func (e *Execution) IsRunning() bool {
+	if e.Status == ecs.DesiredStatusStopped {
+		return false
+	}
+	return true
+}
+
 type DynamoDBExecutionStore struct {
 	Client    dynamodbiface.DynamoDBAPI
 	TableName string

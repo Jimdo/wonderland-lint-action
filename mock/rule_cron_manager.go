@@ -44,6 +44,19 @@ func (mr *MockRuleCronManagerMockRecorder) ActivateRule(arg0 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ActivateRule", reflect.TypeOf((*MockRuleCronManager)(nil).ActivateRule), arg0)
 }
 
+// CreateRule mocks base method
+func (m *MockRuleCronManager) CreateRule(arg0, arg1, arg2 string) (string, error) {
+	ret := m.ctrl.Call(m, "CreateRule", arg0, arg1, arg2)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateRule indicates an expected call of CreateRule
+func (mr *MockRuleCronManagerMockRecorder) CreateRule(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateRule", reflect.TypeOf((*MockRuleCronManager)(nil).CreateRule), arg0, arg1, arg2)
+}
+
 // DeactivateRule mocks base method
 func (m *MockRuleCronManager) DeactivateRule(arg0 string) error {
 	ret := m.ctrl.Call(m, "DeactivateRule", arg0)
