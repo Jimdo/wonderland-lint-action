@@ -79,7 +79,7 @@ var (
 		ECSClusterARN                   string        `flag:"cluster-arn" env:"ECS_CLUSTER_ARN" description:"The ARN of the ECS cluster crons should run on"`
 		RefreshAWSCredentialsInterval   time.Duration `flag:"aws-credentials-interval" env:"AWS_CREDENTIALS_INTERVAL" default:"10m" description:"Interval in which to fetch new AWS credentials from Vault"`
 		ECSEventsQueueURL               string        `flag:"ecs-events-queue-url" env:"ECS_EVENTS_QUEUE_URL" description:"The URL of the SQS queue receiving ECS events"`
-		ECSEventQueuePollInterval       time.Duration `flag:"ecs-events-queue-poll-interval" default:"1s" description:"The interval in which to poll new ECS events"`
+		ECSEventQueuePollInterval       time.Duration `flag:"ecs-events-queue-poll-interval" default:"100ms" description:"The interval in which to poll new ECS events"`
 		CronsTableName                  string        `flag:"crons-table-name" env:"CRONS_TABLE_NAME" description:"Name of the DynamoDB Table used for storing crons"`
 		ExecutionsTableName             string        `flag:"executions-table-name" env:"EXECUTIONS_TABLE_NAME" description:"Name of the DynamoDB Table used for storing cron executions"`
 		WorkerLeaderLockRefreshInterval time.Duration `flag:"worker-leader-lock-refresh-interval" default:"1m" description:"The interval in which to refresh the workers leader lock"`

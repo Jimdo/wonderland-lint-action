@@ -135,19 +135,18 @@ func (w *Worker) runInLeaderMode(stop chan struct{}, errChan chan error) {
 
 func (w *Worker) pollQueue() error {
 	out, err := w.sqs.ReceiveMessage(&sqs.ReceiveMessageInput{
-		QueueUrl: aws.String(w.queueURL),
+		QueueUrl:            aws.String(w.queueURL),
+		MaxNumberOfMessages: aws.Int64(10),
+		WaitTimeSeconds:     aws.Int64(5),
 	})
 	if err != nil {
 		return fmt.Errorf("could not receive sqs message: %s", err)
 	}
+
 	for _, m := range out.Messages {
 		if err := w.handleMessage(m); err != nil {
 			return fmt.Errorf("could not handle sqs message: %s", err)
 		}
-	}
-
-	if len(out.Messages) != 0 {
-		return w.pollQueue()
 	}
 	return nil
 }
