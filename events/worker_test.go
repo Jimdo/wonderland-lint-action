@@ -62,7 +62,7 @@ func TestWorker_runInLeaderMode(t *testing.T) {
 	done := make(chan struct{})
 	errChan := make(chan error)
 	go func() {
-		worker.runInLeaderMode(done, errChan)
+		go worker.runInLeaderMode(done, errChan)
 		for {
 			select {
 			case err := <-errChan:
