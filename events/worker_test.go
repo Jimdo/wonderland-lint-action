@@ -79,8 +79,6 @@ func TestWorker_runInLeaderMode(t *testing.T) {
 
 	taskStore.EXPECT().Update("test", task)
 
-	sqsClient.EXPECT().ReceiveMessage(gomock.Any()).Return(&sqs.ReceiveMessageOutput{}, nil)
-
 	sqsClient.EXPECT().DeleteMessage(&sqs.DeleteMessageInput{
 		QueueUrl:      aws.String(queueURL),
 		ReceiptHandle: message.ReceiptHandle,
@@ -174,7 +172,6 @@ func TestWorker_handleMessage_noUserContainer(t *testing.T) {
 		pollInterval: pollInterval,
 		queueURL:     queueURL,
 		sqs:          sqsClient,
-		//	eventDispatcher: ed,
 	}
 
 	sqsClient.EXPECT().DeleteMessage(&sqs.DeleteMessageInput{
@@ -228,7 +225,6 @@ func TestWorker_pollQueue(t *testing.T) {
 		pollInterval: pollInterval,
 		queueURL:     queueURL,
 		sqs:          sqsClient,
-		//	eventDispatcher: ed,
 	}
 
 	sqsClient.EXPECT().ReceiveMessage(gomock.Any()).Return(&sqs.ReceiveMessageOutput{
@@ -239,8 +235,6 @@ func TestWorker_pollQueue(t *testing.T) {
 		QueueUrl:      aws.String(queueURL),
 		ReceiptHandle: message.ReceiptHandle,
 	}).Times(1)
-
-	sqsClient.EXPECT().ReceiveMessage(gomock.Any()).Return(&sqs.ReceiveMessageOutput{}, nil)
 
 	if err := worker.pollQueue(); err != nil {
 		t.Fatalf("Expect no error, got %q", err)
@@ -284,7 +278,6 @@ func TestWorker_pollQueue_NoUserContainer(t *testing.T) {
 		pollInterval: pollInterval,
 		queueURL:     queueURL,
 		sqs:          sqsClient,
-		//	eventDispatcher: ed,
 	}
 
 	sqsClient.EXPECT().ReceiveMessage(gomock.Any()).Return(&sqs.ReceiveMessageOutput{
@@ -295,8 +288,6 @@ func TestWorker_pollQueue_NoUserContainer(t *testing.T) {
 		QueueUrl:      aws.String(queueURL),
 		ReceiptHandle: message.ReceiptHandle,
 	}).Times(1)
-
-	sqsClient.EXPECT().ReceiveMessage(gomock.Any()).Return(&sqs.ReceiveMessageOutput{}, nil)
 
 	err := worker.pollQueue()
 	if err != nil {
