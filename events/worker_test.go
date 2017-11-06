@@ -14,10 +14,11 @@ import (
 )
 
 var (
-	clusterName       = "test-cluster"
-	containerArn      = "arn:..."
-	taskArn           = "arn:aws:ecs:eu-west-1:1234:task/c5cba4eb-5dad-405e-96db-71ef8eefe6a8"
-	taskDefinitionArn = "arn:aws:ecs:eu-west-1:062052581233:task-definition/wonderland-docs:241"
+	clusterName          = "test-cluster"
+	clusterArn           = "arn:aws:ecs:eu-west-1:1234:cluster/test-cluster"
+	containerInstanceArn = "arn:aws:ecs:eu-west-1:1234:container-instance/654684"
+	taskArn              = "arn:aws:ecs:eu-west-1:1234:task/c5cba4eb-5dad-405e-96db-71ef8eefe6a8"
+	taskDefinitionArn    = "arn:aws:ecs:eu-west-1:062052581233:task-definition/wonderland-docs:241"
 )
 
 func TestWorker_runInLeaderMode(t *testing.T) {
@@ -62,7 +63,7 @@ func TestWorker_runInLeaderMode(t *testing.T) {
 	done := make(chan struct{})
 	errChan := make(chan error)
 	go func() {
-		worker.runInLeaderMode(done, errChan)
+		go worker.runInLeaderMode(done, errChan)
 		for {
 			select {
 			case err := <-errChan:
@@ -87,4 +88,218 @@ func TestWorker_runInLeaderMode(t *testing.T) {
 
 	// Wait for some time until between the first and second poll.
 	time.Sleep(pollInterval + pollInterval/2)
+}
+
+func TestWorker_handleMessage(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	var (
+		pollInterval = 100 * time.Millisecond
+		queueURL     = "http://example.com"
+	)
+
+	task := &ecs.Task{
+		Containers: []*ecs.Container{
+			{
+				Name: aws.String("my-beautiful-cron-container"),
+			},
+			{
+				Name: aws.String("timeout"),
+			},
+		},
+	}
+	taskJSON, _ := json.Marshal(task)
+
+	messageBody, _ := json.Marshal(&Event{
+		DetailType: TaskStateEventType,
+		Detail:     taskJSON,
+	})
+
+	message := &sqs.Message{
+		ReceiptHandle: aws.String("receipt-handle"),
+		Body:          aws.String(string(messageBody)),
+	}
+
+	sqsClient := mock.NewMockSQSAPI(ctrl)
+
+	worker := &Worker{
+		pollInterval: pollInterval,
+		queueURL:     queueURL,
+		sqs:          sqsClient,
+		//	eventDispatcher: ed,
+	}
+	sqsClient.EXPECT().DeleteMessage(&sqs.DeleteMessageInput{
+		QueueUrl:      aws.String(queueURL),
+		ReceiptHandle: message.ReceiptHandle,
+	}).Times(1)
+
+	if err := worker.handleMessage(message); err != nil {
+		t.Fatalf("Failed with %q", err)
+	}
+}
+
+func TestWorker_handleMessage_noUserContainer(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	var (
+		pollInterval = 100 * time.Millisecond
+		queueURL     = "http://example.com"
+	)
+
+	task := &ecs.Task{
+		Containers: []*ecs.Container{{
+			Name: aws.String("timeout"),
+		}},
+		TaskArn:              aws.String(taskArn),
+		ClusterArn:           aws.String(clusterArn),
+		ContainerInstanceArn: aws.String(containerInstanceArn),
+	}
+	taskJSON, _ := json.Marshal(task)
+
+	messageBody, _ := json.Marshal(&Event{
+		DetailType: TaskStateEventType,
+		Detail:     taskJSON,
+	})
+
+	message := &sqs.Message{
+		ReceiptHandle: aws.String("receipt-handle"),
+		Body:          aws.String(string(messageBody)),
+	}
+
+	sqsClient := mock.NewMockSQSAPI(ctrl)
+
+	worker := &Worker{
+		pollInterval: pollInterval,
+		queueURL:     queueURL,
+		sqs:          sqsClient,
+		//	eventDispatcher: ed,
+	}
+
+	sqsClient.EXPECT().DeleteMessage(&sqs.DeleteMessageInput{
+		QueueUrl:      aws.String(queueURL),
+		ReceiptHandle: message.ReceiptHandle,
+	}).Times(1)
+
+	err := worker.handleMessage(message)
+	if err != nil {
+		t.Fatalf("Expected no error, got %q", err)
+	}
+}
+
+func TestWorker_pollQueue(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	var (
+		pollInterval = 100 * time.Millisecond
+		queueURL     = "http://example.com"
+	)
+
+	task := &ecs.Task{
+		Containers: []*ecs.Container{
+			{
+				Name: aws.String("my-beautiful-cron-container"),
+			},
+			{
+				Name: aws.String("timeout"),
+			},
+		},
+		TaskArn:              aws.String(taskArn),
+		ClusterArn:           aws.String(clusterArn),
+		ContainerInstanceArn: aws.String(containerInstanceArn),
+	}
+	taskJSON, _ := json.Marshal(task)
+
+	messageBody, _ := json.Marshal(&Event{
+		DetailType: TaskStateEventType,
+		Detail:     taskJSON,
+	})
+
+	message := &sqs.Message{
+		ReceiptHandle: aws.String("receipt-handle"),
+		Body:          aws.String(string(messageBody)),
+	}
+
+	sqsClient := mock.NewMockSQSAPI(ctrl)
+
+	worker := &Worker{
+		pollInterval: pollInterval,
+		queueURL:     queueURL,
+		sqs:          sqsClient,
+		//	eventDispatcher: ed,
+	}
+
+	sqsClient.EXPECT().ReceiveMessage(gomock.Any()).Return(&sqs.ReceiveMessageOutput{
+		Messages: []*sqs.Message{message},
+	}, nil)
+
+	sqsClient.EXPECT().DeleteMessage(&sqs.DeleteMessageInput{
+		QueueUrl:      aws.String(queueURL),
+		ReceiptHandle: message.ReceiptHandle,
+	}).Times(1)
+
+	sqsClient.EXPECT().ReceiveMessage(gomock.Any()).Return(&sqs.ReceiveMessageOutput{}, nil)
+
+	if err := worker.pollQueue(); err != nil {
+		t.Fatalf("Expect no error, got %q", err)
+	}
+}
+
+func TestWorker_pollQueue_NoUserContainer(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	var (
+		pollInterval = 100 * time.Millisecond
+		queueURL     = "http://example.com"
+	)
+
+	task := &ecs.Task{
+		Containers: []*ecs.Container{
+			{
+				Name: aws.String("timeout"),
+			},
+		},
+		TaskArn:              aws.String(taskArn),
+		ClusterArn:           aws.String(clusterArn),
+		ContainerInstanceArn: aws.String(containerInstanceArn),
+	}
+	taskJSON, _ := json.Marshal(task)
+
+	messageBody, _ := json.Marshal(&Event{
+		DetailType: TaskStateEventType,
+		Detail:     taskJSON,
+	})
+
+	message := &sqs.Message{
+		ReceiptHandle: aws.String("receipt-handle"),
+		Body:          aws.String(string(messageBody)),
+	}
+
+	sqsClient := mock.NewMockSQSAPI(ctrl)
+
+	worker := &Worker{
+		pollInterval: pollInterval,
+		queueURL:     queueURL,
+		sqs:          sqsClient,
+		//	eventDispatcher: ed,
+	}
+
+	sqsClient.EXPECT().ReceiveMessage(gomock.Any()).Return(&sqs.ReceiveMessageOutput{
+		Messages: []*sqs.Message{message},
+	}, nil)
+
+	sqsClient.EXPECT().DeleteMessage(&sqs.DeleteMessageInput{
+		QueueUrl:      aws.String(queueURL),
+		ReceiptHandle: message.ReceiptHandle,
+	}).Times(1)
+
+	sqsClient.EXPECT().ReceiveMessage(gomock.Any()).Return(&sqs.ReceiveMessageOutput{}, nil)
+
+	err := worker.pollQueue()
+	if err != nil {
+		t.Fatalf("Expected no error, got %q", err)
+	}
 }
