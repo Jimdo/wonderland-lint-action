@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/golang/mock/gomock"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/Jimdo/wonderland-crons/mock"
 )
@@ -21,6 +22,10 @@ var (
 	taskArn              = "arn:aws:ecs:eu-west-1:1234:task/c5cba4eb-5dad-405e-96db-71ef8eefe6a8"
 	taskDefinitionArn    = "arn:aws:ecs:eu-west-1:062052581233:task-definition/wonderland-docs:241"
 )
+
+func init() {
+	log.SetLevel(log.FatalLevel)
+}
 
 func TestWorker_runInLeaderMode(t *testing.T) {
 	ctrl := gomock.NewController(t)
