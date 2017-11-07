@@ -59,19 +59,6 @@ func (mr *MockCronStoreMockRecorder) GetByName(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByName", reflect.TypeOf((*MockCronStore)(nil).GetByName), arg0)
 }
 
-// GetResourceName mocks base method
-func (m *MockCronStore) GetResourceName(arg0 string) (string, error) {
-	ret := m.ctrl.Call(m, "GetResourceName", arg0)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetResourceName indicates an expected call of GetResourceName
-func (mr *MockCronStoreMockRecorder) GetResourceName(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetResourceName", reflect.TypeOf((*MockCronStore)(nil).GetResourceName), arg0)
-}
-
 // List mocks base method
 func (m *MockCronStore) List() ([]string, error) {
 	ret := m.ctrl.Call(m, "List")
@@ -86,25 +73,13 @@ func (mr *MockCronStoreMockRecorder) List() *gomock.Call {
 }
 
 // Save mocks base method
-func (m *MockCronStore) Save(arg0, arg1 string, arg2 *cron.CronDescription, arg3 string) error {
-	ret := m.ctrl.Call(m, "Save", arg0, arg1, arg2, arg3)
+func (m *MockCronStore) Save(arg0, arg1, arg2, arg3 string, arg4 *cron.CronDescription) error {
+	ret := m.ctrl.Call(m, "Save", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Save indicates an expected call of Save
-func (mr *MockCronStoreMockRecorder) Save(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockCronStore)(nil).Save), arg0, arg1, arg2, arg3)
-}
-
-// SetDeployStatus mocks base method
-func (m *MockCronStore) SetDeployStatus(arg0, arg1 string) error {
-	ret := m.ctrl.Call(m, "SetDeployStatus", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetDeployStatus indicates an expected call of SetDeployStatus
-func (mr *MockCronStoreMockRecorder) SetDeployStatus(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDeployStatus", reflect.TypeOf((*MockCronStore)(nil).SetDeployStatus), arg0, arg1)
+func (mr *MockCronStoreMockRecorder) Save(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockCronStore)(nil).Save), arg0, arg1, arg2, arg3, arg4)
 }

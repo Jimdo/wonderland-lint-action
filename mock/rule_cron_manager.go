@@ -69,10 +69,11 @@ func (mr *MockRuleCronManagerMockRecorder) DeleteRule(arg0 interface{}) *gomock.
 }
 
 // RunTaskDefinitionWithSchedule mocks base method
-func (m *MockRuleCronManager) RunTaskDefinitionWithSchedule(arg0, arg1, arg2 string) error {
+func (m *MockRuleCronManager) RunTaskDefinitionWithSchedule(arg0, arg1, arg2 string) (string, error) {
 	ret := m.ctrl.Call(m, "RunTaskDefinitionWithSchedule", arg0, arg1, arg2)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // RunTaskDefinitionWithSchedule indicates an expected call of RunTaskDefinitionWithSchedule

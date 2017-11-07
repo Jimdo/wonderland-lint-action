@@ -34,16 +34,17 @@ func (m *MockTaskDefinitionStore) EXPECT() *MockTaskDefinitionStoreMockRecorder 
 }
 
 // AddRevisionFromCronDescription mocks base method
-func (m *MockTaskDefinitionStore) AddRevisionFromCronDescription(arg0, arg1 string, arg2 *cron.CronDescription) (string, error) {
-	ret := m.ctrl.Call(m, "AddRevisionFromCronDescription", arg0, arg1, arg2)
+func (m *MockTaskDefinitionStore) AddRevisionFromCronDescription(arg0 string, arg1 *cron.CronDescription) (string, string, error) {
+	ret := m.ctrl.Call(m, "AddRevisionFromCronDescription", arg0, arg1)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // AddRevisionFromCronDescription indicates an expected call of AddRevisionFromCronDescription
-func (mr *MockTaskDefinitionStoreMockRecorder) AddRevisionFromCronDescription(arg0, arg1, arg2 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddRevisionFromCronDescription", reflect.TypeOf((*MockTaskDefinitionStore)(nil).AddRevisionFromCronDescription), arg0, arg1, arg2)
+func (mr *MockTaskDefinitionStoreMockRecorder) AddRevisionFromCronDescription(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddRevisionFromCronDescription", reflect.TypeOf((*MockTaskDefinitionStore)(nil).AddRevisionFromCronDescription), arg0, arg1)
 }
 
 // DeleteByFamily mocks base method
