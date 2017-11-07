@@ -157,10 +157,12 @@ func (s *Service) Status(cronName string, executionCount int64) (*CronStatus, er
 	}
 	// Error is only logged so we can at least continue and respond with something even if we could not get any executions.
 	executions, err := s.executionStore.GetLastNExecutions(cronName, executionCount)
-	log.WithFields(log.Fields{
-		"name":  cronName,
-		"count": executionCount,
-	}).WithError(err).Error("Getting last n executions failed")
+	if err != nil {
+		log.WithFields(log.Fields{
+			"name":  cronName,
+			"count": executionCount,
+		}).WithError(err).Error("Getting last n executions failed")
+	}
 	status := &CronStatus{
 		Cron:       cron,
 		Status:     "not implemented yet",
