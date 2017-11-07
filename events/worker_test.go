@@ -2,6 +2,7 @@ package events
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 	"time"
 
@@ -174,14 +175,13 @@ func TestWorker_handleMessage_noUserContainer(t *testing.T) {
 		sqs:          sqsClient,
 	}
 
-	sqsClient.EXPECT().DeleteMessage(&sqs.DeleteMessageInput{
-		QueueUrl:      aws.String(queueURL),
-		ReceiptHandle: message.ReceiptHandle,
-	}).Times(1)
-
 	err := worker.handleMessage(message)
-	if err != nil {
-		t.Fatalf("Expected no error, got %q", err)
+	if err == nil {
+		t.Fatal("Expected error, got None")
+	}
+	expectedError := "could not determine user container"
+	if fmt.Sprintf("%s", err) != expectedError {
+		t.Fatalf("Expected error %q, got %q", expectedError, err)
 	}
 }
 
@@ -283,11 +283,6 @@ func TestWorker_pollQueue_NoUserContainer(t *testing.T) {
 	sqsClient.EXPECT().ReceiveMessage(gomock.Any()).Return(&sqs.ReceiveMessageOutput{
 		Messages: []*sqs.Message{message},
 	}, nil)
-
-	sqsClient.EXPECT().DeleteMessage(&sqs.DeleteMessageInput{
-		QueueUrl:      aws.String(queueURL),
-		ReceiptHandle: message.ReceiptHandle,
-	}).Times(1)
 
 	err := worker.pollQueue()
 	if err != nil {

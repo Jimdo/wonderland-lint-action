@@ -145,7 +145,7 @@ func (w *Worker) pollQueue() error {
 
 	for _, m := range out.Messages {
 		if err := w.handleMessage(m); err != nil {
-			return fmt.Errorf("could not handle sqs message: %s", err)
+			log.WithField("sqs_message_id", m.MessageId).WithError(err).Error("Could not handle SQS message")
 		}
 	}
 	return nil
@@ -169,13 +169,8 @@ func (w *Worker) handleMessage(m *sqs.Message) error {
 
 		userContainer := cron.GetUserContainerFromTask(task)
 		if userContainer == nil {
-			log.WithFields(log.Fields{
-				"task_arn":                    task.TaskArn,
-				"task_cluster_arn":            task.ClusterArn,
-				"task_container_instance_arn": task.ContainerInstanceArn,
-			}).Error("Could not determine user container")
-
-			break
+			log.WithField("ecs_task", task).Error("Could not determine user container")
+			return fmt.Errorf("could not determine user container")
 		}
 		ok, err := cron.IsCron(userContainer)
 		if err != nil {
