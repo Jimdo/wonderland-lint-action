@@ -145,7 +145,7 @@ func (w *Worker) pollQueue() error {
 
 	for _, m := range out.Messages {
 		if err := w.handleMessage(m); err != nil {
-			return fmt.Errorf("could not handle sqs message: %s", err)
+			log.WithField("sqs_message_id", m.MessageId).WithError(err).Error("Could not handle SQS message")
 		}
 	}
 	return nil
@@ -155,6 +155,7 @@ func (w *Worker) handleMessage(m *sqs.Message) error {
 	body := aws.StringValue(m.Body)
 	event := &Event{}
 	if err := json.Unmarshal([]byte(body), &event); err != nil {
+		log.WithError(err).Error("Could not decode SQS message")
 		return fmt.Errorf("could not decode sqs message: %s", err)
 	}
 
@@ -162,59 +163,59 @@ func (w *Worker) handleMessage(m *sqs.Message) error {
 	case TaskStateEventType:
 		task := &ecs.Task{}
 		if err := json.Unmarshal(event.Detail, task); err != nil {
+			log.WithField("cw_event", event).WithError(err).Error("Could not determine user container")
 			return fmt.Errorf("could not decode task state event: %s", err)
 		}
 
 		userContainer := cron.GetUserContainerFromTask(task)
 		if userContainer == nil {
-			log.WithFields(log.Fields{
-				"task_arn":                    task.TaskArn,
-				"task_cluster_arn":            task.ClusterArn,
-				"task_container_instance_arn": task.ContainerInstanceArn,
-			}).Error("Could not determine user container")
-
-			break
+			log.WithField("ecs_task", task).Error("Could not determine user container")
+			return fmt.Errorf("could not determine user container")
 		}
 		ok, err := cron.IsCron(userContainer)
 		if err != nil {
+			log.WithField("ecs_task", task).WithError(err).Error("Could not validate if task is a cron")
 			return fmt.Errorf("could not validate if task is a cron: %s", err)
 		}
 		if ok {
 			cronName := cron.GetNameByResource(aws.StringValue(userContainer.Name))
 			log.WithFields(log.Fields{
-				"task_created_at":     task.CreatedAt,
-				"task_desired_status": task.DesiredStatus,
-				"task_last_status":    task.LastStatus,
-				"task_started_at":     task.StartedAt,
-				"task_started_by":     task.StartedBy,
-				"task_stopped_at":     task.StoppedAt,
-				"task_stopped_reason": task.StoppedReason,
-				"task_version":        task.Version,
-			}).Debugf("Received ECS task event for cron %q", cronName)
+				"name":     cronName,
+				"ecs_task": task,
+			}).Debug("Received ECS task event")
 
 			eventContext := EventContext{CronName: cronName, Task: task}
 
 			derivedEvent := w.deriveEventFromECSTask(task)
 			if derivedEvent != "" {
+				log.WithFields(log.Fields{
+					"name":          cronName,
+					"ecs_task":      task,
+					"derived_event": derivedEvent,
+					"event_context": eventContext,
+				}).WithError(err).Error("Could not handle event")
 				if err := w.eventDispatcher.Fire(derivedEvent, eventContext); err != nil {
 					return fmt.Errorf("could not handle event %q: %s", derivedEvent, err)
 				}
 			}
 
 			if err := w.eventDispatcher.Fire(EventCronExecutionStateChanged, eventContext); err != nil {
-				return fmt.Errorf("could not handle event %q: %s", derivedEvent, err)
+				log.WithFields(log.Fields{
+					"name":          cronName,
+					"ecs_task":      task,
+					"derived_event": EventCronExecutionStateChanged,
+					"event_context": eventContext,
+				}).WithError(err).Error("Could not handle event")
+				return fmt.Errorf("could not handle event %q: %s", EventCronExecutionStateChanged, err)
 			}
 		}
 
 	default:
-		log.WithFields(log.Fields{
-			"event_id":    event.ID,
-			"detail_type": event.DetailType,
-			"source":      event.Source,
-		}).Warnf("Unknown event type '%s' found", event.DetailType)
+		log.WithField("cw_event", event).Warn("Unknown SQS event type found")
 	}
 
 	if err := w.acknowledgeMessage(m); err != nil {
+		log.WithField("cw_event", event).WithError(err).Error("Could not acknowledge SQS message")
 		return fmt.Errorf("could not acknowledge sqs message: %s", err)
 	}
 

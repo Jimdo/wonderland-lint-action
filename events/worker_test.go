@@ -2,6 +2,7 @@ package events
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 	"time"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/golang/mock/gomock"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/Jimdo/wonderland-crons/mock"
 )
@@ -20,6 +22,10 @@ var (
 	taskArn              = "arn:aws:ecs:eu-west-1:1234:task/c5cba4eb-5dad-405e-96db-71ef8eefe6a8"
 	taskDefinitionArn    = "arn:aws:ecs:eu-west-1:062052581233:task-definition/wonderland-docs:241"
 )
+
+func init() {
+	log.SetLevel(log.FatalLevel)
+}
 
 func TestWorker_runInLeaderMode(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -174,14 +180,13 @@ func TestWorker_handleMessage_noUserContainer(t *testing.T) {
 		sqs:          sqsClient,
 	}
 
-	sqsClient.EXPECT().DeleteMessage(&sqs.DeleteMessageInput{
-		QueueUrl:      aws.String(queueURL),
-		ReceiptHandle: message.ReceiptHandle,
-	}).Times(1)
-
 	err := worker.handleMessage(message)
-	if err != nil {
-		t.Fatalf("Expected no error, got %q", err)
+	if err == nil {
+		t.Fatal("Expected error, got None")
+	}
+	expectedError := "could not determine user container"
+	if fmt.Sprintf("%s", err) != expectedError {
+		t.Fatalf("Expected error %q, got %q", expectedError, err)
 	}
 }
 
@@ -283,11 +288,6 @@ func TestWorker_pollQueue_NoUserContainer(t *testing.T) {
 	sqsClient.EXPECT().ReceiveMessage(gomock.Any()).Return(&sqs.ReceiveMessageOutput{
 		Messages: []*sqs.Message{message},
 	}, nil)
-
-	sqsClient.EXPECT().DeleteMessage(&sqs.DeleteMessageInput{
-		QueueUrl:      aws.String(queueURL),
-		ReceiptHandle: message.ReceiptHandle,
-	}).Times(1)
 
 	err := worker.pollQueue()
 	if err != nil {
