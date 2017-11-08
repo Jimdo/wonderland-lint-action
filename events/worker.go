@@ -170,12 +170,12 @@ func (w *Worker) handleMessage(m *sqs.Message) error {
 		userContainer := cron.GetUserContainerFromTask(task)
 		if userContainer == nil {
 			log.WithField("ecs_task", task).Error("Could not determine user container")
-			return fmt.Errorf("could not determine user container")
+			break
 		}
 		ok, err := cron.IsCron(userContainer)
 		if err != nil {
 			log.WithField("ecs_task", task).WithError(err).Error("Could not validate if task is a cron")
-			return fmt.Errorf("could not validate if task is a cron: %s", err)
+			break
 		}
 		if ok {
 			cronName := cron.GetNameByResource(aws.StringValue(userContainer.Name))
