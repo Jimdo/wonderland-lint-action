@@ -169,19 +169,19 @@ func (w *Worker) handleMessage(m *sqs.Message) error {
 
 		userContainer := cron.GetUserContainerFromTask(task)
 		if userContainer == nil {
-			log.WithField("ecs_task", task).Error("Could not determine user container")
+			log.WithField("cw_event", event).Error("Could not determine user container")
 			break
 		}
 		ok, err := cron.IsCron(userContainer)
 		if err != nil {
-			log.WithField("ecs_task", task).WithError(err).Error("Could not validate if task is a cron")
+			log.WithField("cw_event", event).WithError(err).Error("Could not validate if task is a cron")
 			break
 		}
 		if ok {
 			cronName := cron.GetNameByResource(aws.StringValue(userContainer.Name))
 			log.WithFields(log.Fields{
 				"name":     cronName,
-				"ecs_task": task,
+				"cw_event": event,
 			}).Debug("Received ECS task event")
 
 			eventContext := EventContext{CronName: cronName, Task: task}
@@ -190,7 +190,7 @@ func (w *Worker) handleMessage(m *sqs.Message) error {
 			if derivedEvent != "" {
 				log.WithFields(log.Fields{
 					"name":          cronName,
-					"ecs_task":      task,
+					"cw_event":      event,
 					"derived_event": derivedEvent,
 					"event_context": eventContext,
 				}).WithError(err).Error("Could not handle event")
@@ -202,7 +202,7 @@ func (w *Worker) handleMessage(m *sqs.Message) error {
 			if err := w.eventDispatcher.Fire(EventCronExecutionStateChanged, eventContext); err != nil {
 				log.WithFields(log.Fields{
 					"name":          cronName,
-					"ecs_task":      task,
+					"cw_event":      event,
 					"derived_event": EventCronExecutionStateChanged,
 					"event_context": eventContext,
 				}).WithError(err).Error("Could not handle event")
