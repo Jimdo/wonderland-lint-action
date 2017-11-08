@@ -230,7 +230,7 @@ func (w *Worker) acknowledgeMessage(m *sqs.Message) error {
 	return err
 }
 
-func (w *Worker) deriveEventFromECSTask(t *ecs.Task) TaskEvent {
+func (w *Worker) deriveEventFromECSTask(t *ecs.Task) string {
 	if aws.Int64Value(t.Version) == 1 {
 		return EventCronExecutionStarted
 	} else if aws.StringValue(t.LastStatus) == ecs.DesiredStatusStopped &&

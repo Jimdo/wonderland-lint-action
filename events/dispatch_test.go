@@ -6,9 +6,9 @@ import (
 )
 
 func TestEventDispatcher(t *testing.T) {
-	var primaryEvent TaskEvent = "PrimaryEvent"
-	var secondaryEvent TaskEvent = "SecondaryEvent"
-	var firstListenerExecutions, secondListenerExecutions int
+	primaryEvent := "PrimaryEvent"
+	secondaryEvent := "SecondaryEvent"
+	firstListenerExecutions, secondListenerExecutions := 0, 0
 
 	var firstListener EventListener = func(c EventContext) error {
 		firstListenerExecutions++
@@ -42,8 +42,8 @@ func TestEventDispatcher(t *testing.T) {
 }
 
 func TestEventDispatcher_Error_ExitEarly(t *testing.T) {
-	var someEvent TaskEvent = "SomeEvent"
-	var secondListenerExecutions int
+	someEvent := "SomeEvent"
+	secondListenerExecutions := 0
 
 	var firstListener EventListener = func(c EventContext) error {
 		return errors.New("Some listener error")
