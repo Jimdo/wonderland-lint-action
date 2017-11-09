@@ -46,6 +46,11 @@ keys:
     values:
       type: aws
 
+  # Enable AWS-Dolphin secret backend (Configuration is done manually!!!)
+  - key: sys/mounts/aws-dolphin
+    values:
+      type: aws
+
   # Enable and configure app-role auth
   - key: sys/auth/approle
     values:
@@ -65,7 +70,14 @@ keys:
       policies: officeteam-jenkins
       period: 300
 
-  - key: auth/approle/role/wonderland-ecs-metadata
+  - key: auth/approle/role/wonderland-ecs-metadata-api
+    values:
+      bind_secret_id: false
+      bound_cidr_list: 0.0.0.0/0
+      policies: wonderland-ecs-metadata
+      period: 300
+
+  - key: auth/approle/role/wonderland-ecs-metadata-worker
     values:
       bind_secret_id: false
       bound_cidr_list: 0.0.0.0/0
@@ -77,6 +89,13 @@ keys:
       bind_secret_id: false
       bound_cidr_list: 0.0.0.0/0
       policies: wonderland-ecs-prometheus
+      period: 300
+
+  - key: auth/approle/role/wonderland-ecs-oom-notifications
+    values:
+      bind_secret_id: false
+      bound_cidr_list: 0.0.0.0/0
+      policies: wonderland-ecs-oom-notifications
       period: 300
 
   - key: auth/approle/role/wonderland-elb-prometheus
@@ -101,6 +120,13 @@ keys:
       period: 300
 
   - key: auth/approle/role/wonderland-travis-config
+    values:
+      bind_secret_id: false
+      bound_cidr_list: 0.0.0.0/0
+      policies: wonderland-travis-config
+      period: 300
+
+  - key: auth/approle/role/wonderland-travis-config-dolphin
     values:
       bind_secret_id: false
       bound_cidr_list: 0.0.0.0/0

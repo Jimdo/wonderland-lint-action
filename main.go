@@ -11,7 +11,6 @@ import (
 
 	"github.com/Luzifer/rconfig"
 	awssdk "github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
@@ -105,11 +104,6 @@ func main() {
 	log.SetLevel(level)
 	log.SetFormatter(&log.JSONFormatter{})
 
-	rcm, err := rcm.NewWithLogger(config.VaultAddress, config.VaultRoleID, log.StandardLogger())
-	if err != nil {
-		abort("Could not set up role credential manager: %s", err)
-	}
-
 	if config.CronsTableName == "" {
 		abort("Please pass a crons DynamoDB table name")
 	}
@@ -121,6 +115,9 @@ func main() {
 	if config.WorkerLeaderLockTableName == "" {
 		abort("Please pass a lock DynamoDB table name")
 	}
+
+	stop := make(chan interface{})
+	defer close(stop)
 
 	router := mux.NewRouter()
 
@@ -153,11 +150,31 @@ func main() {
 		abort("Could not create Nomad client: %s", err)
 	}
 
+	ecsClient := ecsClient()
+	cwClient := cloudwatchEventsClient()
+	dynamoDBClient := dynamoDBClient()
+	sqsClient := sqsClient()
+
+	r, err := rcm.New(
+		config.VaultAddress,
+		config.VaultRoleID,
+		rcm.WithAWSClientConfigs(&ecsClient.Config, &cwClient.Config, &dynamoDBClient.Config, &sqsClient.Config),
+		rcm.WithAWSIAMRole(programIdentifier),
+		rcm.WithIgnoreErrors(),
+		rcm.WithLogger(log.StandardLogger()),
+	)
+	if err != nil {
+		log.Fatalf("Error creating RCM library: %s", err)
+	}
+	if err := r.Init(); err != nil {
+		log.Fatalf("Error initializing RCM library: %s", err)
+	}
+
 	vaultSecretProvider := &vault.SecretProvider{
-		VaultClient: rcm.VaultClient,
+		VaultClient: r.VaultClient,
 	}
 	vaultAppRoleProvider := &vault.AppRoleProvider{
-		VaultClient: rcm.VaultClient,
+		VaultClient: r.VaultClient,
 	}
 
 	validator := validation.New(validation.Configuration{
@@ -187,37 +204,9 @@ func main() {
 		},
 	})
 
-	ecsClient := ecsClient()
-	cwClient := cloudwatchEventsClient()
-	dynamoDBClient := dynamoDBClient()
-	sqsClient := sqsClient()
-
-	if err := refreshAWSCredentials(ecsClient.Client, rcm); err != nil {
-		log.Fatalf("Failed to fetch AWS config from Vault: %s", err)
-	}
-	if err := refreshAWSCredentials(cwClient.Client, rcm); err != nil {
-		log.Fatalf("Failed to fetch AWS config from Vault: %s", err)
-	}
-	if err := refreshAWSCredentials(dynamoDBClient.Client, rcm); err != nil {
-		log.Fatalf("Failed to fetch AWS config from Vault :%s", err)
-	}
-	if err := refreshAWSCredentials(sqsClient.Client, rcm); err != nil {
-		log.Fatalf("Failed to fetch AWS config from Vault :%s", err)
-	}
 	go func() {
-		for range time.Tick(config.RefreshAWSCredentialsInterval) {
-			if err := refreshAWSCredentials(ecsClient.Client, rcm); err != nil {
-				log.Fatalf("Failed to fetch AWS config from Vault: %s", err)
-			}
-			if err := refreshAWSCredentials(cwClient.Client, rcm); err != nil {
-				log.Fatalf("Failed to fetch AWS config from Vault: %s", err)
-			}
-			if err := refreshAWSCredentials(dynamoDBClient.Client, rcm); err != nil {
-				log.Fatalf("Failed to fetch AWS config from Vault: %s", err)
-			}
-			if err := refreshAWSCredentials(sqsClient.Client, rcm); err != nil {
-				log.Fatalf("Failed to fetch AWS config from Vault: %s", err)
-			}
+		if err := r.Run(stop); err != nil {
+			log.Fatalf("RCM library returned error even though ignore errors option was set: %s", err)
 		}
 	}()
 
@@ -260,10 +249,9 @@ func main() {
 	w := events.NewWorker(lm, sqsClient, config.ECSEventsQueueURL, eventDispatcher,
 		events.WithPollInterval(config.ECSEventQueuePollInterval),
 		events.WithLockRefreshInterval(config.WorkerLeaderLockRefreshInterval))
-	stopWorker := make(chan struct{})
-	defer close(stopWorker)
+
 	go func() {
-		if err := w.Run(stopWorker); err != nil {
+		if err := w.Run(stop); err != nil {
 			log.Fatalf("Error consuming ECS events: %s", err)
 		}
 	}()
@@ -286,7 +274,7 @@ func main() {
 	go func() {
 		signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 		<-signals
-		stopWorker <- struct{}{}
+		stop <- struct{}{}
 	}()
 
 	graceful.Run(config.Addr, config.ShutdownTimeout, router)
@@ -347,13 +335,4 @@ func sqsClient() *sqs.SQS {
 	c.Handlers.Build.PushFront(request.MakeAddToUserAgentHandler(programIdentifier, programVersion))
 
 	return c
-}
-
-func refreshAWSCredentials(c *client.Client, rcmInstance *rcm.RoleCredentialManager) error {
-	awsConfig, err := rcmInstance.GetAWSConfig(programIdentifier, config.AWSRegion)
-	if err != nil {
-		log.Fatalf("Failed to fetch AWS config from Vault: %s", err)
-	}
-	c.Config.MergeIn(awsConfig)
-	return nil
 }

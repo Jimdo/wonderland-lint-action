@@ -125,6 +125,7 @@ keys:
     values:
       rules: |
         path "secret/platform/*" { capabilities = ["create", "read", "update", "delete", "list"] }
+        path "aws-infra/sts/admin" { capabilities = ["read"] }
 
   - key: auth/github/map/teams/platform
     values: {value: platform}
@@ -211,6 +212,11 @@ keys:
       rules: |
         path "aws/sts/wonderland-ecs-prometheus" { capabilities = ["read"] }
 
+  - key: sys/policy/wonderland-ecs-oom-notifications
+    values:
+      rules: |
+        path "aws/sts/wonderland-ecs-oom-notifications" { capabilities = ["read"] }
+
   - key: sys/policy/wonderland-elb-prometheus
     values:
       rules: |
@@ -220,6 +226,8 @@ keys:
     values:
       rules: |
         path "secret/*" { capabilities = ["read"] }
+        path "aws/sts/wonderland-crons" { capabilities = ["read"] }
+        path "auth/approle/role/*" { capabilities = ["read"] }
 
   - key: sys/policy/jimdo-jenkins
     values:
@@ -232,6 +240,9 @@ keys:
         path "aws-infra/sts/jimdo-jenkins" { capabilities = ["read"] }
         path "secret/team-red/dashboard-*" { capabilities = ["read", "create", "update"] }
         path "secret/team-red/dashboard-dev" { capabilities = ["read", "create", "update"] }
+        path "secret/team-blue/socialintegration" { capabilities = ["read"] }
+        path "secret/developer-efficiency/application-metrics/ansible-vault" { capabilities = ["read"] }
+        path "secret/developer-efficiency/grafana_admin_password" { capabilities = ["read"] }
 
   - key: sys/policy/wonderland-travis-config
     values:
@@ -240,6 +251,8 @@ keys:
         path "secret/wonderland/infrastructure/authentication" { capabilities = ["read"] }
         path "secret/wonderland/wonderland-travis-config" { capabilities = ["read"] }
         path "secret/wonderland/travis-config/*" { capabilities = ["read"] }
+        path "secret/developers/ghostinspector" { capabilities = ["read"] }
+        path "aws-infra/sts/admin" { capabilities = ["read"] }
 
   - key: sys/policy/dashboard-prod
     values:

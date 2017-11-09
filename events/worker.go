@@ -66,7 +66,7 @@ func WithPollInterval(pi time.Duration) func(*Worker) {
 	}
 }
 
-func (w *Worker) Run(stop chan struct{}) error {
+func (w *Worker) Run(stop chan interface{}) error {
 	lockTTL := w.lockRefreshInterval * 2
 	acquireLeadership := time.NewTicker(w.lockRefreshInterval)
 	stopLeader := make(chan struct{})
