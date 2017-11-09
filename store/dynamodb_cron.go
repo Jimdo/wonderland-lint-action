@@ -17,14 +17,6 @@ var (
 	ErrCronNotFound = errors.New("The cron was not found")
 )
 
-type Cron struct {
-	Name                            string
-	RuleARN                         string
-	TaskDefinitionFamily            string
-	LatestTaskDefinitionRevisionARN string
-	Description                     *cron.CronDescription
-}
-
 type DynamoDBCronStore struct {
 	Client    dynamodbiface.DynamoDBAPI
 	TableName string
@@ -42,7 +34,7 @@ func NewDynamoDBCronStore(dynamoDBClient dynamodbiface.DynamoDBAPI, tableName st
 }
 
 func (d *DynamoDBCronStore) Save(name, ruleARN, latestTaskDefARN, taskDefFamily string, desc *cron.CronDescription) error {
-	cron := &Cron{
+	cron := &cron.Cron{
 		Name:    name,
 		RuleARN: ruleARN,
 		LatestTaskDefinitionRevisionARN: latestTaskDefARN,
@@ -81,13 +73,13 @@ func (d *DynamoDBCronStore) List() ([]string, error) {
 	return cronNames, nil
 }
 
-func (d *DynamoDBCronStore) getAll() ([]*Cron, error) {
-	var result []*Cron
+func (d *DynamoDBCronStore) getAll() ([]*cron.Cron, error) {
+	var result []*cron.Cron
 	var mapperError error
 	err := d.Client.ScanPages(&dynamodb.ScanInput{
 		TableName: aws.String(d.TableName),
 	}, func(out *dynamodb.ScanOutput, last bool) bool {
-		var crons []*Cron
+		var crons []*cron.Cron
 		if err := dynamodbattribute.UnmarshalListOfMaps(out.Items, &crons); err != nil {
 			mapperError = fmt.Errorf("Error transforming DynamoDB items to cron: %s", err)
 			return false
@@ -107,8 +99,8 @@ func (d *DynamoDBCronStore) getAll() ([]*Cron, error) {
 	return result, nil
 }
 
-func (d *DynamoDBCronStore) GetByName(name string) (*Cron, error) {
-	cron := &Cron{}
+func (d *DynamoDBCronStore) GetByName(name string) (*cron.Cron, error) {
+	cron := &cron.Cron{}
 
 	res, err := d.Client.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String(d.TableName),
@@ -131,8 +123,8 @@ func (d *DynamoDBCronStore) GetByName(name string) (*Cron, error) {
 	return cron, nil
 }
 
-func (d *DynamoDBCronStore) GetByRuleARN(ruleARN string) (*Cron, error) {
-	cron := &Cron{}
+func (d *DynamoDBCronStore) GetByRuleARN(ruleARN string) (*cron.Cron, error) {
+	cron := &cron.Cron{}
 
 	res, err := d.Client.Query(&dynamodb.QueryInput{
 		KeyConditionExpression: aws.String("RuleARN = :rule_arn"),
@@ -162,7 +154,7 @@ func (d *DynamoDBCronStore) GetByRuleARN(ruleARN string) (*Cron, error) {
 	return cron, nil
 }
 
-func (d *DynamoDBCronStore) set(cron *Cron) error {
+func (d *DynamoDBCronStore) set(cron *cron.Cron) error {
 	data, err := dynamodbattribute.MarshalMap(cron)
 	if err != nil {
 		return fmt.Errorf("Could not marshal cron into DynamoDB value: %s", err)

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/Jimdo/wonderland-crons/cron"
 	"github.com/Jimdo/wonderland-crons/mock"
@@ -136,7 +137,7 @@ func TestService_Delete(t *testing.T) {
 	defer ctrl.Finish()
 
 	cronName := "test-cron"
-	cron := &store.Cron{
+	cron := &cron.Cron{
 		RuleARN:              "rule-arn",
 		TaskDefinitionFamily: "task-definition-family",
 	}
@@ -159,7 +160,7 @@ func TestService_Delete_Error_OnRuleDeletionError(t *testing.T) {
 	defer ctrl.Finish()
 
 	cronName := "test-cron"
-	cron := &store.Cron{
+	cron := &cron.Cron{
 		RuleARN:              "rule-arn",
 		TaskDefinitionFamily: "task-definition-family",
 	}
@@ -180,7 +181,7 @@ func TestService_Delete_Error_OnTaskDefinitionDeletionError(t *testing.T) {
 	defer ctrl.Finish()
 
 	cronName := "test-cron"
-	cron := &store.Cron{
+	cron := &cron.Cron{
 		RuleARN:              "rule-arn",
 		TaskDefinitionFamily: "task-definition-family",
 	}
@@ -201,7 +202,7 @@ func TestService_Delete_Error_OnlyFirstErrorReturned(t *testing.T) {
 	defer ctrl.Finish()
 
 	cronName := "test-cron"
-	cron := &store.Cron{
+	cron := &cron.Cron{
 		RuleARN:              "rule-arn",
 		TaskDefinitionFamily: "task-definition-family",
 	}
@@ -225,7 +226,7 @@ func TestService_Delete_Error_OnStoreDelete(t *testing.T) {
 	defer ctrl.Finish()
 
 	cronName := "test-cron"
-	cron := &store.Cron{
+	cron := &cron.Cron{
 		RuleARN:              "rule-arn",
 		TaskDefinitionFamily: "task-definition-family",
 	}
@@ -278,7 +279,7 @@ func TestService_Delete_Error_ExecutionDelete(t *testing.T) {
 	defer ctrl.Finish()
 
 	cronName := "test-cron"
-	cron := &store.Cron{
+	cron := &cron.Cron{
 		RuleARN:              "rule-arn",
 		TaskDefinitionFamily: "task-definition-family",
 	}
@@ -292,6 +293,70 @@ func TestService_Delete_Error_ExecutionDelete(t *testing.T) {
 	err := service.Delete(cronName)
 	if err == nil {
 		t.Fatal("expected an error when deletion from DynamoDB failed, but got none")
+	}
+}
+
+func TestService_TriggerExecution_FirstExecution(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	ruleARN := "test-rule-arn"
+	testCron := &cron.Cron{}
+	testExecutions := []*cron.Execution{}
+
+	service, mocks := createServiceWithMocks(ctrl)
+
+	mocks.cs.EXPECT().GetByRuleARN(gomock.Any()).Return(testCron, nil)
+	mocks.ces.EXPECT().GetLastNExecutions(gomock.Any(), gomock.Any()).Return(testExecutions, nil)
+	mocks.tds.EXPECT().RunTaskDefinition(gomock.Any()).Return(nil)
+
+	if err := service.TriggerExecution(ruleARN); err != nil {
+		assert.NoError(t, err)
+	}
+}
+
+func TestService_TriggerExecution_SecondExecution(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	ruleARN := "test-rule-arn"
+	testCron := &cron.Cron{}
+	testExecutions := []*cron.Execution{
+		&cron.Execution{
+			Status: cron.ExecutionStatusSuccess,
+		},
+	}
+
+	service, mocks := createServiceWithMocks(ctrl)
+
+	mocks.cs.EXPECT().GetByRuleARN(gomock.Any()).Return(testCron, nil)
+	mocks.ces.EXPECT().GetLastNExecutions(gomock.Any(), gomock.Any()).Return(testExecutions, nil)
+	mocks.tds.EXPECT().RunTaskDefinition(gomock.Any()).Return(nil)
+
+	if err := service.TriggerExecution(ruleARN); err != nil {
+		assert.NoError(t, err)
+	}
+}
+
+func TestService_TriggerExecution_ExecutionRunning(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	ruleARN := "test-rule-arn"
+	testCron := &cron.Cron{}
+	testExecutions := []*cron.Execution{
+		&cron.Execution{
+			Status: cron.ExecutionStatusRunning,
+		},
+	}
+
+	service, mocks := createServiceWithMocks(ctrl)
+
+	mocks.cs.EXPECT().GetByRuleARN(gomock.Any()).Return(testCron, nil)
+	mocks.ces.EXPECT().GetLastNExecutions(gomock.Any(), gomock.Any()).Return(testExecutions, nil)
+
+	if err := service.TriggerExecution(ruleARN); err != nil {
+		assert.NoError(t, err)
 	}
 }
 
@@ -351,7 +416,7 @@ func TestService_Activate(t *testing.T) {
 	defer ctrl.Finish()
 
 	cronName := "test-cron"
-	cron := &store.Cron{
+	cron := &cron.Cron{
 		RuleARN: "rule-arn",
 	}
 
@@ -383,7 +448,7 @@ func TestService_Activate_ErrorToActivateCronRule(t *testing.T) {
 	defer ctrl.Finish()
 
 	cronName := "test-cron"
-	cron := &store.Cron{
+	cron := &cron.Cron{
 		RuleARN: "rule-arn",
 	}
 
@@ -401,7 +466,7 @@ func TestService_Deactivate(t *testing.T) {
 	defer ctrl.Finish()
 
 	cronName := "test-cron"
-	cron := &store.Cron{
+	cron := &cron.Cron{
 		RuleARN: "rule-arn",
 	}
 
@@ -433,7 +498,7 @@ func TestService_Deactivate_ErrorToActivateCronRule(t *testing.T) {
 	defer ctrl.Finish()
 
 	cronName := "test-cron"
-	cron := &store.Cron{
+	cron := &cron.Cron{
 		RuleARN: "rule-arn",
 	}
 

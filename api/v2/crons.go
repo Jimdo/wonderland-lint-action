@@ -8,11 +8,11 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
 
 	"github.com/Jimdo/wonderland-crons/api"
-	"github.com/Jimdo/wonderland-crons/aws"
 	"github.com/Jimdo/wonderland-crons/cron"
 	"github.com/Jimdo/wonderland-crons/store"
 	"github.com/Jimdo/wonderland-crons/validation"
@@ -21,17 +21,32 @@ import (
 func New(c *Config) *API {
 	return &API{
 		config: c,
+		hc:     &http.Client{Timeout: time.Second * 30},
 	}
+}
+
+type CronService interface {
+	Apply(cronName string, desc *cron.CronDescription) error
+	Delete(cronName string) error
+	Exists(cronName string) (bool, error)
+	List() ([]string, error)
+	Status(cronName string, executionCount int64) (*cron.CronStatus, error)
+	TriggerExecution(ruleARN string) error
+}
+
+type HTTPClient interface {
+	Do(req *http.Request) (*http.Response, error)
 }
 
 type Config struct {
 	Router  *mux.Router
-	Service *aws.Service
+	Service CronService
 	URI     *URIGenerator
 }
 
 type API struct {
 	config *Config
+	hc     HTTPClient
 }
 
 func (a *API) Register() {
@@ -60,7 +75,9 @@ func (a *API) ExecutionTriggerHandler(w http.ResponseWriter, req *http.Request) 
 			sendServerError(w, err)
 			return
 		}
-		resp, err := http.Get(opt.SubscribeURL)
+
+		req, _ := http.NewRequest(http.MethodGet, opt.SubscribeURL, nil)
+		resp, err := a.hc.Do(req)
 		if err != nil {
 			sendServerError(w, err)
 			return

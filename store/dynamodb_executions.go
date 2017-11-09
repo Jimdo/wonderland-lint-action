@@ -20,26 +20,6 @@ const (
 	daysToKeepExecutions = 14
 )
 
-type Execution struct {
-	Name            string
-	StartTime       time.Time
-	EndTime         time.Time
-	TaskArn         string
-	ExitCode        *int64
-	ExitReason      string
-	Status          string
-	Version         int64
-	ExpiryTime      int64
-	TimeoutExitCode *int64
-}
-
-func (e *Execution) IsRunning() bool {
-	if e.Status == ecs.DesiredStatusStopped {
-		return false
-	}
-	return true
-}
-
 type DynamoDBExecutionStore struct {
 	Client    dynamodbiface.DynamoDBAPI
 	TableName string
@@ -60,7 +40,7 @@ func (es *DynamoDBExecutionStore) Update(cronName string, t *ecs.Task) error {
 	cronContainer := cron.GetUserContainerFromTask(t)
 	timeoutContainer := cron.GetTimeoutContainerFromTask(t)
 
-	execution := &Execution{
+	execution := &cron.Execution{
 		Name:            cronName,
 		StartTime:       aws.TimeValue(t.CreatedAt),
 		EndTime:         aws.TimeValue(t.StoppedAt),
@@ -110,8 +90,8 @@ func (es *DynamoDBExecutionStore) Update(cronName string, t *ecs.Task) error {
 	return nil
 }
 
-func (es *DynamoDBExecutionStore) GetLastNExecutions(cronName string, count int64) ([]*Execution, error) {
-	var result []*Execution
+func (es *DynamoDBExecutionStore) GetLastNExecutions(cronName string, count int64) ([]*cron.Execution, error) {
+	var result []*cron.Execution
 	var queryError error
 
 	err := es.Client.QueryPages(&dynamodb.QueryInput{
@@ -127,7 +107,7 @@ func (es *DynamoDBExecutionStore) GetLastNExecutions(cronName string, count int6
 		KeyConditionExpression: aws.String("#N = :name"),
 		ScanIndexForward:       aws.Bool(false),
 	}, func(out *dynamodb.QueryOutput, last bool) bool {
-		var executions []*Execution
+		var executions []*cron.Execution
 		if err := dynamodbattribute.UnmarshalListOfMaps(out.Items, &executions); err != nil {
 			queryError = fmt.Errorf("Could not unmarshal cron: %s", err)
 			return false
@@ -239,7 +219,7 @@ func (es *DynamoDBExecutionStore) calcExpiry(t *ecs.Task) int64 {
 	return ttl.Unix()
 }
 
-func (es *DynamoDBExecutionStore) getStatusByExitCodes(t *Execution) string {
+func (es *DynamoDBExecutionStore) getStatusByExitCodes(t *cron.Execution) string {
 	if t.Status == ecs.DesiredStatusStopped {
 		executionLogger(t).Debug("Got stopped execution to set status by exit code")
 		if t.ExitCode == nil || t.TimeoutExitCode == nil {

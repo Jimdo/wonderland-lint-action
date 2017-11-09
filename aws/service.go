@@ -16,12 +16,12 @@ type CronStore interface {
 	Save(string, string, string, string, *cron.CronDescription) error
 	Delete(string) error
 	List() ([]string, error)
-	GetByName(string) (*store.Cron, error)
-	GetByRuleARN(string) (*store.Cron, error)
+	GetByName(string) (*cron.Cron, error)
+	GetByRuleARN(string) (*cron.Cron, error)
 }
 
 type CronExecutionStore interface {
-	GetLastNExecutions(string, int64) ([]*store.Execution, error)
+	GetLastNExecutions(string, int64) ([]*cron.Execution, error)
 	Delete(string) error
 }
 
@@ -31,12 +31,6 @@ type Service struct {
 	tds            TaskDefinitionStore
 	validator      CronValidator
 	executionStore CronExecutionStore
-}
-
-type CronStatus struct {
-	Cron       *store.Cron
-	Status     string
-	Executions []*store.Execution
 }
 
 func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s CronStore, es CronExecutionStore) *Service {
@@ -123,8 +117,8 @@ func (s *Service) List() ([]string, error) {
 	return s.cronStore.List()
 }
 
-func (s *Service) Status(cronName string, executionCount int64) (*CronStatus, error) {
-	cron, err := s.cronStore.GetByName(cronName)
+func (s *Service) Status(cronName string, executionCount int64) (*cron.CronStatus, error) {
+	c, err := s.cronStore.GetByName(cronName)
 	if err != nil {
 		return nil, err
 	}
@@ -136,8 +130,8 @@ func (s *Service) Status(cronName string, executionCount int64) (*CronStatus, er
 			"count": executionCount,
 		}).WithError(err).Error("Getting last n executions failed")
 	}
-	status := &CronStatus{
-		Cron:       cron,
+	status := &cron.CronStatus{
+		Cron:       c,
 		Status:     "not implemented yet",
 		Executions: executions,
 	}

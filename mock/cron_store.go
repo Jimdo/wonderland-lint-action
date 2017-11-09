@@ -6,7 +6,6 @@ package mock
 
 import (
 	cron "github.com/Jimdo/wonderland-crons/cron"
-	store "github.com/Jimdo/wonderland-crons/store"
 	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
 )
@@ -47,9 +46,9 @@ func (mr *MockCronStoreMockRecorder) Delete(arg0 interface{}) *gomock.Call {
 }
 
 // GetByName mocks base method
-func (m *MockCronStore) GetByName(arg0 string) (*store.Cron, error) {
+func (m *MockCronStore) GetByName(arg0 string) (*cron.Cron, error) {
 	ret := m.ctrl.Call(m, "GetByName", arg0)
-	ret0, _ := ret[0].(*store.Cron)
+	ret0, _ := ret[0].(*cron.Cron)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -60,9 +59,9 @@ func (mr *MockCronStoreMockRecorder) GetByName(arg0 interface{}) *gomock.Call {
 }
 
 // GetByRuleARN mocks base method
-func (m *MockCronStore) GetByRuleARN(arg0 string) (*store.Cron, error) {
+func (m *MockCronStore) GetByRuleARN(arg0 string) (*cron.Cron, error) {
 	ret := m.ctrl.Call(m, "GetByRuleARN", arg0)
-	ret0, _ := ret[0].(*store.Cron)
+	ret0, _ := ret[0].(*cron.Cron)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
