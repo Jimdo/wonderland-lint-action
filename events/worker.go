@@ -192,7 +192,6 @@ func (w *Worker) handleMessage(m *sqs.Message) error {
 					"name":          cronName,
 					"cw_event":      event,
 					"derived_event": derivedEvent,
-					"event_context": eventContext,
 				}).WithError(err).Error("Could not handle event")
 				if err := w.eventDispatcher.Fire(derivedEvent, eventContext); err != nil {
 					return fmt.Errorf("could not handle event %q: %s", derivedEvent, err)
@@ -204,7 +203,6 @@ func (w *Worker) handleMessage(m *sqs.Message) error {
 					"name":          cronName,
 					"cw_event":      event,
 					"derived_event": EventCronExecutionStateChanged,
-					"event_context": eventContext,
 				}).WithError(err).Error("Could not handle event")
 				return fmt.Errorf("could not handle event %q: %s", EventCronExecutionStateChanged, err)
 			}
