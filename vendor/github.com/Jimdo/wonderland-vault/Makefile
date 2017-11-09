@@ -24,13 +24,6 @@ IMAGE=wonderland-vault
 clean:
 	rm -rf vault
 
-wonderland_vault_monitoring:
-	WONDERLAND_ENV=prod \
-	ZONE=jimdo-platform.net \
-	VAULT_TOKEN=$(VAULT_TOKEN) \
-	PAGERDUTY_KEY=$(PAGERDUTY_KEY) \
-		wl deploy wonderland-vault-rw-monitoring
-
 # +++ ASSETS +++
 
 vault:
@@ -62,6 +55,7 @@ write_aws_roles: export VAULT_ADDR=https://vault.$(ZONE)/
 write_aws_roles: wait_vault_ready yaml-vault
 	./yaml-vault --verbose --import --file=vault_aws.yaml
 	./yaml-vault --verbose --import --file=vault_aws_infra.yaml
+	./yaml-vault --verbose --import --file=vault_aws_dolphin.yaml
 
 # +++ Further configuration options +++
 

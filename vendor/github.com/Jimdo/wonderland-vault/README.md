@@ -1,7 +1,5 @@
-[![jenkins stage](https://badges.fyi/static/Jenkins/stage)](https://jenkins.jimdo-platform-stage.net/job/Vault-Deploy/)
-[![papertrail stage](https://badges.fyi/static/papertrail/stage/03498f)](https://papertrailapp.com/groups/1772563/events?q=system%3Avault)
-[![jenkins prod](https://badges.fyi/static/Jenkins/prod)](https://jenkins.jimdo-platform.net/job/Vault-Deploy/)
-[![papertrail prod](https://badges.fyi/static/papertrail/prod/03498f)](https://papertrailapp.com/groups/1401924/events?q=system%3Avault)
+[![jenkins stage](https://badges.fyi/static/Jenkins/stage)](https://jenkins.jimdo-platform-stage.net/job/Vault-Configure/)
+[![jenkins prod](https://badges.fyi/static/Jenkins/prod)](https://jenkins.jimdo-platform.net/job/Vault-Configure/)
 
 # Jimdo / wonderland-vault
 

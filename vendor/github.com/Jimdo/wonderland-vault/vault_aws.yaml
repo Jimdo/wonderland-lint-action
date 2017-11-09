@@ -82,6 +82,23 @@ keys:
           ]
         }
 
+  - key: aws/roles/wonderland-ecs-oom-notifications
+    values:
+      policy: |
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:DeleteMessage"
+              ],
+              "Effect": "Allow",
+              "Resource": "*"
+            }
+          ]
+        }
+
   - key: aws/roles/wonderland-elb-prometheus
     values:
       policy: |
@@ -96,6 +113,46 @@ keys:
               ],
               "Effect": "Allow",
               "Resource": "*"
+            }
+          ]
+        }
+
+  - key: aws/roles/wonderland-crons
+    values:
+      policy: |
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "events:ListTargetsByRule",
+                "events:*Rule",
+                "events:*Targets",
+                "ecs:*TaskDefinition",
+                "ecs:ListTaskDefinitions",
+                "iam:PassRole"
+              ],
+              "Effect": "Allow",
+              "Resource": "*"
+            },
+            {
+              "Action": [
+                "dynamodb:*"
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                "arn:aws:dynamodb:*:*:table/wonderland-crons",
+                "arn:aws:dynamodb:*:*:table/wonderland-crons-executions",
+                "arn:aws:dynamodb:*:*:table/wonderland-crons-locks"
+              ]
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:DeleteMessage"
+              ],
+              "Effect": "Allow",
+              "Resource": "arn:aws:sqs:eu-west-1:*:wonderland-service-crons-ECSEventsQueue-*"
             }
           ]
         }

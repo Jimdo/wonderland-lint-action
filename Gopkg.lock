@@ -10,7 +10,8 @@
 [[projects]]
   name = "github.com/Jimdo/wonderland-vault"
   packages = ["lib/role-credential-manager"]
-  revision = "cbd830df2c1ee4c0cc2ffef4e46777202e73197f"
+  revision = "fc83b327f8e79005a5688fb30ac1195ddda97646"
+  version = "v0.1.1"
 
 [[projects]]
   name = "github.com/Luzifer/rconfig"

@@ -1,6 +1,10 @@
 ---
 keys:
 
+  - key: aws-infra/roles/admin
+    values:
+      arn: arn:aws:iam::874814834432:role/wonderland-vault-admin
+
   - key: aws-infra/roles/jimdo-jenkins
     values:
       policy: |
