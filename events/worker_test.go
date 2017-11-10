@@ -69,11 +69,11 @@ func TestWorker_runInLeaderMode(t *testing.T) {
 	errChan := make(chan error)
 	go func() {
 		go worker.runInLeaderMode(done, errChan)
-		for {
-			select {
-			case err := <-errChan:
-				t.Fatalf("should not return an error: %s", err)
-			}
+		select {
+		case err := <-errChan:
+			t.Fatalf("should not return an error: %s", err)
+		case <-done:
+			return
 		}
 	}()
 	defer close(done)
