@@ -12,9 +12,7 @@ import (
 )
 
 type RuleCronManager interface {
-	ActivateRule(string) error
 	CreateRule(name, snsTopicARN, schedule string) (string, error)
-	DeactivateRule(string) error
 	DeleteRule(string) error
 	RunTaskDefinitionWithSchedule(string, string, string) (string, error)
 }
@@ -142,26 +140,4 @@ func (cm *CloudwatchRuleCronManager) DeleteRule(ruleARN string) error {
 	}
 
 	return nil
-}
-
-func (cm *CloudwatchRuleCronManager) ActivateRule(ruleARN string) error {
-	ruleName, err := parseRuleNameFromARN(ruleARN)
-	if err != nil {
-		return err
-	}
-	_, err = cm.cloudwatchEvents.EnableRule(&cloudwatchevents.EnableRuleInput{
-		Name: awssdk.String(ruleName),
-	})
-	return err
-}
-
-func (cm *CloudwatchRuleCronManager) DeactivateRule(ruleARN string) error {
-	ruleName, err := parseRuleNameFromARN(ruleARN)
-	if err != nil {
-		return err
-	}
-	_, err = cm.cloudwatchEvents.DisableRule(&cloudwatchevents.DisableRuleInput{
-		Name: awssdk.String(ruleName),
-	})
-	return err
 }

@@ -241,8 +241,6 @@ func main() {
 	service := aws.NewService(validator, cloudwatchcm, ecstds, dynamoDBCronStore, dynamoDBExecutionStore)
 
 	eventDispatcher := events.NewEventDispatcher()
-	eventDispatcher.On(events.EventCronExecutionStarted, events.CronDeactivator(service))
-	eventDispatcher.On(events.EventCronExecutionStopped, events.CronActivator(service))
 	eventDispatcher.On(events.EventCronExecutionStateChanged, events.CronExecutionStatePersister(dynamoDBExecutionStore))
 
 	lm := locking.NewDynamoDBLockManager(dynamoDBClient, config.WorkerLeaderLockTableName)
