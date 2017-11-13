@@ -83,6 +83,7 @@ var (
 		ExecutionsTableName             string        `flag:"executions-table-name" env:"EXECUTIONS_TABLE_NAME" description:"Name of the DynamoDB Table used for storing cron executions"`
 		WorkerLeaderLockRefreshInterval time.Duration `flag:"worker-leader-lock-refresh-interval" default:"1m" description:"The interval in which to refresh the workers leader lock"`
 		WorkerLeaderLockTableName       string        `flag:"worker-leader-lock-table-name" env:"WORKER_LEADER_LOCK_TABLE_NAME" description:"Name of the DynamoDB Table used for worker leadership locking"`
+		ExecutionTriggerTopicARN        string        `flag:"exec-trigger-topic-arn" env:"EXEC_TRIGGER_TOPIC_ARN" description:"ARN of the SNS topic that triggers cron executions"`
 
 		// Logz.io
 		LogzioURL       string `flag:"logzio-url" env:"LOGZIO_URL" default:"https://app-eu.logz.io" description:"The URL of the Logz.io endpoint to use for Kibana and other services"`
@@ -238,7 +239,7 @@ func main() {
 		log.Fatalf("Failed to initialize Cron store: %s", err)
 	}
 
-	service := aws.NewService(validator, cloudwatchcm, ecstds, dynamoDBCronStore, dynamoDBExecutionStore)
+	service := aws.NewService(validator, cloudwatchcm, ecstds, dynamoDBCronStore, dynamoDBExecutionStore, config.ExecutionTriggerTopicARN)
 
 	eventDispatcher := events.NewEventDispatcher()
 	eventDispatcher.On(events.EventCronExecutionStateChanged, events.CronExecutionStatePersister(dynamoDBExecutionStore))

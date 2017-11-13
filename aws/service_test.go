@@ -426,7 +426,7 @@ func createServiceWithMocks(ctrl *gomock.Controller) (*Service, mocks) {
 	cs := mock.NewMockCronStore(ctrl)
 	ces := mock.NewMockCronExecutionStore(ctrl)
 
-	return NewService(v, cm, tds, cs, ces), mocks{
+	return NewService(v, cm, tds, cs, ces, "fake-topic"), mocks{
 		v:   v,
 		cm:  cm,
 		tds: tds,

@@ -31,15 +31,18 @@ type Service struct {
 	tds            TaskDefinitionStore
 	validator      CronValidator
 	executionStore CronExecutionStore
+
+	topicARN string
 }
 
-func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s CronStore, es CronExecutionStore) *Service {
+func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s CronStore, es CronExecutionStore, tarn string) *Service {
 	return &Service{
 		cm:             cm,
 		cronStore:      s,
 		tds:            tds,
 		validator:      v,
 		executionStore: es,
+		topicARN:       tarn,
 	}
 }
 
@@ -59,12 +62,11 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 		return err
 	}
 
-	snsTopic := "arn:aws:sns:eu-west-1:062052581233:side-test"
-	ruleARN, err := s.cm.CreateRule(name, snsTopic, cronDescription.Schedule)
+	ruleARN, err := s.cm.CreateRule(name, s.topicARN, cronDescription.Schedule)
 	if err != nil {
 		log.WithError(err).WithFields(log.Fields{
 			"cron":      name,
-			"sns_topic": snsTopic,
+			"sns_topic": s.topicARN,
 			"schedule":  cronDescription.Schedule,
 		}).Error("Could not trigger CloudWatch rule for SNS topic")
 		return err
