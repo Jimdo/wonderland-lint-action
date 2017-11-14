@@ -5,7 +5,7 @@
 package mock
 
 import (
-	store "github.com/Jimdo/wonderland-crons/store"
+	cron "github.com/Jimdo/wonderland-crons/cron"
 	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
 )
@@ -46,9 +46,9 @@ func (mr *MockCronExecutionStoreMockRecorder) Delete(arg0 interface{}) *gomock.C
 }
 
 // GetLastNExecutions mocks base method
-func (m *MockCronExecutionStore) GetLastNExecutions(arg0 string, arg1 int64) ([]*store.Execution, error) {
+func (m *MockCronExecutionStore) GetLastNExecutions(arg0 string, arg1 int64) ([]*cron.Execution, error) {
 	ret := m.ctrl.Call(m, "GetLastNExecutions", arg0, arg1)
-	ret0, _ := ret[0].([]*store.Execution)
+	ret0, _ := ret[0].([]*cron.Execution)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

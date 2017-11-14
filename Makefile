@@ -97,6 +97,8 @@ dinah:
 	@curl -sSL https://gist.github.com/white--rabbit/bca70b3215991e9e45905a1195388d09/raw | bash
 
 gen-mocks:
+	mockgen -package mock github.com/Jimdo/wonderland-crons/api/v2 CronService > mock/cron_service.go
+	mockgen -package mock github.com/Jimdo/wonderland-crons/api/v2 HTTPClient > mock/http_client.go
 	mockgen -package mock github.com/Jimdo/wonderland-crons/aws CronValidator > mock/cron_validator.go
 	mockgen -package mock github.com/Jimdo/wonderland-crons/aws RuleCronManager > mock/rule_cron_manager.go
 	mockgen -package mock github.com/Jimdo/wonderland-crons/aws TaskDefinitionStore > mock/task_definition_store.go

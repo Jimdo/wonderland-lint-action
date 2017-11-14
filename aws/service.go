@@ -7,29 +7,21 @@ import (
 	"github.com/Jimdo/wonderland-crons/store"
 )
 
-const (
-	StatusCreating                     = "Creating"
-	StatusTaskDefinitionCreationFailed = "ECS task definition creation failed"
-	StatusRuleCreationFailed           = "Cloudwatch rule creation failed"
-	StatusSuccess                      = "Success"
-)
-
 type CronValidator interface {
 	ValidateCronDescription(*cron.CronDescription) error
 	ValidateCronName(string) error
 }
 
 type CronStore interface {
-	Save(string, string, *cron.CronDescription, string) error
-	GetResourceName(string) (string, error)
+	Save(string, string, string, string, *cron.CronDescription) error
 	Delete(string) error
-	SetDeployStatus(string, string) error
 	List() ([]string, error)
-	GetByName(string) (*store.Cron, error)
+	GetByName(string) (*cron.Cron, error)
+	GetByRuleARN(string) (*cron.Cron, error)
 }
 
 type CronExecutionStore interface {
-	GetLastNExecutions(string, int64) ([]*store.Execution, error)
+	GetLastNExecutions(string, int64) ([]*cron.Execution, error)
 	Delete(string) error
 }
 
@@ -39,21 +31,18 @@ type Service struct {
 	tds            TaskDefinitionStore
 	validator      CronValidator
 	executionStore CronExecutionStore
+
+	topicARN string
 }
 
-type CronStatus struct {
-	Cron       *store.Cron
-	Status     string
-	Executions []*store.Execution
-}
-
-func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s CronStore, es CronExecutionStore) *Service {
+func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s CronStore, es CronExecutionStore, tarn string) *Service {
 	return &Service{
 		cm:             cm,
 		cronStore:      s,
 		tds:            tds,
 		validator:      v,
 		executionStore: es,
+		topicARN:       tarn,
 	}
 }
 
@@ -65,47 +54,31 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 		return err
 	}
 
-	resourceName, err := s.cronStore.GetResourceName(name)
+	latestTaskDefARN, taskDefFamily, err := s.tds.AddRevisionFromCronDescription(name, cronDescription)
 	if err != nil {
-		if err != store.ErrCronNotFound {
-			return err
-		}
-
-		resourceName = cron.GetResourceByName(name)
-		if err := s.cronStore.Save(name, resourceName, cronDescription, StatusCreating); err != nil {
-			log.WithError(err).WithFields(log.Fields{
-				"cron": name,
-			}).Error("Could not create cron in DynamoDB")
-			return err
-		}
-	}
-
-	taskDefinitionARN, err := s.tds.AddRevisionFromCronDescription(name, resourceName, cronDescription)
-	if err != nil {
-		if err := s.cronStore.SetDeployStatus(name, StatusTaskDefinitionCreationFailed); err != nil {
-			log.WithError(err).WithFields(log.Fields{
-				"cron":   name,
-				"status": StatusTaskDefinitionCreationFailed,
-			}).Error("Could not set deploy status in DynamoDB")
-		}
-		return err
-	}
-
-	if err := s.cm.RunTaskDefinitionWithSchedule(resourceName, taskDefinitionARN, cronDescription.Schedule); err != nil {
-		if err := s.cronStore.SetDeployStatus(name, StatusRuleCreationFailed); err != nil {
-			log.WithError(err).WithFields(log.Fields{
-				"cron":   name,
-				"status": StatusRuleCreationFailed,
-			}).Error("Could not set deploy status in DynamoDB")
-		}
-		return err
-	}
-
-	if err := s.cronStore.Save(name, resourceName, cronDescription, StatusSuccess); err != nil {
 		log.WithError(err).WithFields(log.Fields{
-			"cron":   name,
-			"status": StatusSuccess,
-		}).Error("Could not update cron in DynamoDB")
+			"cron": name,
+		}).Error("Could not add TaskDefinition revision")
+		return err
+	}
+
+	ruleARN, err := s.cm.CreateRule(name, s.topicARN, cronDescription.Schedule)
+	if err != nil {
+		log.WithError(err).WithFields(log.Fields{
+			"cron":      name,
+			"sns_topic": s.topicARN,
+			"schedule":  cronDescription.Schedule,
+		}).Error("Could not trigger CloudWatch rule for SNS topic")
+		return err
+	}
+
+	if err := s.cronStore.Save(name, ruleARN, latestTaskDefARN, taskDefFamily, cronDescription); err != nil {
+		log.WithError(err).WithFields(log.Fields{
+			"cron":        name,
+			"task_arn":    latestTaskDefARN,
+			"task_family": taskDefFamily,
+			"rule_arn":    ruleARN,
+		}).Error("Could not save cron in DynamoDB")
 		return err
 	}
 
@@ -113,7 +86,7 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 }
 
 func (s *Service) Delete(cronName string) error {
-	resourceName, err := s.cronStore.GetResourceName(cronName)
+	cron, err := s.cronStore.GetByName(cronName)
 	if err != nil {
 		if err == store.ErrCronNotFound {
 			return nil
@@ -122,11 +95,11 @@ func (s *Service) Delete(cronName string) error {
 	}
 
 	var errors []error
-	if err := s.cm.DeleteRule(resourceName); err != nil {
+	if err := s.cm.DeleteRule(cron.RuleARN); err != nil {
 		errors = append(errors, err)
 	}
 
-	if err := s.tds.DeleteByFamily(resourceName); err != nil {
+	if err := s.tds.DeleteByFamily(cron.TaskDefinitionFamily); err != nil {
 		errors = append(errors, err)
 	}
 
@@ -139,19 +112,15 @@ func (s *Service) Delete(cronName string) error {
 		return err
 	}
 
-	if err := s.cronStore.Delete(cronName); err != nil {
-		return err
-	}
-
-	return nil
+	return s.cronStore.Delete(cronName)
 }
 
 func (s *Service) List() ([]string, error) {
 	return s.cronStore.List()
 }
 
-func (s *Service) Status(cronName string, executionCount int64) (*CronStatus, error) {
-	cron, err := s.cronStore.GetByName(cronName)
+func (s *Service) Status(cronName string, executionCount int64) (*cron.CronStatus, error) {
+	c, err := s.cronStore.GetByName(cronName)
 	if err != nil {
 		return nil, err
 	}
@@ -163,8 +132,8 @@ func (s *Service) Status(cronName string, executionCount int64) (*CronStatus, er
 			"count": executionCount,
 		}).WithError(err).Error("Getting last n executions failed")
 	}
-	status := &CronStatus{
-		Cron:       cron,
+	status := &cron.CronStatus{
+		Cron:       c,
 		Status:     "not implemented yet",
 		Executions: executions,
 	}
@@ -184,20 +153,26 @@ func (s *Service) Exists(cronName string) (bool, error) {
 	return true, nil
 }
 
-func (s *Service) Activate(cronName string) error {
-	resourceName, err := s.cronStore.GetResourceName(cronName)
+func (s *Service) TriggerExecution(cronRuleARN string) error {
+	cron, err := s.cronStore.GetByRuleARN(cronRuleARN)
 	if err != nil {
 		return err
 	}
 
-	return s.cm.ActivateRule(resourceName)
-}
-
-func (s *Service) Deactivate(cronName string) error {
-	resourceName, err := s.cronStore.GetResourceName(cronName)
+	executions, err := s.executionStore.GetLastNExecutions(cron.Name, 1)
 	if err != nil {
 		return err
 	}
 
-	return s.cm.DeactivateRule(resourceName)
+	startExecution := len(executions) == 0 || !executions[0].IsRunning()
+	log.WithFields(log.Fields{
+		"cron_name": cron.Name,
+		"rule_arn":  cron.RuleARN,
+	}).Infof("Trigger cron execution, started: %t", startExecution)
+
+	if startExecution {
+		return s.tds.RunTaskDefinition(cron.LatestTaskDefinitionRevisionARN)
+	}
+
+	return nil
 }

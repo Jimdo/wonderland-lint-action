@@ -129,7 +129,7 @@ func TestStore_getStatusByExitCodes(t *testing.T) {
 	}
 
 	for expectedStatus, tc := range testCases {
-		execution := &Execution{
+		execution := &cron.Execution{
 			Name:            "test-execution",
 			ExitCode:        tc.ExitCode,
 			Status:          tc.StatusBefore,

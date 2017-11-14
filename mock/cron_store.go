@@ -6,7 +6,6 @@ package mock
 
 import (
 	cron "github.com/Jimdo/wonderland-crons/cron"
-	store "github.com/Jimdo/wonderland-crons/store"
 	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
 )
@@ -47,9 +46,9 @@ func (mr *MockCronStoreMockRecorder) Delete(arg0 interface{}) *gomock.Call {
 }
 
 // GetByName mocks base method
-func (m *MockCronStore) GetByName(arg0 string) (*store.Cron, error) {
+func (m *MockCronStore) GetByName(arg0 string) (*cron.Cron, error) {
 	ret := m.ctrl.Call(m, "GetByName", arg0)
-	ret0, _ := ret[0].(*store.Cron)
+	ret0, _ := ret[0].(*cron.Cron)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -59,17 +58,17 @@ func (mr *MockCronStoreMockRecorder) GetByName(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByName", reflect.TypeOf((*MockCronStore)(nil).GetByName), arg0)
 }
 
-// GetResourceName mocks base method
-func (m *MockCronStore) GetResourceName(arg0 string) (string, error) {
-	ret := m.ctrl.Call(m, "GetResourceName", arg0)
-	ret0, _ := ret[0].(string)
+// GetByRuleARN mocks base method
+func (m *MockCronStore) GetByRuleARN(arg0 string) (*cron.Cron, error) {
+	ret := m.ctrl.Call(m, "GetByRuleARN", arg0)
+	ret0, _ := ret[0].(*cron.Cron)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetResourceName indicates an expected call of GetResourceName
-func (mr *MockCronStoreMockRecorder) GetResourceName(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetResourceName", reflect.TypeOf((*MockCronStore)(nil).GetResourceName), arg0)
+// GetByRuleARN indicates an expected call of GetByRuleARN
+func (mr *MockCronStoreMockRecorder) GetByRuleARN(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByRuleARN", reflect.TypeOf((*MockCronStore)(nil).GetByRuleARN), arg0)
 }
 
 // List mocks base method
@@ -86,25 +85,13 @@ func (mr *MockCronStoreMockRecorder) List() *gomock.Call {
 }
 
 // Save mocks base method
-func (m *MockCronStore) Save(arg0, arg1 string, arg2 *cron.CronDescription, arg3 string) error {
-	ret := m.ctrl.Call(m, "Save", arg0, arg1, arg2, arg3)
+func (m *MockCronStore) Save(arg0, arg1, arg2, arg3 string, arg4 *cron.CronDescription) error {
+	ret := m.ctrl.Call(m, "Save", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Save indicates an expected call of Save
-func (mr *MockCronStoreMockRecorder) Save(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockCronStore)(nil).Save), arg0, arg1, arg2, arg3)
-}
-
-// SetDeployStatus mocks base method
-func (m *MockCronStore) SetDeployStatus(arg0, arg1 string) error {
-	ret := m.ctrl.Call(m, "SetDeployStatus", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetDeployStatus indicates an expected call of SetDeployStatus
-func (mr *MockCronStoreMockRecorder) SetDeployStatus(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDeployStatus", reflect.TypeOf((*MockCronStore)(nil).SetDeployStatus), arg0, arg1)
+func (mr *MockCronStoreMockRecorder) Save(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockCronStore)(nil).Save), arg0, arg1, arg2, arg3, arg4)
 }

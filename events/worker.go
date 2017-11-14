@@ -23,8 +23,6 @@ const (
 
 	LeaderLockName = "wonderland-crons-worker"
 
-	EventCronExecutionStarted      = "CronExecutionStarted"
-	EventCronExecutionStopped      = "CronExecutionStopped"
 	EventCronExecutionStateChanged = "CronExecutionStateChanged"
 )
 
@@ -185,19 +183,6 @@ func (w *Worker) handleMessage(m *sqs.Message) error {
 			}).Debug("Received ECS task event")
 
 			eventContext := EventContext{CronName: cronName, Task: task}
-
-			derivedEvent := w.deriveEventFromECSTask(task)
-			if derivedEvent != "" {
-				log.WithFields(log.Fields{
-					"name":          cronName,
-					"cw_event":      event,
-					"derived_event": derivedEvent,
-				}).WithError(err).Error("Could not handle event")
-				if err := w.eventDispatcher.Fire(derivedEvent, eventContext); err != nil {
-					return fmt.Errorf("could not handle event %q: %s", derivedEvent, err)
-				}
-			}
-
 			if err := w.eventDispatcher.Fire(EventCronExecutionStateChanged, eventContext); err != nil {
 				log.WithFields(log.Fields{
 					"name":          cronName,
@@ -226,14 +211,4 @@ func (w *Worker) acknowledgeMessage(m *sqs.Message) error {
 		ReceiptHandle: m.ReceiptHandle,
 	})
 	return err
-}
-
-func (w *Worker) deriveEventFromECSTask(t *ecs.Task) string {
-	if aws.Int64Value(t.Version) == 1 {
-		return EventCronExecutionStarted
-	} else if aws.StringValue(t.LastStatus) == ecs.DesiredStatusStopped &&
-		aws.StringValue(t.DesiredStatus) == ecs.DesiredStatusStopped {
-		return EventCronExecutionStopped
-	}
-	return ""
 }

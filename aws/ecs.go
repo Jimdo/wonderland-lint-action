@@ -12,31 +12,39 @@ import (
 )
 
 type TaskDefinitionStore interface {
-	AddRevisionFromCronDescription(cronName, family string, desc *cron.CronDescription) (string, error)
-	DeleteByFamily(family string) error
+	AddRevisionFromCronDescription(string, *cron.CronDescription) (string, string, error)
+	DeleteByFamily(string) error
+	RunTaskDefinition(string) error
 }
 
 type ECSTaskDefinitionStore struct {
 	ecs ecsiface.ECSAPI
 	tdm *ECSTaskDefinitionMapper
+
+	clusterARN          string
+	ecsRunnerIdentifier string
 }
 
-func NewECSTaskDefinitionStore(e ecsiface.ECSAPI, tdm *ECSTaskDefinitionMapper) *ECSTaskDefinitionStore {
+func NewECSTaskDefinitionStore(e ecsiface.ECSAPI, tdm *ECSTaskDefinitionMapper, clusterARN, ecsRunnerIdentifier string) *ECSTaskDefinitionStore {
 	return &ECSTaskDefinitionStore{
-		ecs: e,
-		tdm: tdm,
+		ecs:                 e,
+		tdm:                 tdm,
+		clusterARN:          clusterARN,
+		ecsRunnerIdentifier: ecsRunnerIdentifier,
 	}
 }
 
-func (tds *ECSTaskDefinitionStore) AddRevisionFromCronDescription(cronName, family string, desc *cron.CronDescription) (string, error) {
-	cd, err := tds.tdm.ContainerDefinitionFromCronDescription(family, desc, cronName)
+func (tds *ECSTaskDefinitionStore) AddRevisionFromCronDescription(cronName string, desc *cron.CronDescription) (string, string, error) {
+	tdFamilyName := cron.GetResourceByName(cronName)
+
+	cd, err := tds.tdm.ContainerDefinitionFromCronDescription(tdFamilyName, desc, cronName)
 	if err != nil {
-		return "", fmt.Errorf("could not generate ECS container definition from cron description: %s", err)
+		return "", "", fmt.Errorf("could not generate ECS container definition from cron description: %s", err)
 	}
 
 	rtdInput := &ecs.RegisterTaskDefinitionInput{
 		ContainerDefinitions: []*ecs.ContainerDefinition{cd},
-		Family:               awssdk.String(family),
+		Family:               awssdk.String(tdFamilyName),
 	}
 
 	timeoutSidecarDefinition := tds.createTimeoutSidecarDefinition(cronName, desc)
@@ -44,9 +52,9 @@ func (tds *ECSTaskDefinitionStore) AddRevisionFromCronDescription(cronName, fami
 	rtdInput.ContainerDefinitions = append(rtdInput.ContainerDefinitions, timeoutSidecarDefinition)
 	out, err := tds.ecs.RegisterTaskDefinition(rtdInput)
 	if err != nil {
-		return "", fmt.Errorf("could not register task definition for family %q with error: %s", family, err)
+		return "", "", fmt.Errorf("could not register task definition for family %q with error: %s", tdFamilyName, err)
 	}
-	return awssdk.StringValue(out.TaskDefinition.TaskDefinitionArn), nil
+	return awssdk.StringValue(out.TaskDefinition.TaskDefinitionArn), tdFamilyName, nil
 }
 
 func (tds *ECSTaskDefinitionStore) createTimeoutSidecarDefinition(cronName string, desc *cron.CronDescription) *ecs.ContainerDefinition {
@@ -86,6 +94,26 @@ func (tds *ECSTaskDefinitionStore) DeleteByFamily(family string) error {
 	})
 	if err != nil {
 		return fmt.Errorf("could not list targets of family %q with error: %s", family, err)
+	}
+	return nil
+}
+
+func (tds *ECSTaskDefinitionStore) RunTaskDefinition(arn string) error {
+	out, err := tds.ecs.RunTask(&ecs.RunTaskInput{
+		Cluster:        awssdk.String(tds.clusterARN),
+		StartedBy:      awssdk.String(tds.ecsRunnerIdentifier),
+		TaskDefinition: awssdk.String(arn),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	if len(out.Failures) > 0 {
+		return fmt.Errorf("couldn't start task: %s", awssdk.StringValue(out.Failures[0].Reason))
+	}
+	if len(out.Tasks) == 0 {
+		return fmt.Errorf("error: task status unknown")
 	}
 	return nil
 }
