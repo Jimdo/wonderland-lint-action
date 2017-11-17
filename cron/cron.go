@@ -8,6 +8,7 @@ const (
 	ExecutionStatusSuccess = "SUCCESS"
 	ExecutionStatusFailed  = "FAILED"
 	ExecutionStatusRunning = "RUNNING"
+	ExecutionStatusUnknown = "UNKNOWN"
 )
 
 type Cron struct {
