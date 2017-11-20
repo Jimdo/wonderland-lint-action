@@ -5,12 +5,17 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/Jimdo/wonderland-crons/cron"
 	"github.com/Jimdo/wonderland-crons/mock"
 	"github.com/Jimdo/wonderland-crons/store"
 )
+
+func init() {
+	log.SetLevel(log.FatalLevel)
+}
 
 /*
 func TestService_Apply_Creation(t *testing.T) {
@@ -323,7 +328,7 @@ func TestService_TriggerExecution_SecondExecution(t *testing.T) {
 	testCron := &cron.Cron{}
 	testExecutions := []*cron.Execution{
 		&cron.Execution{
-			Status: cron.ExecutionStatusSuccess,
+			AWSStatus: cron.ExecutionStatusSuccess,
 		},
 	}
 
@@ -346,7 +351,7 @@ func TestService_TriggerExecution_ExecutionRunning(t *testing.T) {
 	testCron := &cron.Cron{}
 	testExecutions := []*cron.Execution{
 		&cron.Execution{
-			Status: cron.ExecutionStatusRunning,
+			AWSStatus: cron.ExecutionStatusRunning,
 		},
 	}
 
@@ -409,6 +414,52 @@ func TestService_Exists_Error_UnkownError(t *testing.T) {
 	if exists {
 		t.Fatalf("expected a check for a service to be false when an unexpected error happens, but got true instead")
 	}
+}
+
+func TestService_StatusWithNoExecutions(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	ruleARN := "test-rule-arn"
+	testCron := &cron.Cron{}
+	testExecutions := []*cron.Execution{}
+
+	service, mocks := createServiceWithMocks(ctrl)
+
+	mocks.cs.EXPECT().GetByName(gomock.Any()).Return(testCron, nil)
+	mocks.ces.EXPECT().GetLastNExecutions(gomock.Any(), gomock.Any()).Return(testExecutions, nil)
+
+	if status, err := service.Status(ruleARN, 1); err != nil {
+		assert.NoError(t, err)
+	} else {
+		assert.Equal(t, "NONE", status.Status)
+	}
+
+}
+
+func TestService_StatusWithExecution(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	ruleARN := "test-rule-arn"
+	testCron := &cron.Cron{}
+	testExecutions := []*cron.Execution{
+		&cron.Execution{
+			AWSStatus: "RUNNING",
+		},
+	}
+
+	service, mocks := createServiceWithMocks(ctrl)
+
+	mocks.cs.EXPECT().GetByName(gomock.Any()).Return(testCron, nil)
+	mocks.ces.EXPECT().GetLastNExecutions(gomock.Any(), gomock.Any()).Return(testExecutions, nil)
+
+	if status, err := service.Status(ruleARN, 1); err != nil {
+		assert.NoError(t, err)
+	} else {
+		assert.Equal(t, "RUNNING", status.Status)
+	}
+
 }
 
 type mocks struct {

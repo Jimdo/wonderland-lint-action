@@ -133,9 +133,9 @@ func (s *Service) Status(cronName string, executionCount int64) (*cron.CronStatu
 		}).WithError(err).Error("Getting last n executions failed")
 	}
 
-	lastStatus := cron.ExecutionStatusUnknown
+	lastStatus := cron.ExecutionStatusNone
 	if len(executions) > 0 {
-		lastStatus = executions[0].Status
+		lastStatus = executions[0].GetExecutionStatus()
 	}
 
 	status := &cron.CronStatus{
