@@ -1,6 +1,7 @@
 package cron
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -138,4 +139,27 @@ func TestExecution_IsRunning(t *testing.T) {
 		status := execution.IsRunning()
 		assert.Equal(t, tc.ExpectedIsRunning, status)
 	}
+}
+
+func TestExecution_MarshalJSON(t *testing.T) {
+	execution := &Execution{
+		Name:            "test-execution",
+		ExitCode:        aws.Int64(0),
+		AWSStatus:       "STOPPED",
+		TimeoutExitCode: aws.Int64(0),
+	}
+
+	data, err := json.Marshal(execution)
+	assert.NoError(t, err)
+
+	var marshaledExecution struct {
+		*Execution
+		Status string
+	}
+
+	err = json.Unmarshal(data, &marshaledExecution)
+	assert.NoError(t, err)
+
+	assert.Equal(t, "SUCCESS", marshaledExecution.Status)
+
 }

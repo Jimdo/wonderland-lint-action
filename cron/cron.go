@@ -1,6 +1,7 @@
 package cron
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -43,6 +44,22 @@ type Execution struct {
 	Version         int64
 	ExpiryTime      int64
 	TimeoutExitCode *int64
+}
+
+// MarshalJSON implements the json.Marshaler interface and adds a
+// custom field Status to the marshaled JSON object which represents
+// the Wonderland specific status information of a cron execution.
+func (e *Execution) MarshalJSON() ([]byte, error) {
+	// A type alias is needed here to overwrite the MarshalJSON function
+	// without running into an infinite loop of the inlined Execution type
+	type Alias Execution
+	return json.Marshal(struct {
+		*Alias
+		Status string
+	}{
+		Alias:  (*Alias)(e),
+		Status: e.GetExecutionStatus(),
+	})
 }
 
 // GetExecutionStatus returns one of our ExecutionStatus strings depending on AWS'
