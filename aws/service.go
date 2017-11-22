@@ -132,9 +132,15 @@ func (s *Service) Status(cronName string, executionCount int64) (*cron.CronStatu
 			"count": executionCount,
 		}).WithError(err).Error("Getting last n executions failed")
 	}
+
+	lastStatus := cron.ExecutionStatusNone
+	if len(executions) > 0 {
+		lastStatus = executions[0].GetExecutionStatus()
+	}
+
 	status := &cron.CronStatus{
 		Cron:       c,
-		Status:     "not implemented yet",
+		Status:     lastStatus,
 		Executions: executions,
 	}
 

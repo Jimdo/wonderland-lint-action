@@ -47,14 +47,11 @@ func (es *DynamoDBExecutionStore) Update(cronName string, t *ecs.Task) error {
 		TaskArn:         aws.StringValue(t.TaskArn),
 		ExitCode:        cronContainer.ExitCode,
 		ExitReason:      aws.StringValue(t.StoppedReason),
-		Status:          aws.StringValue(t.LastStatus),
+		AWSStatus:       aws.StringValue(t.LastStatus),
 		Version:         aws.Int64Value(t.Version),
 		ExpiryTime:      es.calcExpiry(t),
 		TimeoutExitCode: timeoutContainer.ExitCode,
 	}
-
-	execution.Status = es.getStatusByExitCodes(execution)
-	executionLogger(execution).Debugf("Updated execution status")
 
 	data, err := dynamodbattribute.MarshalMap(execution)
 	if err != nil {
@@ -217,26 +214,4 @@ func (es *DynamoDBExecutionStore) batchDelete(cronName string, r []*dynamodb.Wri
 func (es *DynamoDBExecutionStore) calcExpiry(t *ecs.Task) int64 {
 	ttl := aws.TimeValue(t.CreatedAt).Add(24 * time.Hour * daysToKeepExecutions)
 	return ttl.Unix()
-}
-
-func (es *DynamoDBExecutionStore) getStatusByExitCodes(t *cron.Execution) string {
-	if t.Status == ecs.DesiredStatusStopped {
-		executionLogger(t).Debug("Got stopped execution to set status by exit code")
-		if t.ExitCode == nil || t.TimeoutExitCode == nil {
-			executionLogger(t).Debug("Execution status will be set to unknown")
-			return "UNKNOWN"
-		}
-		if aws.Int64Value(t.TimeoutExitCode) == cron.TimeoutExitCode {
-			executionLogger(t).Debug("Execution status will be set to timeout")
-			return "TIMEOUT"
-		}
-		if aws.Int64Value(t.ExitCode) == 0 {
-			executionLogger(t).Debug("Execution status will be set to success")
-			return "SUCCESS"
-		}
-		executionLogger(t).Debug("Execution status will be set to failed")
-		return "FAILED"
-	}
-	executionLogger(t).Debug("Got execution that is not stopped")
-	return t.Status
 }
