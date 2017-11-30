@@ -21,16 +21,18 @@ type ECSTaskDefinitionStore struct {
 	ecs ecsiface.ECSAPI
 	tdm *ECSTaskDefinitionMapper
 
-	clusterARN          string
-	ecsRunnerIdentifier string
+	clusterARN                string
+	ecsRunnerIdentifier       string
+	noScheduleMarkerAttribute string
 }
 
-func NewECSTaskDefinitionStore(e ecsiface.ECSAPI, tdm *ECSTaskDefinitionMapper, clusterARN, ecsRunnerIdentifier string) *ECSTaskDefinitionStore {
+func NewECSTaskDefinitionStore(e ecsiface.ECSAPI, tdm *ECSTaskDefinitionMapper, clusterARN, ecsRunnerIdentifier, noScheduleMarkerAttribute string) *ECSTaskDefinitionStore {
 	return &ECSTaskDefinitionStore{
-		ecs:                 e,
-		tdm:                 tdm,
-		clusterARN:          clusterARN,
-		ecsRunnerIdentifier: ecsRunnerIdentifier,
+		ecs:                       e,
+		tdm:                       tdm,
+		clusterARN:                clusterARN,
+		ecsRunnerIdentifier:       ecsRunnerIdentifier,
+		noScheduleMarkerAttribute: noScheduleMarkerAttribute,
 	}
 }
 
@@ -45,6 +47,14 @@ func (tds *ECSTaskDefinitionStore) AddRevisionFromCronDescription(cronName strin
 	rtdInput := &ecs.RegisterTaskDefinitionInput{
 		ContainerDefinitions: []*ecs.ContainerDefinition{cd},
 		Family:               awssdk.String(tdFamilyName),
+	}
+
+	if tds.noScheduleMarkerAttribute != "" {
+		rtdInput.PlacementConstraints = []*ecs.TaskDefinitionPlacementConstraint{
+			{
+				Expression: awssdk.String(fmt.Sprintf("attribute:%s not_exists", tds.noScheduleMarkerAttribute)),
+			},
+		}
 	}
 
 	timeoutSidecarDefinition := tds.createTimeoutSidecarDefinition(cronName, desc)
