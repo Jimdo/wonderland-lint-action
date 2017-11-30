@@ -16,6 +16,7 @@ components:
       EXECUTIONS_TABLE_NAME: '{{env `EXECUTIONS_TABLE_NAME` }}'
       WORKER_LEADER_LOCK_TABLE_NAME: '{{env `WORKER_LEADER_LOCK_TABLE_NAME`}}'
       EXEC_TRIGGER_TOPIC_ARN: '{{env `EXEC_TRIGGER_TOPIC_ARN`}}'
+      NO_SCHEDULE_ATTRIBUTE: wonderland.no-schedule
       $ref_secrets: vault+secret://vault.{{env `ZONE`}}/wonderland/crons
     capacity:
       memory: M
