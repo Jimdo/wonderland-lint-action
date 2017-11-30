@@ -53,6 +53,7 @@ func (tds *ECSTaskDefinitionStore) AddRevisionFromCronDescription(cronName strin
 		rtdInput.PlacementConstraints = []*ecs.TaskDefinitionPlacementConstraint{
 			{
 				Expression: awssdk.String(fmt.Sprintf("attribute:%s not_exists", tds.noScheduleMarkerAttribute)),
+				Type:       awssdk.String("memberOf"),
 			},
 		}
 	}
