@@ -68,7 +68,7 @@ func (e *Execution) GetExecutionStatus() string {
 	switch e.AWSStatus {
 	case ecs.DesiredStatusStopped:
 		if e.ExitCode == nil || e.TimeoutExitCode == nil {
-			log.WithField("execution", e).Error("Exit code(s) of stopped ECS unavailable")
+			log.WithField("task_arn", e.TaskArn).Error("Exit code(s) of stopped ECS unavailable")
 			return ExecutionStatusUnknown
 		}
 		if aws.Int64Value(e.ExitCode) == 0 {
