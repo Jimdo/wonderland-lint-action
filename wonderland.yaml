@@ -19,7 +19,7 @@ components:
       NO_SCHEDULE_ATTRIBUTE: '{{env `NO_SCHEDULE_ATTRIBUTE`}}'
       $ref_secrets: vault+secret://vault.{{env `ZONE`}}/wonderland/crons
     capacity:
-      memory: M
+      memory: XL
       CPU: L
     logging:
       types:
