@@ -32,7 +32,7 @@ func NewCloudwatchRuleCronManager(ce cloudwatcheventsiface.CloudWatchEventsAPI, 
 }
 
 func (cm *CloudwatchRuleCronManager) CreateRule(name, snsTopicARN, schedule string) (string, error) {
-	ruleName := cron.GetResourceByName(name)
+	ruleName := getHashedRuleName(name)
 
 	out, err := cm.cloudwatchEvents.PutRule(&cloudwatchevents.PutRuleInput{
 		Name:               awssdk.String(ruleName),
