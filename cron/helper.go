@@ -8,21 +8,21 @@ import (
 )
 
 const (
-	cronPrefix           = "cron--"
+	CronPrefix           = "cron--"
 	TimeoutExitCode      = 201
 	TimeoutContainerName = "timeout"
 )
 
 func GetNameByResource(resourceName string) string {
-	return strings.TrimPrefix(resourceName, cronPrefix)
+	return strings.TrimPrefix(resourceName, CronPrefix)
 }
 
 func GetResourceByName(cronName string) string {
-	return cronPrefix + cronName
+	return CronPrefix + cronName
 }
 
 func IsCron(container *ecs.Container) (bool, error) {
-	return strings.HasPrefix(aws.StringValue(container.Name), cronPrefix), nil
+	return strings.HasPrefix(aws.StringValue(container.Name), CronPrefix), nil
 }
 
 func GetUserContainerFromTask(t *ecs.Task) *ecs.Container {
