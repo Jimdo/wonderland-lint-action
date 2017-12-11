@@ -1,0 +1,12 @@
+language: go
+go: 1.9.x
+install:
+  - make clean generate install
+script:
+  - make test
+branches:
+  only:
+  - master
+notifications:
+  slack:
+    secure: W2UGSG+EvNshdRRUh94GYkhsMzy5xnpUjKOpJbuNCOw+aED/yHBdCBeoR6vCzQpF25WR+zGnCHM6ymjojf9/+aeDRD5L1yZvo8xldbXzMJWK8VyNBZLqiq5JUTwutCBexMk4C7hX89RKj6kBJ5G7mb67J3E+EcXPIBv9SOklmT3Yzje+vD6AiTOS/BeHRM+KMYBERqrVfS7M5lOnOECpgrxdsNcD93aTLH+gaT4tlo07Yisz6RtSL0A1pALLFsUXGxrPghkvs8dj8SZy6Ax4LeSDfcnsT+Av/iPCHE9J+cQFFasQTt6exqyMRX2Pq6jn/n3v8RJX5LSzyqwvYK0k7GtJASHB8j6sWOKfyUK8fnIutu2FlIyR7EkM+2Fx3iPuB0keq1eMYwA03KIBqGv11ZwVX74ljHWXOutJ4yk2BGydiJi4uK9MJ4c7RFbdkiTS+N3/kleeQVCAs+AsLrqK1yWf/HewG2oqj2WVUOPi4lNxbOHya6mkHZxjHVm4C6jM44/mZRcXYM1ymXYv0OF85gpfCW0TDwLZAvozEH+H4Zw0LmwJ2v8Mc32DkgK9RP2WwgGFyHyBkPdA42p1hse3wB0lLwxyKNvhTfLDAKgCwFomnZ9i0fuVjxCGvLHtY0g3dkW2y4MhhpO72BtgbD1c54TEa7l5ZaKGDzgtkj7IjF4=
