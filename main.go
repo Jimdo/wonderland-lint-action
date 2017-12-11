@@ -34,6 +34,7 @@ import (
 	"github.com/Jimdo/wonderland-crons/api/v2"
 	"github.com/Jimdo/wonderland-crons/aws"
 	"github.com/Jimdo/wonderland-crons/cron"
+	"github.com/Jimdo/wonderland-crons/cronitor"
 	"github.com/Jimdo/wonderland-crons/events"
 	"github.com/Jimdo/wonderland-crons/locking"
 	"github.com/Jimdo/wonderland-crons/nomad"
@@ -89,6 +90,10 @@ var (
 		// Logz.io
 		LogzioURL       string `flag:"logzio-url" env:"LOGZIO_URL" default:"https://app-eu.logz.io" description:"The URL of the Logz.io endpoint to use for Kibana and other services"`
 		LogzioAccountID string `flag:"logzio-account-id" env:"LOGZIO_ACCOUNT_ID" description:"The Logz.io account ID to use for Kibana URLs"`
+
+		// Cronitor
+		CronitorApiKey  string `flag:"cronitor-api-key" env:"CRONITOR_API_KEY" description:"Cronitor API Key"`
+		CronitorAuthKey string `flag:"cronitor-auth-key" env:"CRONITOR_AUTH_KEY" description:"Cronitor Auth Key"`
 	}
 	programIdentifier = "wonderland-crons"
 	programVersion    = "dev"
@@ -246,7 +251,9 @@ func main() {
 		log.Fatalf("Failed to initialize Cron store: %s", err)
 	}
 
-	service := aws.NewService(validator, cloudwatchcm, ecstds, dynamoDBCronStore, dynamoDBExecutionStore, config.ExecutionTriggerTopicARN)
+	hc := &http.Client{Timeout: time.Duration(10) * time.Second}
+	cronitorClient := cronitor.New(config.CronitorApiKey, config.CronitorAuthKey, hc)
+	service := aws.NewService(validator, cloudwatchcm, ecstds, dynamoDBCronStore, dynamoDBExecutionStore, config.ExecutionTriggerTopicARN, cronitorClient)
 
 	eventDispatcher := events.NewEventDispatcher()
 	eventDispatcher.On(events.EventCronExecutionStateChanged, events.CronExecutionStatePersister(dynamoDBExecutionStore))

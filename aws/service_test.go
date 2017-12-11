@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -149,6 +150,7 @@ func TestService_Delete(t *testing.T) {
 
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.cs.EXPECT().GetByName(cronName).Return(cron, nil)
+	mocks.cc.EXPECT().Delete(context.Background(), cronName)
 	mocks.cm.EXPECT().DeleteRule(cron.RuleARN)
 	mocks.tds.EXPECT().DeleteByFamily(cron.TaskDefinitionFamily)
 	mocks.ces.EXPECT().Delete(cronName)
@@ -172,6 +174,7 @@ func TestService_Delete_Error_OnRuleDeletionError(t *testing.T) {
 
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.cs.EXPECT().GetByName(cronName).Return(cron, nil)
+	mocks.cc.EXPECT().Delete(context.Background(), cronName)
 	mocks.cm.EXPECT().DeleteRule(cron.RuleARN).Return(errors.New("foo"))
 	mocks.tds.EXPECT().DeleteByFamily(cron.TaskDefinitionFamily)
 
@@ -193,6 +196,7 @@ func TestService_Delete_Error_OnTaskDefinitionDeletionError(t *testing.T) {
 
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.cs.EXPECT().GetByName(cronName).Return(cron, nil)
+	mocks.cc.EXPECT().Delete(context.Background(), cronName)
 	mocks.cm.EXPECT().DeleteRule(cron.RuleARN)
 	mocks.tds.EXPECT().DeleteByFamily(cron.TaskDefinitionFamily).Return(errors.New("foo"))
 
@@ -214,8 +218,9 @@ func TestService_Delete_Error_OnlyFirstErrorReturned(t *testing.T) {
 
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.cs.EXPECT().GetByName(cronName).Return(cron, nil)
-	mocks.cm.EXPECT().DeleteRule(cron.RuleARN).Return(errors.New("foo1"))
-	mocks.tds.EXPECT().DeleteByFamily(cron.TaskDefinitionFamily).Return(errors.New("foo2"))
+	mocks.cc.EXPECT().Delete(context.Background(), cronName).Return(errors.New("foo1"))
+	mocks.cm.EXPECT().DeleteRule(cron.RuleARN).Return(errors.New("foo2"))
+	mocks.tds.EXPECT().DeleteByFamily(cron.TaskDefinitionFamily).Return(errors.New("foo3"))
 
 	err := service.Delete(cronName)
 	if err == nil {
@@ -238,6 +243,7 @@ func TestService_Delete_Error_OnStoreDelete(t *testing.T) {
 
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.cs.EXPECT().GetByName(cronName).Return(cron, nil)
+	mocks.cc.EXPECT().Delete(context.Background(), cronName)
 	mocks.cm.EXPECT().DeleteRule(cron.RuleARN)
 	mocks.tds.EXPECT().DeleteByFamily(cron.TaskDefinitionFamily)
 	mocks.ces.EXPECT().Delete(cronName)
@@ -291,6 +297,7 @@ func TestService_Delete_Error_ExecutionDelete(t *testing.T) {
 
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.cs.EXPECT().GetByName(cronName).Return(cron, nil)
+	mocks.cc.EXPECT().Delete(context.Background(), cronName)
 	mocks.cm.EXPECT().DeleteRule(cron.RuleARN)
 	mocks.tds.EXPECT().DeleteByFamily(cron.TaskDefinitionFamily)
 	mocks.ces.EXPECT().Delete(cronName).Return(errors.New("foo"))
@@ -468,6 +475,7 @@ type mocks struct {
 	tds *mock.MockTaskDefinitionStore
 	cs  *mock.MockCronStore
 	ces *mock.MockCronExecutionStore
+	cc  *mock.MockCronitorAPI
 }
 
 func createServiceWithMocks(ctrl *gomock.Controller) (*Service, mocks) {
@@ -476,12 +484,14 @@ func createServiceWithMocks(ctrl *gomock.Controller) (*Service, mocks) {
 	tds := mock.NewMockTaskDefinitionStore(ctrl)
 	cs := mock.NewMockCronStore(ctrl)
 	ces := mock.NewMockCronExecutionStore(ctrl)
+	cc := mock.NewMockCronitorAPI(ctrl)
 
-	return NewService(v, cm, tds, cs, ces, "fake-topic"), mocks{
+	return NewService(v, cm, tds, cs, ces, "fake-topic", cc), mocks{
 		v:   v,
 		cm:  cm,
 		tds: tds,
 		cs:  cs,
 		ces: ces,
+		cc:  cc,
 	}
 }
