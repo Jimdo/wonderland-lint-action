@@ -12,6 +12,7 @@ import (
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
+	log "github.com/sirupsen/logrus"
 )
 
 type CronitorAPI interface {
@@ -30,7 +31,9 @@ func New(apiKey, authKey string, hc *http.Client) *Client {
 	transport := httptransport.NewWithClient(cfg.Host, cfg.BasePath, cfg.Schemes, hc)
 	authInfo := httptransport.BasicAuth(apiKey, "")
 	client := client.New(transport, strfmt.Default)
-	transport.Debug = true
+	if log.GetLevel() == log.DebugLevel {
+		transport.Debug = true
+	}
 
 	return &Client{
 		authInfo: authInfo,
