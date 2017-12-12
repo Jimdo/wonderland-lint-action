@@ -3,7 +3,6 @@ package cronitor
 import (
 	"context"
 	"net/http"
-	"time"
 
 	cronitor "github.com/Jimdo/cronitor-api-client"
 	"github.com/Jimdo/cronitor-api-client/client"
@@ -44,9 +43,9 @@ func New(apiKey, authKey string, hc *http.Client) *Client {
 
 type CreateOrUpdateParams struct {
 	// setup
-	Name          string
-	NotRunningFor time.Duration
-	Timeout       time.Duration
+	Name                    string
+	NoRunThreshhold         *int64
+	RanLongerThanThreshhold *int64
 	// notifications
 	PagerDuty string
 	Slack     string
@@ -69,18 +68,19 @@ func (c *Client) CreateOrUpdate(ctx context.Context, params CreateOrUpdateParams
 	if params.Slack != "" {
 		payload.Notifications.SLACK = []string{params.Slack}
 	}
-	// todo: this should never happen
-	if params.NotRunningFor > 0 {
+	if params.NoRunThreshhold != nil && *params.NoRunThreshhold > 0 {
 		payload.Rules = append(payload.Rules, &models.RuleHeartbeat{
 			RuleType: cronitor.StringPtr(models.RuleHeartbeatRuleTypeRunPingNotReceived),
-			Value:    cronitor.Float64Ptr(params.NotRunningFor.Minutes()),
+			// TODO: beautify
+			Value:    cronitor.Float64Ptr(float64(*params.NoRunThreshhold)),
 			TimeUnit: models.RuleHeartbeatTimeUnitMinutes,
 		})
 	}
-	if params.Timeout > 0 {
+	if params.RanLongerThanThreshhold != nil && *params.RanLongerThanThreshhold > 0 {
 		payload.Rules = append(payload.Rules, &models.RuleHeartbeat{
 			RuleType: cronitor.StringPtr(models.RuleHeartbeatRuleTypeRanLongerThan),
-			Value:    cronitor.Float64Ptr(float64(params.Timeout.Minutes())),
+			// TODO: beautify
+			Value:    cronitor.Float64Ptr(float64(*params.RanLongerThanThreshhold)),
 			TimeUnit: models.RuleHeartbeatTimeUnitMinutes,
 		})
 	}

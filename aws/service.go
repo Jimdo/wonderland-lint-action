@@ -2,7 +2,6 @@ package aws
 
 import (
 	"context"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 
@@ -88,17 +87,18 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 		return err
 	}
 
-	timeoutSeconds := time.Duration(*cronDescription.Timeout) * time.Second
-	err = s.cronitorClient.CreateOrUpdate(context.Background(), cronitor.CreateOrUpdateParams{
-		Name:          name,
-		NotRunningFor: timeoutSeconds,
-		Timeout:       timeoutSeconds,
-		PagerDuty:     "",
-		Slack:         "",
-	})
-	if err != nil {
-		log.WithError(err).WithField("cron", name).Error("Could not create monitor at cronitor")
-		return err
+	if cronDescription.Notifications != nil {
+		err = s.cronitorClient.CreateOrUpdate(context.Background(), cronitor.CreateOrUpdateParams{
+			Name:                    name,
+			NoRunThreshhold:         cronDescription.Notifications.NoRunThreshhold,
+			RanLongerThanThreshhold: cronDescription.Notifications.RanLongerThanThreshhold,
+			PagerDuty:               "",
+			Slack:                   "",
+		})
+		if err != nil {
+			log.WithError(err).WithField("cron", name).Error("Could not create monitor at cronitor")
+			return err
+		}
 	}
 
 	return nil

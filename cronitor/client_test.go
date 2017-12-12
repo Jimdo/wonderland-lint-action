@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -25,9 +24,13 @@ func TestCreateOrUpdate(t *testing.T) {
 
 	// create monitor
 	err := c.CreateOrUpdate(context.Background(), CreateOrUpdateParams{
-		Name:          cronName,
-		NotRunningFor: time.Minute * 2,
-		Timeout:       time.Minute * 5,
+		Name:                    cronName,
+		NoRunThreshhold:         int64Pointer(int64(5)),
+		RanLongerThanThreshhold: int64Pointer(int64(2)),
 	})
 	assert.NoError(t, err)
+}
+
+func int64Pointer(i int64) *int64 {
+	return &i
 }
