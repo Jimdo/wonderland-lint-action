@@ -40,7 +40,9 @@ set-credentials:
 			WONDERLAND_REGISTRY_PASS=$(WONDERLAND_PASS) \
 			QUAY_REGISTRY_USER=$(QUAY_USER) \
 			QUAY_REGISTRY_PASS=$(QUAY_PASS) \
-			LOGZIO_ACCOUNT_ID=$(LOGZIO_ACCOUNT_ID)
+			LOGZIO_ACCOUNT_ID=$(LOGZIO_ACCOUNT_ID) \
+			CRONITOR_API_KEY=$(CRONITOR_API_KEY) \
+			CRONITOR_AUTH_KEY=$(CRONITOR_AUTH_KEY)
 	WONDERLAND_ENV=$(JIMDO_ENVIRONMENT) \
 		wl vault write secret/wonderland/crons/proxy \
 			HTTP_USER="$(AUTH_USER)" \
@@ -70,6 +72,8 @@ test: test-container
 	docker run --rm -i \
 		-v $(PWD):/go/src/github.com/Jimdo/$(PROJECT_NAME) \
 		-e TEST_TAGS=$(TEST_TAGS) \
+		-e CRONITOR_API_KEY=$(CRONITOR_API_KEY) \
+		-e CRONITOR_AUTH_KEY=$(CRONITOR_AUTH_KEY) \
 		$(CRONS_TEST_IMAGE) ./script/test
 
 lint: test-container
