@@ -62,7 +62,6 @@ func (c *Client) CreateOrUpdate(ctx context.Context, params CreateOrUpdateParams
 		Type:          cronitor.StringPtr(models.MonitorTypeHeartbeat),
 		Rules:         models.MonitorParamsRules{},
 	}
-	payload.Notifications.Emails = []string{"simon.hartmann+cronitortest@jimdo.com"}
 
 	if params.PagerDuty != "" {
 		payload.Notifications.Pagerduty = []string{params.PagerDuty}
