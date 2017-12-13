@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	cronitor "github.com/Jimdo/cronitor-api-client"
 )
 
 func TestCreateOrUpdate(t *testing.T) {
@@ -25,12 +27,8 @@ func TestCreateOrUpdate(t *testing.T) {
 	// create monitor
 	err := c.CreateOrUpdate(context.Background(), CreateOrUpdateParams{
 		Name:                    cronName,
-		NoRunThreshhold:         int64Pointer(int64(5)),
-		RanLongerThanThreshhold: int64Pointer(int64(2)),
+		NoRunThreshhold:         cronitor.Int64Ptr(5),
+		RanLongerThanThreshhold: cronitor.Int64Ptr(2),
 	})
 	assert.NoError(t, err)
-}
-
-func int64Pointer(i int64) *int64 {
-	return &i
 }
