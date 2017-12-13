@@ -100,7 +100,7 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 			return err
 		}
 	} else {
-		if err = s.Delete(name); err != nil {
+		if err := s.cronitorClient.Delete(context.Background(), name); err != nil {
 			log.WithError(err).WithField("cron", name).Error("Could not delete monitor at cronitor")
 			return err
 		}
