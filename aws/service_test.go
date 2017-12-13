@@ -74,6 +74,48 @@ func TestService_Apply_Creation(t *testing.T) {
 	}
 }
 
+func TestService_Apply_NoNotifications(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	cronName := "test-cron"
+	cronDesc := &cron.CronDescription{
+		Schedule: "* * * * *",
+		Description: &cron.ContainerDescription{
+			Image: "python",
+			Arguments: []string{
+				"python",
+				"--version",
+			},
+			Environment: map[string]string{
+				"foo": "bar",
+				"baz": "fuz",
+			},
+			Capacity: &cron.CapacityDescription{
+				Memory: "l",
+				CPU:    "m",
+			},
+		},
+	}
+
+	taskDefARN := "task-definition-arn"
+	taskDefFamily := "task-defintion-family"
+	ruleARN := "rule-arn"
+
+	service, mocks := createServiceWithMocks(ctrl)
+	mocks.v.EXPECT().ValidateCronDescription(cronDesc)
+	mocks.v.EXPECT().ValidateCronName(cronName)
+	mocks.tds.EXPECT().AddRevisionFromCronDescription(cronName, cronDesc).Return(taskDefARN, taskDefFamily, nil)
+	mocks.cm.EXPECT().CreateRule(cronName, testTopicName, cronDesc.Schedule).Return(ruleARN, nil)
+	mocks.cs.EXPECT().Save(cronName, ruleARN, taskDefARN, taskDefFamily, cronDesc)
+	mocks.cc.EXPECT().Delete(context.Background(), cronName)
+
+	err := service.Apply(cronName, cronDesc)
+	if err != nil {
+		t.Fatalf("Creating cron failed: %s", err)
+	}
+}
+
 func TestService_Apply_Error_InvalidCronName(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
