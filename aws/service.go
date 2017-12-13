@@ -99,6 +99,11 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 			log.WithError(err).WithField("cron", name).Error("Could not create monitor at cronitor")
 			return err
 		}
+	} else {
+		if err = s.Delete(name); err != nil {
+			log.WithError(err).WithField("cron", name).Error("Could not delete monitor at cronitor")
+			return err
+		}
 	}
 
 	return nil
