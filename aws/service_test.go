@@ -5,20 +5,23 @@ import (
 	"errors"
 	"testing"
 
+	cronitorclient "github.com/Jimdo/cronitor-api-client"
 	"github.com/golang/mock/gomock"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/Jimdo/wonderland-crons/cron"
+	"github.com/Jimdo/wonderland-crons/cronitor"
 	"github.com/Jimdo/wonderland-crons/mock"
 	"github.com/Jimdo/wonderland-crons/store"
 )
+
+const testTopicName = "fake-topic"
 
 func init() {
 	log.SetLevel(log.FatalLevel)
 }
 
-/*
 func TestService_Apply_Creation(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -41,6 +44,10 @@ func TestService_Apply_Creation(t *testing.T) {
 				CPU:    "m",
 			},
 		},
+		Notifications: &cron.CronNotification{
+			NoRunThreshhold:         cronitorclient.Int64Ptr(10),
+			RanLongerThanThreshhold: cronitorclient.Int64Ptr(15),
+		},
 	}
 
 	taskDefARN := "task-definition-arn"
@@ -51,15 +58,21 @@ func TestService_Apply_Creation(t *testing.T) {
 	mocks.v.EXPECT().ValidateCronDescription(cronDesc)
 	mocks.v.EXPECT().ValidateCronName(cronName)
 	mocks.tds.EXPECT().AddRevisionFromCronDescription(cronName, cronDesc).Return(taskDefARN, taskDefFamily, nil)
-	mocks.cm.EXPECT().RunTaskDefinitionWithSchedule(cronName, taskDefARN, cronDesc.Schedule).Return(ruleARN, nil)
+	mocks.cm.EXPECT().CreateRule(cronName, testTopicName, cronDesc.Schedule).Return(ruleARN, nil)
 	mocks.cs.EXPECT().Save(cronName, ruleARN, taskDefARN, taskDefFamily, cronDesc)
+	mocks.cc.EXPECT().CreateOrUpdate(context.Background(), cronitor.CreateOrUpdateParams{
+		Name:                    cronName,
+		NoRunThreshhold:         cronDesc.Notifications.NoRunThreshhold,
+		RanLongerThanThreshhold: cronDesc.Notifications.RanLongerThanThreshhold,
+		PagerDuty:               "",
+		Slack:                   "",
+	})
 
 	err := service.Apply(cronName, cronDesc)
 	if err != nil {
 		t.Fatalf("Creating cron failed: %s", err)
 	}
 }
-*/
 
 func TestService_Apply_Error_InvalidCronName(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -111,8 +124,7 @@ func TestService_Apply_Error_AddTaskDefinitionRevision(t *testing.T) {
 	}
 }
 
-/*
-func TestService_Apply_Error_RunTaskDefinitionWithSchedule(t *testing.T) {
+func TestService_Apply_Error_CreateRule(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -128,15 +140,14 @@ func TestService_Apply_Error_RunTaskDefinitionWithSchedule(t *testing.T) {
 	mocks.tds.EXPECT().AddRevisionFromCronDescription(cronName, cronDesc).Return(taskDefARN, taskDefFamily, nil)
 
 	mocks.cm.EXPECT().
-		RunTaskDefinitionWithSchedule(cronName, taskDefARN, cronDesc.Schedule).
+		CreateRule(cronName, testTopicName, cronDesc.Schedule).
 		Return("", errors.New("foo"))
 
 	err := service.Apply(cronName, cronDesc)
 	if err == nil {
-		t.Fatal("expected an error when running a task definition to result in an error, but got none")
+		t.Fatal("expected an error when creating a CloudWatch rule to result in an error, but got none")
 	}
 }
-*/
 
 func TestService_Delete(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -486,7 +497,7 @@ func createServiceWithMocks(ctrl *gomock.Controller) (*Service, mocks) {
 	ces := mock.NewMockCronExecutionStore(ctrl)
 	cc := mock.NewMockCronitorAPI(ctrl)
 
-	return NewService(v, cm, tds, cs, ces, "fake-topic", cc), mocks{
+	return NewService(v, cm, tds, cs, ces, testTopicName, cc), mocks{
 		v:   v,
 		cm:  cm,
 		tds: tds,
