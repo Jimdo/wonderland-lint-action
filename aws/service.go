@@ -1,9 +1,12 @@
 package aws
 
 import (
+	"context"
+
 	log "github.com/sirupsen/logrus"
 
 	"github.com/Jimdo/wonderland-crons/cron"
+	"github.com/Jimdo/wonderland-crons/cronitor"
 	"github.com/Jimdo/wonderland-crons/store"
 )
 
@@ -31,11 +34,12 @@ type Service struct {
 	tds            TaskDefinitionStore
 	validator      CronValidator
 	executionStore CronExecutionStore
+	cronitorClient cronitor.CronitorAPI
 
 	topicARN string
 }
 
-func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s CronStore, es CronExecutionStore, tarn string) *Service {
+func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s CronStore, es CronExecutionStore, tarn string, cc cronitor.CronitorAPI) *Service {
 	return &Service{
 		cm:             cm,
 		cronStore:      s,
@@ -43,6 +47,7 @@ func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s 
 		validator:      v,
 		executionStore: es,
 		topicARN:       tarn,
+		cronitorClient: cc,
 	}
 }
 
@@ -82,6 +87,25 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 		return err
 	}
 
+	if cronDescription.Notifications != nil {
+		err = s.cronitorClient.CreateOrUpdate(context.Background(), cronitor.CreateOrUpdateParams{
+			Name:                    name,
+			NoRunThreshhold:         cronDescription.Notifications.NoRunThreshhold,
+			RanLongerThanThreshhold: cronDescription.Notifications.RanLongerThanThreshhold,
+			PagerDuty:               "",
+			Slack:                   "",
+		})
+		if err != nil {
+			log.WithError(err).WithField("cron", name).Error("Could not create monitor at cronitor")
+			return err
+		}
+	} else {
+		if err := s.cronitorClient.Delete(context.Background(), name); err != nil {
+			log.WithError(err).WithField("cron", name).Error("Could not delete monitor at cronitor")
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -95,6 +119,10 @@ func (s *Service) Delete(cronName string) error {
 	}
 
 	var errors []error
+	if err := s.cronitorClient.Delete(context.Background(), cronName); err != nil {
+		errors = append(errors, err)
+	}
+
 	if err := s.cm.DeleteRule(cron.RuleARN); err != nil {
 		errors = append(errors, err)
 	}

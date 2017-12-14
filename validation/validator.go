@@ -24,7 +24,8 @@ func New(cfg Configuration) *Validator {
 			Image:                cfg.DockerImageValidator,
 			EnvironmentVariables: cfg.EnvironmentVariables,
 		},
-		Name: cfg.WonderlandNameValidator,
+		Name:             cfg.WonderlandNameValidator,
+		CronNotification: &cronNotification{},
 	}
 
 	return &Validator{

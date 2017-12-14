@@ -61,9 +61,10 @@ func (d *CronDescription) Init() {
 }
 
 type CronDescription struct {
-	Schedule    string                `json:"schedule"`
-	Description *ContainerDescription `json:"description"`
-	Timeout     *int64                `json:"timeout"`
+	Schedule      string                `json:"schedule"`
+	Description   *ContainerDescription `json:"description"`
+	Timeout       *int64                `json:"timeout"`
+	Notifications *CronNotification     `json:"notifications,omitempty"`
 }
 
 type ContainerDescription struct {
@@ -72,6 +73,11 @@ type ContainerDescription struct {
 	Environment map[string]string    `json:"env,omitempty"`
 	Capacity    *CapacityDescription `json:"capacity,omitempty"`
 	Logging     *LogDescription      `json:"logging,omitempty"`
+}
+
+type CronNotification struct {
+	NoRunThreshhold         *int64 `json:"no-run-threshhold,omitempty"`
+	RanLongerThanThreshhold *int64 `json:"ran-longer-than-threshhold,omitempty"`
 }
 
 const (

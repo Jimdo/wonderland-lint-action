@@ -32,18 +32,6 @@ func (m *MockRuleCronManager) EXPECT() *MockRuleCronManagerMockRecorder {
 	return m.recorder
 }
 
-// ActivateRule mocks base method
-func (m *MockRuleCronManager) ActivateRule(arg0 string) error {
-	ret := m.ctrl.Call(m, "ActivateRule", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// ActivateRule indicates an expected call of ActivateRule
-func (mr *MockRuleCronManagerMockRecorder) ActivateRule(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ActivateRule", reflect.TypeOf((*MockRuleCronManager)(nil).ActivateRule), arg0)
-}
-
 // CreateRule mocks base method
 func (m *MockRuleCronManager) CreateRule(arg0, arg1, arg2 string) (string, error) {
 	ret := m.ctrl.Call(m, "CreateRule", arg0, arg1, arg2)
@@ -55,18 +43,6 @@ func (m *MockRuleCronManager) CreateRule(arg0, arg1, arg2 string) (string, error
 // CreateRule indicates an expected call of CreateRule
 func (mr *MockRuleCronManagerMockRecorder) CreateRule(arg0, arg1, arg2 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateRule", reflect.TypeOf((*MockRuleCronManager)(nil).CreateRule), arg0, arg1, arg2)
-}
-
-// DeactivateRule mocks base method
-func (m *MockRuleCronManager) DeactivateRule(arg0 string) error {
-	ret := m.ctrl.Call(m, "DeactivateRule", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeactivateRule indicates an expected call of DeactivateRule
-func (mr *MockRuleCronManagerMockRecorder) DeactivateRule(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeactivateRule", reflect.TypeOf((*MockRuleCronManager)(nil).DeactivateRule), arg0)
 }
 
 // DeleteRule mocks base method

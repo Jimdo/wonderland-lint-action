@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  branch = "master"
+  name = "github.com/Jimdo/cronitor-api-client"
+  packages = [".","client","client/heartbeat","client/monitor","models"]
+  revision = "24513c5beea815bd0609c4bebab69f3e6b65ea6a"
+
+[[projects]]
   name = "github.com/Jimdo/wonderland-validator"
   packages = ["docker/registry","validator"]
   revision = "6e2b32e54f6831f3f039bc74c0c7e5e0ad63b7bd"
@@ -17,6 +23,24 @@
   name = "github.com/Luzifer/rconfig"
   packages = ["."]
   revision = "31d785fa79c95e7b92c955689c5b0feed4fc0c7d"
+
+[[projects]]
+  name = "github.com/PuerkitoBio/purell"
+  packages = ["."]
+  revision = "0bcb03f4b4d0a9428594752bd2a3b9aa0a9d4bd4"
+  version = "v1.1.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/PuerkitoBio/urlesc"
+  packages = ["."]
+  revision = "de5bf2ad457846296e2031421a34e2568e304e35"
+
+[[projects]]
+  name = "github.com/asaskevich/govalidator"
+  packages = ["."]
+  revision = "521b25f4b05fd26bec69d9dedeb8f9c9a83939a8"
+  version = "v8"
 
 [[projects]]
   name = "github.com/aws/aws-sdk-go"
@@ -44,6 +68,66 @@
   name = "github.com/go-ini/ini"
   packages = ["."]
   revision = "9f4d2712cf687b68fad24366f81eaee163079090"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/go-openapi/analysis"
+  packages = ["."]
+  revision = "5c7230aa5ab8abb751bf85916c87ecd4e1698bd9"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/go-openapi/errors"
+  packages = ["."]
+  revision = "03cfca65330da08a5a440053faf994a3c682b5bf"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/go-openapi/jsonpointer"
+  packages = ["."]
+  revision = "779f45308c19820f1a69e9a4cd965f496e0da10f"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/go-openapi/jsonreference"
+  packages = ["."]
+  revision = "36d33bfe519efae5632669801b180bf1a245da3b"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/go-openapi/loads"
+  packages = ["."]
+  revision = "2a2b323bab96e6b1fdee110e57d959322446e9c9"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/go-openapi/runtime"
+  packages = [".","client","logger","middleware","middleware/denco","middleware/header","middleware/untyped","security"]
+  revision = "55d76b2319213cf30fdb7c4ae3a01541f5404c16"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/go-openapi/spec"
+  packages = ["."]
+  revision = "01738944bdee0f26bf66420c5b17d54cfdf55341"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/go-openapi/strfmt"
+  packages = ["."]
+  revision = "610b6cacdcde6852f4de68998bd20ce1dac85b22"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/go-openapi/swag"
+  packages = ["."]
+  revision = "cf0bdb963811675a4d7e74901cefc7411a1df939"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/go-openapi/validate"
+  packages = ["."]
+  revision = "d509235108fcf6ab4913d2dcb3a2260c0db2108e"
 
 [[projects]]
   name = "github.com/golang/mock"
@@ -133,6 +217,12 @@
   revision = "bd40a432e4c76585ef6b72d3fd96fb9b6dc7b68d"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/mailru/easyjson"
+  packages = ["buffer","jlexer","jwriter"]
+  revision = "32fa128f234d041f196a9f3e0fea5ac9772c08e1"
+
+[[projects]]
   name = "github.com/mitchellh/copystructure"
   packages = ["."]
   revision = "6871c41ca9148d368715dedcda473f396f205df5"
@@ -198,7 +288,7 @@
 
 [[projects]]
   name = "golang.org/x/net"
-  packages = ["context","http2","http2/hpack","idna","lex/httplex"]
+  packages = ["context","context/ctxhttp","http2","http2/hpack","idna","lex/httplex"]
   revision = "513929065c19401a1c7b76ecd942f9f86a0c061b"
 
 [[projects]]
@@ -213,8 +303,14 @@
 
 [[projects]]
   name = "golang.org/x/text"
-  packages = ["internal/gen","internal/triegen","internal/ucd","secure/bidirule","transform","unicode/bidi","unicode/cldr","unicode/norm","unicode/rangetable"]
+  packages = ["internal/gen","internal/triegen","internal/ucd","secure/bidirule","transform","unicode/bidi","unicode/cldr","unicode/norm","unicode/rangetable","width"]
   revision = "470f45bf29f4147d6fbd7dfd0a02a848e49f5bf4"
+
+[[projects]]
+  branch = "v2"
+  name = "gopkg.in/mgo.v2"
+  packages = ["bson","internal/json"]
+  revision = "3f83fa5005286a7fe593b055f0d7771a7dce4655"
 
 [[projects]]
   name = "gopkg.in/oleiade/lane.v1"
@@ -236,6 +332,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "41cf18af7b63bb8327fbe8e54eecc455ce882efd6a83619314be468ca8b687c9"
+  inputs-digest = "df7d4c68f2ba5dddebdfc06e9d648233dc41ca363220ba00b8cd2a37480cb662"
   solver-name = "gps-cdcl"
   solver-version = 1
