@@ -5,6 +5,7 @@ package validation
 import (
 	"testing"
 
+	cronitor "github.com/Jimdo/cronitor-api-client"
 	"github.com/Jimdo/wonderland-validator/docker/registry"
 	wonderlandValidator "github.com/Jimdo/wonderland-validator/validator"
 
@@ -20,6 +21,10 @@ func TestValidateCronDescription_Valid(t *testing.T) {
 				CPU:    "S",
 				Memory: "XL",
 			},
+		},
+		Notifications: &cron.CronNotification{
+			NoRunThreshhold:         cronitor.Int64Ptr(1),
+			RanLongerThanThreshhold: cronitor.Int64Ptr(5),
 		},
 	}
 
@@ -38,6 +43,7 @@ func TestValidateCronDescription_Valid(t *testing.T) {
 				MemoryMaxCapacity:            cron.MaxMemoryCapacity,
 			},
 		},
+		CronNotification: &cronNotification{},
 	}
 	if err := v.validate(desc); err != nil {
 		t.Errorf("%+v should be a valid cron description, err = %s", desc, err)
