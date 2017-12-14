@@ -71,16 +71,14 @@ func (c *Client) CreateOrUpdate(ctx context.Context, params CreateOrUpdateParams
 	if params.NoRunThreshhold != nil && *params.NoRunThreshhold > 0 {
 		payload.Rules = append(payload.Rules, &models.RuleHeartbeat{
 			RuleType: cronitor.StringPtr(models.RuleHeartbeatRuleTypeRunPingNotReceived),
-			// TODO: beautify
-			Value:    cronitor.Float64Ptr(float64(*params.NoRunThreshhold)),
+			Value:    params.NoRunThreshhold,
 			TimeUnit: models.RuleHeartbeatTimeUnitMinutes,
 		})
 	}
 	if params.RanLongerThanThreshhold != nil && *params.RanLongerThanThreshhold > 0 {
 		payload.Rules = append(payload.Rules, &models.RuleHeartbeat{
 			RuleType: cronitor.StringPtr(models.RuleHeartbeatRuleTypeRanLongerThan),
-			// TODO: beautify
-			Value:    cronitor.Float64Ptr(float64(*params.RanLongerThanThreshhold)),
+			Value:    params.RanLongerThanThreshhold,
 			TimeUnit: models.RuleHeartbeatTimeUnitMinutes,
 		})
 	}
