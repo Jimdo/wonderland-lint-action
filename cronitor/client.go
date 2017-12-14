@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/Jimdo/cronitor-api-client/client/heartbeat"
+
 	cronitor "github.com/Jimdo/cronitor-api-client"
 	"github.com/Jimdo/cronitor-api-client/client"
 	"github.com/Jimdo/cronitor-api-client/client/monitor"
@@ -117,5 +119,49 @@ func (c *Client) Delete(ctx context.Context, name string) error {
 	if _, ok := err.(*monitor.DeleteNotFound); ok {
 		return nil
 	}
+	return err
+}
+
+func (c *Client) GetMonitor(ctx context.Context, name string) (*models.Monitor, error) {
+	res, err := c.client.Monitor.Get(&monitor.GetParams{
+		Code:    name,
+		Context: ctx,
+	}, c.authInfo)
+
+	if err != nil {
+		// treat a 404 as no error
+		if _, ok := err.(*monitor.GetNotFound); ok {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return res.Payload, err
+}
+
+func (c *Client) ReportRun(ctx context.Context, code string) error {
+	_, err := c.client.Heartbeat.ReportRun(&heartbeat.ReportRunParams{
+		AuthKey: cronitor.StringPtr(c.authKey),
+		Code:    code,
+		Context: ctx,
+	})
+	return err
+}
+
+func (c *Client) ReportSuccess(ctx context.Context, code string) error {
+	_, err := c.client.Heartbeat.ReportComplete(&heartbeat.ReportCompleteParams{
+		AuthKey: cronitor.StringPtr(c.authKey),
+		Code:    code,
+		Context: ctx,
+	})
+	return err
+}
+
+func (c *Client) ReportFail(ctx context.Context, code string) error {
+	_, err := c.client.Heartbeat.ReportFail(&heartbeat.ReportFailParams{
+		AuthKey: cronitor.StringPtr(c.authKey),
+		Code:    code,
+		Context: ctx,
+	})
 	return err
 }
