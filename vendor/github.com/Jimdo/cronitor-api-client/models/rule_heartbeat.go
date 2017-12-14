@@ -23,7 +23,7 @@ type RuleHeartbeat struct {
 	GraceSeconds int64 `json:"grace_seconds,omitempty"`
 
 	// hours to followup alert
-	HoursToFollowupAlert float64 `json:"hours_to_followup_alert,omitempty"`
+	HoursToFollowupAlert int64 `json:"hours_to_followup_alert,omitempty"`
 
 	// rule type
 	// Required: true
@@ -34,7 +34,7 @@ type RuleHeartbeat struct {
 
 	// value
 	// Required: true
-	Value *float64 `json:"value"`
+	Value *int64 `json:"value"`
 }
 
 // Validate validates this rule heartbeat

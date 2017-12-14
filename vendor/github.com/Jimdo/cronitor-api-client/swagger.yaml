@@ -310,7 +310,7 @@ definitions:
           - run_ping_received
           - complete_ping_received
       value:
-        type: number # this is actually string or number
+        type: integer
       time_unit:
         type: string
         enum:
@@ -320,7 +320,7 @@ definitions:
           - days
           - weeks
       hours_to_followup_alert:
-        type: number
+        type: integer
       grace_seconds:
         type: integer
     required:

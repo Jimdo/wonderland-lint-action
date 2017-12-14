@@ -37,7 +37,7 @@ func TestIntegrationFull(t *testing.T) {
 					HoursToFollowupAlert: 1,
 					RuleType:             StringPtr(models.RuleHeartbeatRuleTypeRanLessThan),
 					TimeUnit:             models.RuleHeartbeatTimeUnitSeconds,
-					Value:                Float64Ptr(120),
+					Value:                Int64Ptr(120),
 				},
 			},
 			Note: "this is my private test monitor to conquer the world.",
@@ -56,7 +56,7 @@ func TestIntegrationFull(t *testing.T) {
 				&models.RuleHeartbeat{
 					RuleType: StringPtr(models.RuleHeartbeatRuleTypeRunPingNotReceived),
 					TimeUnit: models.RuleHeartbeatTimeUnitSeconds,
-					Value:    Float64Ptr(120),
+					Value:    Int64Ptr(120),
 				},
 			},
 			Type: StringPtr(models.MonitorParamsTypeHeartbeat),
