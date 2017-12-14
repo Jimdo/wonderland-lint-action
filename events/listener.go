@@ -59,25 +59,30 @@ func CronitorHeartbeatUpdater(ef ExecutionFetcher, cf CronFetcher, mn MonitorNot
 		}
 		exec := execs[0]
 
-		monitor, err := mn.GetMonitor(context.Background(), c.CronName)
-		if err != nil {
-			return err
-		} else if monitor == nil {
-			return fmt.Errorf("Cannot get monitor of cron %q", c.CronName)
-		}
-
+		// TODO: Improve fetching of monitor
 		switch exec.GetExecutionStatus() {
-		case cron.ExecutionStatusRunning:
-			return mn.ReportRun(context.Background(), monitor.Code)
 		case cron.ExecutionStatusTimeout:
 			fallthrough
 		case cron.ExecutionStatusFailed:
+			monitor, err := mn.GetMonitor(context.Background(), c.CronName)
+			if err != nil {
+				return err
+			} else if monitor == nil {
+				return fmt.Errorf("Cannot get monitor of cron %q", c.CronName)
+			}
+
 			return mn.ReportFail(context.Background(), monitor.Code)
 		case cron.ExecutionStatusSuccess:
+			monitor, err := mn.GetMonitor(context.Background(), c.CronName)
+			if err != nil {
+				return err
+			} else if monitor == nil {
+				return fmt.Errorf("Cannot get monitor of cron %q", c.CronName)
+			}
+
 			return mn.ReportSuccess(context.Background(), monitor.Code)
 		}
 
-		// TODO: Add logging
-		return fmt.Errorf("Cannot notify monitor of cron %q", c.CronName)
+		return nil
 	}
 }
