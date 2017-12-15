@@ -257,11 +257,13 @@ func main() {
 
 	eventDispatcher := events.NewEventDispatcher()
 	eventDispatcher.On(events.EventCronExecutionStateChanged, events.CronExecutionStatePersister(dynamoDBExecutionStore))
-	eventDispatcher.On(events.EventCronExecutionStateChanged, events.CronitorHeartbeatUpdater(
-		dynamoDBExecutionStore,
-		dynamoDBCronStore,
-		cronitorClient,
-	))
+	/*
+		eventDispatcher.On(events.EventCronExecutionStateChanged, events.CronitorHeartbeatUpdater(
+			dynamoDBExecutionStore,
+			dynamoDBCronStore,
+			cronitorClient,
+		))
+	*/
 
 	lm := locking.NewDynamoDBLockManager(dynamoDBClient, config.WorkerLeaderLockTableName)
 	w := events.NewWorker(lm, sqsClient, config.ECSEventsQueueURL, eventDispatcher,

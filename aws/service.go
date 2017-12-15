@@ -2,7 +2,9 @@ package aws
 
 import (
 	"context"
+	"fmt"
 
+	cronitormodel "github.com/Jimdo/cronitor-api-client/models"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/Jimdo/wonderland-crons/cron"
@@ -28,18 +30,25 @@ type CronExecutionStore interface {
 	Delete(string) error
 }
 
+type MonitorManager interface {
+	GetMonitor(ctx context.Context, code string) (*cronitormodel.Monitor, error)
+	ReportRun(ctx context.Context, code string) error
+	Delete(ctx context.Context, name string) error
+	CreateOrUpdate(ctx context.Context, params cronitor.CreateOrUpdateParams) error
+}
+
 type Service struct {
 	cm             RuleCronManager
 	cronStore      CronStore
 	tds            TaskDefinitionStore
 	validator      CronValidator
 	executionStore CronExecutionStore
-	cronitorClient cronitor.CronitorAPI
+	mn             MonitorManager
 
 	topicARN string
 }
 
-func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s CronStore, es CronExecutionStore, tarn string, cc cronitor.CronitorAPI) *Service {
+func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s CronStore, es CronExecutionStore, tarn string, mn MonitorManager) *Service {
 	return &Service{
 		cm:             cm,
 		cronStore:      s,
@@ -47,7 +56,7 @@ func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s 
 		validator:      v,
 		executionStore: es,
 		topicARN:       tarn,
-		cronitorClient: cc,
+		mn:             mn,
 	}
 }
 
@@ -88,7 +97,7 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 	}
 
 	if cronDescription.Notifications != nil {
-		err = s.cronitorClient.CreateOrUpdate(context.Background(), cronitor.CreateOrUpdateParams{
+		err = s.mn.CreateOrUpdate(context.Background(), cronitor.CreateOrUpdateParams{
 			Name:                    name,
 			NoRunThreshhold:         cronDescription.Notifications.NoRunThreshhold,
 			RanLongerThanThreshhold: cronDescription.Notifications.RanLongerThanThreshhold,
@@ -100,7 +109,7 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 			return err
 		}
 	} else {
-		if err := s.cronitorClient.Delete(context.Background(), name); err != nil {
+		if err := s.mn.Delete(context.Background(), name); err != nil {
 			log.WithError(err).WithField("cron", name).Error("Could not delete monitor at cronitor")
 			return err
 		}
@@ -119,7 +128,7 @@ func (s *Service) Delete(cronName string) error {
 	}
 
 	var errors []error
-	if err := s.cronitorClient.Delete(context.Background(), cronName); err != nil {
+	if err := s.mn.Delete(context.Background(), cronName); err != nil {
 		errors = append(errors, err)
 	}
 
@@ -205,7 +214,18 @@ func (s *Service) TriggerExecution(cronRuleARN string) error {
 	}).Infof("Trigger cron execution, started: %t", startExecution)
 
 	if startExecution {
-		return s.tds.RunTaskDefinition(cron.LatestTaskDefinitionRevisionARN)
+		if err := s.tds.RunTaskDefinition(cron.LatestTaskDefinitionRevisionARN); err != nil {
+			return err
+		}
+
+		monitor, err := s.mn.GetMonitor(context.Background(), cron.Name)
+		if err != nil {
+			return err
+		} else if monitor == nil {
+			return fmt.Errorf("Cannot get monitor of cron %q", cron.Name)
+		}
+
+		return s.mn.ReportRun(context.Background(), monitor.Code)
 	}
 
 	return nil

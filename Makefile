@@ -106,10 +106,9 @@ gen-mocks:
 	mockgen -package mock github.com/Jimdo/wonderland-crons/aws RuleCronManager > mock/rule_cron_manager.go
 	mockgen -package mock github.com/Jimdo/wonderland-crons/aws TaskDefinitionStore > mock/task_definition_store.go
 	mockgen -package mock github.com/Jimdo/wonderland-crons/aws CronStore > mock/cron_store.go
-	mockgen -package mock github.com/Jimdo/wonderland-crons/aws CronExecutionStore > mock/cron_execution_store.go
+	mockgen -package mock github.com/Jimdo/wonderland-crons/aws MonitorManager > mock/monitor_manager.go
 	mockgen -package mock github.com/Jimdo/wonderland-crons/aws VaultSecretProvider > mock/vault_secret_provider.go
 	mockgen -package mock github.com/Jimdo/wonderland-crons/aws VaultAppRoleProvider > mock/vault_app_role_provider.go
 	mockgen -package mock github.com/Jimdo/wonderland-crons/events TaskStore > mock/task_store.go
-	mockgen -package mock github.com/Jimdo/wonderland-crons/cronitor CronitorAPI > mock/cronitor_client.go
 	mockgen -package mock github.com/aws/aws-sdk-go/service/sqs/sqsiface SQSAPI > mock/sqsapi.go
 

@@ -18,6 +18,10 @@ type ExecutionFetcher interface {
 	GetLastNExecutions(string, int64) ([]*cron.Execution, error)
 }
 
+type TaskStore interface {
+	Update(string, *ecs.Task) error
+}
+
 type CronFetcher interface {
 	GetByName(string) (*cron.Cron, error)
 }
@@ -29,15 +33,16 @@ type MonitorNotfier interface {
 	ReportFail(ctx context.Context, code string) error
 }
 
-func CronExecutionStatePersister(eu ExecutionUpdater) func(c EventContext) error {
+func CronExecutionStatePersister(ts TaskStore) func(c EventContext) error {
 	return func(c EventContext) error {
-		if err := eu.Update(c.CronName, c.Task); err != nil {
+		if err := ts.Update(c.CronName, c.Task); err != nil {
 			return fmt.Errorf("storing cron execution in DynamoDB failed: %s", err)
 		}
 		return nil
 	}
 }
 
+// TODO: This needs to be refactored to only notify on stopped ECS events
 func CronitorHeartbeatUpdater(ef ExecutionFetcher, cf CronFetcher, mn MonitorNotfier) func(c EventContext) error {
 	return func(c EventContext) error {
 		desc, err := cf.GetByName(c.CronName)
