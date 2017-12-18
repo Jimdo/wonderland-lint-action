@@ -16,10 +16,10 @@ func Test_createTimeoutSidecarDefinition(t *testing.T) {
 	cronDescription := &cron.CronDescription{
 		Timeout: &timeoutValue,
 	}
-	// acutally the command is: /bin/sh -c "trap 'echo got SIGTERM' SIGTERM; sleep 10 & wait $! && exit 201"
+	// acutally the command is: /bin/sh -c "trap 'exit' SIGTERM; sleep 10 & wait $! && exit 201"
 	// but it is hard to match a string slice to a string with bash quoting
 	// and the intended purpose is to test the correct variable substitution
-	expectedCommand := `/bin/sh -c sleep 10 & wait $! && exit 201`
+	expectedCommand := `/bin/sh -c trap 'exit' SIGTERM; sleep 10 & wait $! && exit 201`
 	tds := &ECSTaskDefinitionStore{}
 
 	// execution
