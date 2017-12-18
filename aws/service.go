@@ -3,7 +3,6 @@ package aws
 import (
 	"context"
 
-	cronitormodel "github.com/Jimdo/cronitor-api-client/models"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/Jimdo/wonderland-crons/cron"
@@ -30,7 +29,6 @@ type CronExecutionStore interface {
 }
 
 type MonitorManager interface {
-	GetMonitor(ctx context.Context, code string) (*cronitormodel.Monitor, error)
 	ReportRun(ctx context.Context, code string) error
 	Delete(ctx context.Context, name string) error
 	CreateOrUpdate(ctx context.Context, params cronitor.CreateOrUpdateParams) (string, error)

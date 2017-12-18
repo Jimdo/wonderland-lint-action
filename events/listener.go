@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	cronitormodel "github.com/Jimdo/cronitor-api-client/models"
-
 	"github.com/Jimdo/wonderland-crons/cron"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
@@ -28,7 +26,6 @@ type CronFetcher interface {
 }
 
 type MonitorNotfier interface {
-	GetMonitor(ctx context.Context, code string) (*cronitormodel.Monitor, error)
 	ReportRun(ctx context.Context, code string) error
 	ReportSuccess(ctx context.Context, code string) error
 	ReportFail(ctx context.Context, code string) error

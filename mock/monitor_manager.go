@@ -6,11 +6,9 @@ package mock
 
 import (
 	context "context"
-	reflect "reflect"
-
-	models "github.com/Jimdo/cronitor-api-client/models"
 	cronitor "github.com/Jimdo/wonderland-crons/cronitor"
 	gomock "github.com/golang/mock/gomock"
+	reflect "reflect"
 )
 
 // MockMonitorManager is a mock of MonitorManager interface
@@ -59,19 +57,6 @@ func (m *MockMonitorManager) Delete(arg0 context.Context, arg1 string) error {
 // Delete indicates an expected call of Delete
 func (mr *MockMonitorManagerMockRecorder) Delete(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockMonitorManager)(nil).Delete), arg0, arg1)
-}
-
-// GetMonitor mocks base method
-func (m *MockMonitorManager) GetMonitor(arg0 context.Context, arg1 string) (*models.Monitor, error) {
-	ret := m.ctrl.Call(m, "GetMonitor", arg0, arg1)
-	ret0, _ := ret[0].(*models.Monitor)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetMonitor indicates an expected call of GetMonitor
-func (mr *MockMonitorManagerMockRecorder) GetMonitor(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMonitor", reflect.TypeOf((*MockMonitorManager)(nil).GetMonitor), arg0, arg1)
 }
 
 // ReportRun mocks base method
