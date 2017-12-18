@@ -43,7 +43,6 @@ func CronExecutionStatePersister(ts TaskStore) func(c EventContext) error {
 	}
 }
 
-// TODO: This needs to be refactored to only notify on stopped ECS events
 func CronitorHeartbeatUpdater(ef ExecutionFetcher, cf CronFetcher, mn MonitorNotfier) func(c EventContext) error {
 	return func(c EventContext) error {
 		if aws.StringValue(c.Task.LastStatus) != ecs.DesiredStatusStopped {
@@ -60,7 +59,6 @@ func CronitorHeartbeatUpdater(ef ExecutionFetcher, cf CronFetcher, mn MonitorNot
 		}
 
 		cronContainer := cron.GetUserContainerFromTask(c.Task)
-		timeoutContainer := cron.GetTimeoutContainerFromTask(c.Task)
 
 		monitor, err := mn.GetMonitor(context.Background(), c.CronName)
 		if err != nil {
@@ -69,10 +67,10 @@ func CronitorHeartbeatUpdater(ef ExecutionFetcher, cf CronFetcher, mn MonitorNot
 			return fmt.Errorf("Cannot get monitor of cron %q", c.CronName)
 		}
 
-		if aws.Int64Value(cronContainer.ExitCode) != 0 || aws.Int64Value(timeoutContainer.ExitCode) != 0 {
-			return mn.ReportFail(context.Background(), monitor.Code)
+		if aws.Int64Value(cronContainer.ExitCode) == 0 {
+			return mn.ReportSuccess(context.Background(), monitor.Code)
 		}
-		return mn.ReportSuccess(context.Background(), monitor.Code)
+		return mn.ReportFail(context.Background(), monitor.Code)
 
 	}
 }
