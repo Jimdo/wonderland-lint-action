@@ -85,13 +85,13 @@ func (mr *MockCronStoreMockRecorder) List() *gomock.Call {
 }
 
 // Save mocks base method
-func (m *MockCronStore) Save(arg0, arg1, arg2, arg3 string, arg4 *cron.CronDescription) error {
-	ret := m.ctrl.Call(m, "Save", arg0, arg1, arg2, arg3, arg4)
+func (m *MockCronStore) Save(arg0, arg1, arg2, arg3 string, arg4 *cron.CronDescription, arg5 string) error {
+	ret := m.ctrl.Call(m, "Save", arg0, arg1, arg2, arg3, arg4, arg5)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Save indicates an expected call of Save
-func (mr *MockCronStoreMockRecorder) Save(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockCronStore)(nil).Save), arg0, arg1, arg2, arg3, arg4)
+func (mr *MockCronStoreMockRecorder) Save(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockCronStore)(nil).Save), arg0, arg1, arg2, arg3, arg4, arg5)
 }

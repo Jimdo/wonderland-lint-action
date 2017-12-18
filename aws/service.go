@@ -16,7 +16,7 @@ type CronValidator interface {
 }
 
 type CronStore interface {
-	Save(string, string, string, string, *cron.CronDescription) error
+	Save(string, string, string, string, *cron.CronDescription, string) error
 	Delete(string) error
 	List() ([]string, error)
 	GetByName(string) (*cron.Cron, error)
@@ -28,18 +28,24 @@ type CronExecutionStore interface {
 	Delete(string) error
 }
 
+type MonitorManager interface {
+	ReportRun(ctx context.Context, code string) error
+	Delete(ctx context.Context, name string) error
+	CreateOrUpdate(ctx context.Context, params cronitor.CreateOrUpdateParams) (string, error)
+}
+
 type Service struct {
 	cm             RuleCronManager
 	cronStore      CronStore
 	tds            TaskDefinitionStore
 	validator      CronValidator
 	executionStore CronExecutionStore
-	cronitorClient cronitor.CronitorAPI
+	mn             MonitorManager
 
 	topicARN string
 }
 
-func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s CronStore, es CronExecutionStore, tarn string, cc cronitor.CronitorAPI) *Service {
+func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s CronStore, es CronExecutionStore, tarn string, mn MonitorManager) *Service {
 	return &Service{
 		cm:             cm,
 		cronStore:      s,
@@ -47,7 +53,7 @@ func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s 
 		validator:      v,
 		executionStore: es,
 		topicARN:       tarn,
-		cronitorClient: cc,
+		mn:             mn,
 	}
 }
 
@@ -77,18 +83,9 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 		return err
 	}
 
-	if err := s.cronStore.Save(name, ruleARN, latestTaskDefARN, taskDefFamily, cronDescription); err != nil {
-		log.WithError(err).WithFields(log.Fields{
-			"cron":        name,
-			"task_arn":    latestTaskDefARN,
-			"task_family": taskDefFamily,
-			"rule_arn":    ruleARN,
-		}).Error("Could not save cron in DynamoDB")
-		return err
-	}
-
+	cronitorMonitorID := ""
 	if cronDescription.Notifications != nil {
-		err = s.cronitorClient.CreateOrUpdate(context.Background(), cronitor.CreateOrUpdateParams{
+		cronitorMonitorID, err = s.mn.CreateOrUpdate(context.Background(), cronitor.CreateOrUpdateParams{
 			Name:                    name,
 			NoRunThreshhold:         cronDescription.Notifications.NoRunThreshhold,
 			RanLongerThanThreshhold: cronDescription.Notifications.RanLongerThanThreshhold,
@@ -100,10 +97,21 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 			return err
 		}
 	} else {
-		if err := s.cronitorClient.Delete(context.Background(), name); err != nil {
+		if err := s.mn.Delete(context.Background(), name); err != nil {
 			log.WithError(err).WithField("cron", name).Error("Could not delete monitor at cronitor")
 			return err
 		}
+	}
+
+	if err := s.cronStore.Save(name, ruleARN, latestTaskDefARN, taskDefFamily, cronDescription, cronitorMonitorID); err != nil {
+		log.WithError(err).WithFields(log.Fields{
+			"cron":                name,
+			"task_arn":            latestTaskDefARN,
+			"task_family":         taskDefFamily,
+			"rule_arn":            ruleARN,
+			"cronitor_monitor_id": cronitorMonitorID,
+		}).Error("Could not save cron in DynamoDB")
+		return err
 	}
 
 	return nil
@@ -119,7 +127,7 @@ func (s *Service) Delete(cronName string) error {
 	}
 
 	var errors []error
-	if err := s.cronitorClient.Delete(context.Background(), cronName); err != nil {
+	if err := s.mn.Delete(context.Background(), cronName); err != nil {
 		errors = append(errors, err)
 	}
 
@@ -205,7 +213,13 @@ func (s *Service) TriggerExecution(cronRuleARN string) error {
 	}).Infof("Trigger cron execution, started: %t", startExecution)
 
 	if startExecution {
-		return s.tds.RunTaskDefinition(cron.LatestTaskDefinitionRevisionARN)
+		if err := s.tds.RunTaskDefinition(cron.LatestTaskDefinitionRevisionARN); err != nil {
+			return err
+		}
+
+		if cron.Description.Notifications != nil {
+			return s.mn.ReportRun(context.Background(), cron.CronitorMonitorID)
+		}
 	}
 
 	return nil

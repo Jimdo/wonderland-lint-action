@@ -53,20 +53,21 @@ func TestService_Apply_Creation(t *testing.T) {
 	taskDefARN := "task-definition-arn"
 	taskDefFamily := "task-defintion-family"
 	ruleARN := "rule-arn"
+	cronitorMonitorID := "someid"
 
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.v.EXPECT().ValidateCronDescription(cronDesc)
 	mocks.v.EXPECT().ValidateCronName(cronName)
 	mocks.tds.EXPECT().AddRevisionFromCronDescription(cronName, cronDesc).Return(taskDefARN, taskDefFamily, nil)
 	mocks.cm.EXPECT().CreateRule(cronName, testTopicName, cronDesc.Schedule).Return(ruleARN, nil)
-	mocks.cs.EXPECT().Save(cronName, ruleARN, taskDefARN, taskDefFamily, cronDesc)
-	mocks.cc.EXPECT().CreateOrUpdate(context.Background(), cronitor.CreateOrUpdateParams{
+	mocks.mn.EXPECT().CreateOrUpdate(context.Background(), cronitor.CreateOrUpdateParams{
 		Name:                    cronName,
 		NoRunThreshhold:         cronDesc.Notifications.NoRunThreshhold,
 		RanLongerThanThreshhold: cronDesc.Notifications.RanLongerThanThreshhold,
 		PagerDuty:               "",
 		Slack:                   "",
-	})
+	}).Return(cronitorMonitorID, nil)
+	mocks.cs.EXPECT().Save(cronName, ruleARN, taskDefARN, taskDefFamily, cronDesc, cronitorMonitorID)
 
 	err := service.Apply(cronName, cronDesc)
 	if err != nil {
@@ -107,8 +108,8 @@ func TestService_Apply_NoNotifications(t *testing.T) {
 	mocks.v.EXPECT().ValidateCronName(cronName)
 	mocks.tds.EXPECT().AddRevisionFromCronDescription(cronName, cronDesc).Return(taskDefARN, taskDefFamily, nil)
 	mocks.cm.EXPECT().CreateRule(cronName, testTopicName, cronDesc.Schedule).Return(ruleARN, nil)
-	mocks.cs.EXPECT().Save(cronName, ruleARN, taskDefARN, taskDefFamily, cronDesc)
-	mocks.cc.EXPECT().Delete(context.Background(), cronName)
+	mocks.cs.EXPECT().Save(cronName, ruleARN, taskDefARN, taskDefFamily, cronDesc, "")
+	mocks.mn.EXPECT().Delete(context.Background(), cronName)
 
 	err := service.Apply(cronName, cronDesc)
 	if err != nil {
@@ -203,7 +204,7 @@ func TestService_Delete(t *testing.T) {
 
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.cs.EXPECT().GetByName(cronName).Return(cron, nil)
-	mocks.cc.EXPECT().Delete(context.Background(), cronName)
+	mocks.mn.EXPECT().Delete(context.Background(), cronName)
 	mocks.cm.EXPECT().DeleteRule(cron.RuleARN)
 	mocks.tds.EXPECT().DeleteByFamily(cron.TaskDefinitionFamily)
 	mocks.ces.EXPECT().Delete(cronName)
@@ -227,7 +228,7 @@ func TestService_Delete_Error_OnRuleDeletionError(t *testing.T) {
 
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.cs.EXPECT().GetByName(cronName).Return(cron, nil)
-	mocks.cc.EXPECT().Delete(context.Background(), cronName)
+	mocks.mn.EXPECT().Delete(context.Background(), cronName)
 	mocks.cm.EXPECT().DeleteRule(cron.RuleARN).Return(errors.New("foo"))
 	mocks.tds.EXPECT().DeleteByFamily(cron.TaskDefinitionFamily)
 
@@ -249,7 +250,7 @@ func TestService_Delete_Error_OnTaskDefinitionDeletionError(t *testing.T) {
 
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.cs.EXPECT().GetByName(cronName).Return(cron, nil)
-	mocks.cc.EXPECT().Delete(context.Background(), cronName)
+	mocks.mn.EXPECT().Delete(context.Background(), cronName)
 	mocks.cm.EXPECT().DeleteRule(cron.RuleARN)
 	mocks.tds.EXPECT().DeleteByFamily(cron.TaskDefinitionFamily).Return(errors.New("foo"))
 
@@ -271,7 +272,7 @@ func TestService_Delete_Error_OnlyFirstErrorReturned(t *testing.T) {
 
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.cs.EXPECT().GetByName(cronName).Return(cron, nil)
-	mocks.cc.EXPECT().Delete(context.Background(), cronName).Return(errors.New("foo1"))
+	mocks.mn.EXPECT().Delete(context.Background(), cronName).Return(errors.New("foo1"))
 	mocks.cm.EXPECT().DeleteRule(cron.RuleARN).Return(errors.New("foo2"))
 	mocks.tds.EXPECT().DeleteByFamily(cron.TaskDefinitionFamily).Return(errors.New("foo3"))
 
@@ -296,7 +297,7 @@ func TestService_Delete_Error_OnStoreDelete(t *testing.T) {
 
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.cs.EXPECT().GetByName(cronName).Return(cron, nil)
-	mocks.cc.EXPECT().Delete(context.Background(), cronName)
+	mocks.mn.EXPECT().Delete(context.Background(), cronName)
 	mocks.cm.EXPECT().DeleteRule(cron.RuleARN)
 	mocks.tds.EXPECT().DeleteByFamily(cron.TaskDefinitionFamily)
 	mocks.ces.EXPECT().Delete(cronName)
@@ -350,7 +351,7 @@ func TestService_Delete_Error_ExecutionDelete(t *testing.T) {
 
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.cs.EXPECT().GetByName(cronName).Return(cron, nil)
-	mocks.cc.EXPECT().Delete(context.Background(), cronName)
+	mocks.mn.EXPECT().Delete(context.Background(), cronName)
 	mocks.cm.EXPECT().DeleteRule(cron.RuleARN)
 	mocks.tds.EXPECT().DeleteByFamily(cron.TaskDefinitionFamily)
 	mocks.ces.EXPECT().Delete(cronName).Return(errors.New("foo"))
@@ -366,7 +367,37 @@ func TestService_TriggerExecution_FirstExecution(t *testing.T) {
 	defer ctrl.Finish()
 
 	ruleARN := "test-rule-arn"
-	testCron := &cron.Cron{}
+	cronitorMonitorID := "some-id"
+	testCron := &cron.Cron{
+		Description: &cron.CronDescription{
+			Notifications: &cron.CronNotification{
+				RanLongerThanThreshhold: cronitorclient.Int64Ptr(1),
+			},
+		},
+		CronitorMonitorID: cronitorMonitorID,
+	}
+	testExecutions := []*cron.Execution{}
+
+	service, mocks := createServiceWithMocks(ctrl)
+
+	mocks.cs.EXPECT().GetByRuleARN(gomock.Any()).Return(testCron, nil)
+	mocks.ces.EXPECT().GetLastNExecutions(gomock.Any(), gomock.Any()).Return(testExecutions, nil)
+	mocks.tds.EXPECT().RunTaskDefinition(gomock.Any()).Return(nil)
+	mocks.mn.EXPECT().ReportRun(context.Background(), cronitorMonitorID)
+
+	if err := service.TriggerExecution(ruleARN); err != nil {
+		assert.NoError(t, err)
+	}
+}
+
+func TestService_TriggerExecution_FirstExecutionWithoutNotifications(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	ruleARN := "test-rule-arn"
+	testCron := &cron.Cron{
+		Description: &cron.CronDescription{},
+	}
 	testExecutions := []*cron.Execution{}
 
 	service, mocks := createServiceWithMocks(ctrl)
@@ -379,13 +410,20 @@ func TestService_TriggerExecution_FirstExecution(t *testing.T) {
 		assert.NoError(t, err)
 	}
 }
-
 func TestService_TriggerExecution_SecondExecution(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	ruleARN := "test-rule-arn"
-	testCron := &cron.Cron{}
+	cronitorMonitorID := "some-id"
+	testCron := &cron.Cron{
+		Description: &cron.CronDescription{
+			Notifications: &cron.CronNotification{
+				RanLongerThanThreshhold: cronitorclient.Int64Ptr(1),
+			},
+		},
+		CronitorMonitorID: cronitorMonitorID,
+	}
 	testExecutions := []*cron.Execution{
 		&cron.Execution{
 			AWSStatus: cron.ExecutionStatusSuccess,
@@ -397,6 +435,7 @@ func TestService_TriggerExecution_SecondExecution(t *testing.T) {
 	mocks.cs.EXPECT().GetByRuleARN(gomock.Any()).Return(testCron, nil)
 	mocks.ces.EXPECT().GetLastNExecutions(gomock.Any(), gomock.Any()).Return(testExecutions, nil)
 	mocks.tds.EXPECT().RunTaskDefinition(gomock.Any()).Return(nil)
+	mocks.mn.EXPECT().ReportRun(context.Background(), cronitorMonitorID)
 
 	if err := service.TriggerExecution(ruleARN); err != nil {
 		assert.NoError(t, err)
@@ -528,7 +567,7 @@ type mocks struct {
 	tds *mock.MockTaskDefinitionStore
 	cs  *mock.MockCronStore
 	ces *mock.MockCronExecutionStore
-	cc  *mock.MockCronitorAPI
+	mn  *mock.MockMonitorManager
 }
 
 func createServiceWithMocks(ctrl *gomock.Controller) (*Service, mocks) {
@@ -537,14 +576,14 @@ func createServiceWithMocks(ctrl *gomock.Controller) (*Service, mocks) {
 	tds := mock.NewMockTaskDefinitionStore(ctrl)
 	cs := mock.NewMockCronStore(ctrl)
 	ces := mock.NewMockCronExecutionStore(ctrl)
-	cc := mock.NewMockCronitorAPI(ctrl)
+	mn := mock.NewMockMonitorManager(ctrl)
 
-	return NewService(v, cm, tds, cs, ces, testTopicName, cc), mocks{
+	return NewService(v, cm, tds, cs, ces, testTopicName, mn), mocks{
 		v:   v,
 		cm:  cm,
 		tds: tds,
 		cs:  cs,
 		ces: ces,
-		cc:  cc,
+		mn:  mn,
 	}
 }
