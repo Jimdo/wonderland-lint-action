@@ -7,6 +7,7 @@ import (
 	cronitormodel "github.com/Jimdo/cronitor-api-client/models"
 
 	"github.com/Jimdo/wonderland-crons/cron"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
 )
 
@@ -45,6 +46,10 @@ func CronExecutionStatePersister(ts TaskStore) func(c EventContext) error {
 // TODO: This needs to be refactored to only notify on stopped ECS events
 func CronitorHeartbeatUpdater(ef ExecutionFetcher, cf CronFetcher, mn MonitorNotfier) func(c EventContext) error {
 	return func(c EventContext) error {
+		if aws.StringValue(c.Task.LastStatus) != ecs.DesiredStatusStopped {
+			return nil
+		}
+
 		desc, err := cf.GetByName(c.CronName)
 		if err != nil {
 			return err
@@ -54,40 +59,20 @@ func CronitorHeartbeatUpdater(ef ExecutionFetcher, cf CronFetcher, mn MonitorNot
 			return nil
 		}
 
-		execs, err := ef.GetLastNExecutions(c.CronName, 1)
+		cronContainer := cron.GetUserContainerFromTask(c.Task)
+		timeoutContainer := cron.GetTimeoutContainerFromTask(c.Task)
+
+		monitor, err := mn.GetMonitor(context.Background(), c.CronName)
 		if err != nil {
 			return err
+		} else if monitor == nil {
+			return fmt.Errorf("Cannot get monitor of cron %q", c.CronName)
 		}
 
-		if len(execs) == 0 {
-			return nil
-		}
-		exec := execs[0]
-
-		// TODO: Improve fetching of monitor
-		switch exec.GetExecutionStatus() {
-		case cron.ExecutionStatusTimeout:
-			fallthrough
-		case cron.ExecutionStatusFailed:
-			monitor, err := mn.GetMonitor(context.Background(), c.CronName)
-			if err != nil {
-				return err
-			} else if monitor == nil {
-				return fmt.Errorf("Cannot get monitor of cron %q", c.CronName)
-			}
-
+		if aws.Int64Value(cronContainer.ExitCode) != 0 || aws.Int64Value(timeoutContainer.ExitCode) != 0 {
 			return mn.ReportFail(context.Background(), monitor.Code)
-		case cron.ExecutionStatusSuccess:
-			monitor, err := mn.GetMonitor(context.Background(), c.CronName)
-			if err != nil {
-				return err
-			} else if monitor == nil {
-				return fmt.Errorf("Cannot get monitor of cron %q", c.CronName)
-			}
-
-			return mn.ReportSuccess(context.Background(), monitor.Code)
 		}
+		return mn.ReportSuccess(context.Background(), monitor.Code)
 
-		return nil
 	}
 }
