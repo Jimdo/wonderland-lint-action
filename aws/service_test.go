@@ -54,20 +54,21 @@ func TestService_Apply_Creation(t *testing.T) {
 	taskDefARN := "task-definition-arn"
 	taskDefFamily := "task-defintion-family"
 	ruleARN := "rule-arn"
+	cronitorMonitorID := "someid"
 
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.v.EXPECT().ValidateCronDescription(cronDesc)
 	mocks.v.EXPECT().ValidateCronName(cronName)
 	mocks.tds.EXPECT().AddRevisionFromCronDescription(cronName, cronDesc).Return(taskDefARN, taskDefFamily, nil)
 	mocks.cm.EXPECT().CreateRule(cronName, testTopicName, cronDesc.Schedule).Return(ruleARN, nil)
-	mocks.cs.EXPECT().Save(cronName, ruleARN, taskDefARN, taskDefFamily, cronDesc)
 	mocks.mn.EXPECT().CreateOrUpdate(context.Background(), cronitor.CreateOrUpdateParams{
 		Name:                    cronName,
 		NoRunThreshhold:         cronDesc.Notifications.NoRunThreshhold,
 		RanLongerThanThreshhold: cronDesc.Notifications.RanLongerThanThreshhold,
 		PagerDuty:               "",
 		Slack:                   "",
-	})
+	}).Return(cronitorMonitorID, nil)
+	mocks.cs.EXPECT().Save(cronName, ruleARN, taskDefARN, taskDefFamily, cronDesc, cronitorMonitorID)
 
 	err := service.Apply(cronName, cronDesc)
 	if err != nil {
@@ -108,7 +109,7 @@ func TestService_Apply_NoNotifications(t *testing.T) {
 	mocks.v.EXPECT().ValidateCronName(cronName)
 	mocks.tds.EXPECT().AddRevisionFromCronDescription(cronName, cronDesc).Return(taskDefARN, taskDefFamily, nil)
 	mocks.cm.EXPECT().CreateRule(cronName, testTopicName, cronDesc.Schedule).Return(ruleARN, nil)
-	mocks.cs.EXPECT().Save(cronName, ruleARN, taskDefARN, taskDefFamily, cronDesc)
+	mocks.cs.EXPECT().Save(cronName, ruleARN, taskDefARN, taskDefFamily, cronDesc, "")
 	mocks.mn.EXPECT().Delete(context.Background(), cronName)
 
 	err := service.Apply(cronName, cronDesc)

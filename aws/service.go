@@ -18,7 +18,7 @@ type CronValidator interface {
 }
 
 type CronStore interface {
-	Save(string, string, string, string, *cron.CronDescription) error
+	Save(string, string, string, string, *cron.CronDescription, string) error
 	Delete(string) error
 	List() ([]string, error)
 	GetByName(string) (*cron.Cron, error)
@@ -34,7 +34,7 @@ type MonitorManager interface {
 	GetMonitor(ctx context.Context, code string) (*cronitormodel.Monitor, error)
 	ReportRun(ctx context.Context, code string) error
 	Delete(ctx context.Context, name string) error
-	CreateOrUpdate(ctx context.Context, params cronitor.CreateOrUpdateParams) error
+	CreateOrUpdate(ctx context.Context, params cronitor.CreateOrUpdateParams) (string, error)
 }
 
 type Service struct {
@@ -86,18 +86,9 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 		return err
 	}
 
-	if err := s.cronStore.Save(name, ruleARN, latestTaskDefARN, taskDefFamily, cronDescription); err != nil {
-		log.WithError(err).WithFields(log.Fields{
-			"cron":        name,
-			"task_arn":    latestTaskDefARN,
-			"task_family": taskDefFamily,
-			"rule_arn":    ruleARN,
-		}).Error("Could not save cron in DynamoDB")
-		return err
-	}
-
+	cronitorMonitorID := ""
 	if cronDescription.Notifications != nil {
-		err = s.mn.CreateOrUpdate(context.Background(), cronitor.CreateOrUpdateParams{
+		cronitorMonitorID, err = s.mn.CreateOrUpdate(context.Background(), cronitor.CreateOrUpdateParams{
 			Name:                    name,
 			NoRunThreshhold:         cronDescription.Notifications.NoRunThreshhold,
 			RanLongerThanThreshhold: cronDescription.Notifications.RanLongerThanThreshhold,
@@ -113,6 +104,17 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 			log.WithError(err).WithField("cron", name).Error("Could not delete monitor at cronitor")
 			return err
 		}
+	}
+
+	if err := s.cronStore.Save(name, ruleARN, latestTaskDefARN, taskDefFamily, cronDescription, cronitorMonitorID); err != nil {
+		log.WithError(err).WithFields(log.Fields{
+			"cron":                name,
+			"task_arn":            latestTaskDefARN,
+			"task_family":         taskDefFamily,
+			"rule_arn":            ruleARN,
+			"cronitor_monitor_id": cronitorMonitorID,
+		}).Error("Could not save cron in DynamoDB")
+		return err
 	}
 
 	return nil

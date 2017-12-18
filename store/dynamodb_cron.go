@@ -33,13 +33,14 @@ func NewDynamoDBCronStore(dynamoDBClient dynamodbiface.DynamoDBAPI, tableName st
 	}, nil
 }
 
-func (d *DynamoDBCronStore) Save(name, ruleARN, latestTaskDefARN, taskDefFamily string, desc *cron.CronDescription) error {
+func (d *DynamoDBCronStore) Save(name, ruleARN, latestTaskDefARN, taskDefFamily string, desc *cron.CronDescription, cmi string) error {
 	cron := &cron.Cron{
 		Name:    name,
 		RuleARN: ruleARN,
 		LatestTaskDefinitionRevisionARN: latestTaskDefARN,
 		TaskDefinitionFamily:            taskDefFamily,
 		Description:                     desc,
+		CronitorMonitorID:               cmi,
 	}
 
 	return d.set(cron)

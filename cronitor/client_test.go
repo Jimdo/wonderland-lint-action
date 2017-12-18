@@ -27,7 +27,7 @@ func TestCreateOrUpdate(t *testing.T) {
 	}()
 
 	// create monitor
-	err := c.CreateOrUpdate(context.Background(), CreateOrUpdateParams{
+	_, err := c.CreateOrUpdate(context.Background(), CreateOrUpdateParams{
 		Name:                    cronName,
 		NoRunThreshhold:         cronitor.Int64Ptr(5),
 		RanLongerThanThreshhold: cronitor.Int64Ptr(2),

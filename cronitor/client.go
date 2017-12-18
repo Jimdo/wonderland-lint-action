@@ -55,7 +55,7 @@ type CreateOrUpdateParams struct {
 
 const DefaultGraceSeconds = 120
 
-func (c *Client) CreateOrUpdate(ctx context.Context, params CreateOrUpdateParams) error {
+func (c *Client) CreateOrUpdate(ctx context.Context, params CreateOrUpdateParams) (string, error) {
 	payload := models.MonitorParams{
 		Name:          cronitor.StringPtr(params.Name),
 		Note:          "Created by wonderland-crons",
@@ -85,20 +85,20 @@ func (c *Client) CreateOrUpdate(ctx context.Context, params CreateOrUpdateParams
 		})
 	}
 
-	_, err := c.client.Monitor.Get(&monitor.GetParams{
+	getRes, err := c.client.Monitor.Get(&monitor.GetParams{
 		Code:    params.Name,
 		Context: ctx,
 	}, c.authInfo)
 
 	if err != nil {
 		if _, ok := err.(*monitor.GetNotFound); ok {
-			_, err := c.client.Monitor.Create(&monitor.CreateParams{
+			createRes, err := c.client.Monitor.Create(&monitor.CreateParams{
 				Context: ctx,
 				Payload: &payload,
 			}, c.authInfo)
-			return err
+			return createRes.Payload.Code, err
 		}
-		return err
+		return "", err
 	}
 
 	_, err = c.client.Monitor.Update(&monitor.UpdateParams{
@@ -107,7 +107,11 @@ func (c *Client) CreateOrUpdate(ctx context.Context, params CreateOrUpdateParams
 		Payload: &payload,
 	}, c.authInfo)
 
-	return err
+	if err != nil {
+		return "", err
+	}
+
+	return getRes.Payload.Code, nil
 }
 
 func (c *Client) Delete(ctx context.Context, name string) error {
