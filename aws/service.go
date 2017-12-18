@@ -218,6 +218,7 @@ func (s *Service) TriggerExecution(cronRuleARN string) error {
 			return err
 		}
 
+		// TODO: only try to get monitor if monitoring configured
 		monitor, err := s.mn.GetMonitor(context.Background(), cron.Name)
 		if err != nil {
 			return err
