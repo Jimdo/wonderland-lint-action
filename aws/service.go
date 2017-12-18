@@ -218,15 +218,16 @@ func (s *Service) TriggerExecution(cronRuleARN string) error {
 			return err
 		}
 
-		// TODO: only try to get monitor if monitoring configured
-		monitor, err := s.mn.GetMonitor(context.Background(), cron.Name)
-		if err != nil {
-			return err
-		} else if monitor == nil {
-			return fmt.Errorf("Cannot get monitor of cron %q", cron.Name)
-		}
+		if cron.Description.Notifications != nil {
+			monitor, err := s.mn.GetMonitor(context.Background(), cron.Name)
+			if err != nil {
+				return err
+			} else if monitor == nil {
+				return fmt.Errorf("Cannot get monitor of cron %q", cron.Name)
+			}
 
-		return s.mn.ReportRun(context.Background(), monitor.Code)
+			return s.mn.ReportRun(context.Background(), monitor.Code)
+		}
 	}
 
 	return nil

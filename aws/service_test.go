@@ -367,7 +367,13 @@ func TestService_TriggerExecution_FirstExecution(t *testing.T) {
 	defer ctrl.Finish()
 
 	ruleARN := "test-rule-arn"
-	testCron := &cron.Cron{}
+	testCron := &cron.Cron{
+		Description: &cron.CronDescription{
+			Notifications: &cron.CronNotification{
+				RanLongerThanThreshhold: cronitorclient.Int64Ptr(1),
+			},
+		},
+	}
 	testExecutions := []*cron.Execution{}
 	cronitorMonitor := &cronitormodel.Monitor{Code: "123"}
 
@@ -384,12 +390,38 @@ func TestService_TriggerExecution_FirstExecution(t *testing.T) {
 	}
 }
 
+func TestService_TriggerExecution_FirstExecutionWithoutNotifications(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	ruleARN := "test-rule-arn"
+	testCron := &cron.Cron{
+		Description: &cron.CronDescription{},
+	}
+	testExecutions := []*cron.Execution{}
+
+	service, mocks := createServiceWithMocks(ctrl)
+
+	mocks.cs.EXPECT().GetByRuleARN(gomock.Any()).Return(testCron, nil)
+	mocks.ces.EXPECT().GetLastNExecutions(gomock.Any(), gomock.Any()).Return(testExecutions, nil)
+	mocks.tds.EXPECT().RunTaskDefinition(gomock.Any()).Return(nil)
+
+	if err := service.TriggerExecution(ruleARN); err != nil {
+		assert.NoError(t, err)
+	}
+}
 func TestService_TriggerExecution_SecondExecution(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	ruleARN := "test-rule-arn"
-	testCron := &cron.Cron{}
+	testCron := &cron.Cron{
+		Description: &cron.CronDescription{
+			Notifications: &cron.CronNotification{
+				RanLongerThanThreshhold: cronitorclient.Int64Ptr(1),
+			},
+		},
+	}
 	testExecutions := []*cron.Execution{
 		&cron.Execution{
 			AWSStatus: cron.ExecutionStatusSuccess,
