@@ -60,17 +60,10 @@ func CronitorHeartbeatUpdater(ef ExecutionFetcher, cf CronFetcher, mn MonitorNot
 
 		cronContainer := cron.GetUserContainerFromTask(c.Task)
 
-		monitor, err := mn.GetMonitor(context.Background(), c.CronName)
-		if err != nil {
-			return err
-		} else if monitor == nil {
-			return fmt.Errorf("Cannot get monitor of cron %q", c.CronName)
-		}
-
 		if aws.Int64Value(cronContainer.ExitCode) == 0 {
-			return mn.ReportSuccess(context.Background(), monitor.Code)
+			return mn.ReportSuccess(context.Background(), desc.CronitorMonitorID)
 		}
-		return mn.ReportFail(context.Background(), monitor.Code)
+		return mn.ReportFail(context.Background(), desc.CronitorMonitorID)
 
 	}
 }

@@ -2,7 +2,6 @@ package aws
 
 import (
 	"context"
-	"fmt"
 
 	cronitormodel "github.com/Jimdo/cronitor-api-client/models"
 	log "github.com/sirupsen/logrus"
@@ -221,14 +220,7 @@ func (s *Service) TriggerExecution(cronRuleARN string) error {
 		}
 
 		if cron.Description.Notifications != nil {
-			monitor, err := s.mn.GetMonitor(context.Background(), cron.Name)
-			if err != nil {
-				return err
-			} else if monitor == nil {
-				return fmt.Errorf("Cannot get monitor of cron %q", cron.Name)
-			}
-
-			return s.mn.ReportRun(context.Background(), monitor.Code)
+			return s.mn.ReportRun(context.Background(), cron.CronitorMonitorID)
 		}
 	}
 

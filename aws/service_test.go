@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	cronitorclient "github.com/Jimdo/cronitor-api-client"
-	cronitormodel "github.com/Jimdo/cronitor-api-client/models"
 	"github.com/golang/mock/gomock"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -368,23 +367,23 @@ func TestService_TriggerExecution_FirstExecution(t *testing.T) {
 	defer ctrl.Finish()
 
 	ruleARN := "test-rule-arn"
+	cronitorMonitorID := "some-id"
 	testCron := &cron.Cron{
 		Description: &cron.CronDescription{
 			Notifications: &cron.CronNotification{
 				RanLongerThanThreshhold: cronitorclient.Int64Ptr(1),
 			},
 		},
+		CronitorMonitorID: cronitorMonitorID,
 	}
 	testExecutions := []*cron.Execution{}
-	cronitorMonitor := &cronitormodel.Monitor{Code: "123"}
 
 	service, mocks := createServiceWithMocks(ctrl)
 
 	mocks.cs.EXPECT().GetByRuleARN(gomock.Any()).Return(testCron, nil)
 	mocks.ces.EXPECT().GetLastNExecutions(gomock.Any(), gomock.Any()).Return(testExecutions, nil)
 	mocks.tds.EXPECT().RunTaskDefinition(gomock.Any()).Return(nil)
-	mocks.mn.EXPECT().GetMonitor(context.Background(), gomock.Any()).Return(cronitorMonitor, nil)
-	mocks.mn.EXPECT().ReportRun(context.Background(), cronitorMonitor.Code)
+	mocks.mn.EXPECT().ReportRun(context.Background(), cronitorMonitorID)
 
 	if err := service.TriggerExecution(ruleARN); err != nil {
 		assert.NoError(t, err)
@@ -416,27 +415,27 @@ func TestService_TriggerExecution_SecondExecution(t *testing.T) {
 	defer ctrl.Finish()
 
 	ruleARN := "test-rule-arn"
+	cronitorMonitorID := "some-id"
 	testCron := &cron.Cron{
 		Description: &cron.CronDescription{
 			Notifications: &cron.CronNotification{
 				RanLongerThanThreshhold: cronitorclient.Int64Ptr(1),
 			},
 		},
+		CronitorMonitorID: cronitorMonitorID,
 	}
 	testExecutions := []*cron.Execution{
 		&cron.Execution{
 			AWSStatus: cron.ExecutionStatusSuccess,
 		},
 	}
-	cronitorMonitor := &cronitormodel.Monitor{Code: "123"}
 
 	service, mocks := createServiceWithMocks(ctrl)
 
 	mocks.cs.EXPECT().GetByRuleARN(gomock.Any()).Return(testCron, nil)
 	mocks.ces.EXPECT().GetLastNExecutions(gomock.Any(), gomock.Any()).Return(testExecutions, nil)
 	mocks.tds.EXPECT().RunTaskDefinition(gomock.Any()).Return(nil)
-	mocks.mn.EXPECT().GetMonitor(context.Background(), gomock.Any()).Return(cronitorMonitor, nil)
-	mocks.mn.EXPECT().ReportRun(context.Background(), cronitorMonitor.Code)
+	mocks.mn.EXPECT().ReportRun(context.Background(), cronitorMonitorID)
 
 	if err := service.TriggerExecution(ruleARN); err != nil {
 		assert.NoError(t, err)
