@@ -78,6 +78,8 @@ type ContainerDescription struct {
 type CronNotification struct {
 	NoRunThreshhold         *int64 `json:"no-run-threshhold,omitempty"`
 	RanLongerThanThreshhold *int64 `json:"ran-longer-than-threshhold,omitempty"`
+	PagerdutyURI            string `json:"pagerduty,omitempty"`
+	SlackChannel            string `json:"slack,omitempty"`
 }
 
 const (
