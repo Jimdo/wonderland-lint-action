@@ -188,6 +188,10 @@ func (c *Client) DeleteNotificationChannel(uri string) error {
 	return nil
 }
 
+func (c *Client) GetApiEndpoint() string {
+	return c.apiEndpoint
+}
+
 func (c *Client) createTarget(ch *channel, t target) error {
 	log.Printf("Creating %s notification target", t.Type)
 	return c.do("create_notifications_target", "POST", fmt.Sprintf("/v1/teams/%s/channels/%s/targets", c.team, ch.Slug), t, nil)

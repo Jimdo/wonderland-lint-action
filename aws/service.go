@@ -2,6 +2,7 @@ package aws
 
 import (
 	"context"
+	"fmt"
 
 	log "github.com/sirupsen/logrus"
 
@@ -36,6 +37,7 @@ type MonitorManager interface {
 
 type NotificationClient interface {
 	CreateOrUpdateNotificationChannel(name string, notifications *cron.CronNotification, uri string) (string, string, error)
+	GetApiEndpoint() string
 }
 
 type Service struct {
@@ -91,23 +93,18 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 
 	cronitorMonitorID := ""
 	if cronDescription.Notifications != nil {
-		// TODO: create notification channel
-		/*
-			notificationEndpoint := "https://notification.jimdo-platform-stage.net"
-			if cronDescription.Notifications.Pagerduty != "" {
-				req, _ := http.NewRequest(http.MethodPut, notificationEndpoint, nil)
-			}
-		*/
-
 		//TODO: prefix channel with cron-- in order to avoid duplicates with services?
-		s.nc.CreateOrUpdateNotificationChannel(name, cronDescription.Notifications, "")
+		notificationUri, _, err := s.nc.CreateOrUpdateNotificationChannel(name, cronDescription.Notifications, "")
+		if err != nil {
+			log.WithError(err).WithField("cron", name).Error("Could not create notification channel")
+			return err
+		}
 
 		cronitorMonitorID, err = s.mn.CreateOrUpdate(context.Background(), cronitor.CreateOrUpdateParams{
 			Name:                    name,
 			NoRunThreshhold:         cronDescription.Notifications.NoRunThreshhold,
 			RanLongerThanThreshhold: cronDescription.Notifications.RanLongerThanThreshhold,
-			PagerDuty:               "",
-			Slack:                   "",
+			Webhook:                 fmt.Sprintf("%s%s/webhook/cronitor", s.nc.GetApiEndpoint(), notificationUri),
 		})
 		if err != nil {
 			log.WithError(err).WithField("cron", name).Error("Could not create monitor at cronitor")

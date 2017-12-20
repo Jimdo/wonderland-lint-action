@@ -3,6 +3,7 @@ package aws
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	cronitorclient "github.com/Jimdo/cronitor-api-client"
@@ -54,19 +55,21 @@ func TestService_Apply_Creation(t *testing.T) {
 	taskDefFamily := "task-defintion-family"
 	ruleARN := "rule-arn"
 	cronitorMonitorID := "someid"
+	notificationUri := fmt.Sprintf("/v1/teams/werkzeugschmiede/channels/%s", cronName)
+	apiEndpoint := "https://foo.bar"
 
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.v.EXPECT().ValidateCronDescription(cronDesc)
 	mocks.v.EXPECT().ValidateCronName(cronName)
 	mocks.tds.EXPECT().AddRevisionFromCronDescription(cronName, cronDesc).Return(taskDefARN, taskDefFamily, nil)
 	mocks.cm.EXPECT().CreateRule(cronName, testTopicName, cronDesc.Schedule).Return(ruleARN, nil)
-	mocks.nc.EXPECT().CreateOrUpdateNotificationChannel(cronName, cronDesc.Notifications, "")
+	mocks.nc.EXPECT().CreateOrUpdateNotificationChannel(cronName, cronDesc.Notifications, "").Return(notificationUri, "", nil)
+	mocks.nc.EXPECT().GetApiEndpoint().Return(apiEndpoint)
 	mocks.mn.EXPECT().CreateOrUpdate(context.Background(), cronitor.CreateOrUpdateParams{
 		Name:                    cronName,
 		NoRunThreshhold:         cronDesc.Notifications.NoRunThreshhold,
 		RanLongerThanThreshhold: cronDesc.Notifications.RanLongerThanThreshhold,
-		PagerDuty:               "",
-		Slack:                   "",
+		Webhook:                 fmt.Sprintf("%s%s/webhook/cronitor", apiEndpoint, notificationUri),
 	}).Return(cronitorMonitorID, nil)
 	mocks.cs.EXPECT().Save(cronName, ruleARN, taskDefARN, taskDefFamily, cronDesc, cronitorMonitorID)
 

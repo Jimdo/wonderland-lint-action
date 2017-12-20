@@ -51,6 +51,7 @@ type CreateOrUpdateParams struct {
 	// notifications
 	PagerDuty string
 	Slack     string
+	Webhook   string
 }
 
 const DefaultGraceSeconds = 120
@@ -70,6 +71,10 @@ func (c *Client) CreateOrUpdate(ctx context.Context, params CreateOrUpdateParams
 	if params.Slack != "" {
 		payload.Notifications.SLACK = []string{params.Slack}
 	}
+	if params.Webhook != "" {
+		payload.Notifications.Webhooks = []string{params.Webhook}
+	}
+
 	if params.NoRunThreshhold != nil && *params.NoRunThreshhold > 0 {
 		payload.Rules = append(payload.Rules, &models.RuleHeartbeat{
 			RuleType: cronitor.StringPtr(models.RuleHeartbeatRuleTypeRunPingNotReceived),
