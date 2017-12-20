@@ -23,10 +23,13 @@ NOMAD_PASS=$(WONDERLAND_PASS)
 AUTH_USER=$(WONDERLAND_USER)
 AUTH_PASS=$(WONDERLAND_PASS)
 
+NOTIFICATIONS_API=https://notifications.jimdo-platform-stage.net
+
 prod: JIMDO_ENVIRONMENT=prod
 prod: ZONE=jimdo-platform.net
 prod: WONDERLAND_REGISTRY=registry.jimdo-platform.net
 prod: NOMAD_API=https://nomad.jimdo-platform.net
+prod: NOTIFICATIONS_API=https://notifications.jimdo-platform.net
 prod: deploy
 
 stage: deploy
