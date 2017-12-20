@@ -12,14 +12,28 @@ import (
 func TestValidateCronNotification_Valid(t *testing.T) {
 	valid := []cron.CronNotification{
 		{
+			PagerdutyURI: "http://foo.bar",
+		},
+		{
+			SlackChannel: "#test",
+		},
+		{
+			PagerdutyURI: "http://foo.bar",
+			SlackChannel: "#test",
+		},
+		{
 			NoRunThreshhold:         cronitor.Int64Ptr(70),
 			RanLongerThanThreshhold: cronitor.Int64Ptr(65),
+			SlackChannel:            "#test",
 		},
 		{
 			NoRunThreshhold: cronitor.Int64Ptr(60),
+			SlackChannel:    "#test",
 		},
 		{
 			RanLongerThanThreshhold: cronitor.Int64Ptr(65),
+			SlackChannel:            "#test",
+			PagerdutyURI:            "http://foo.bar",
 		},
 	}
 
@@ -35,8 +49,13 @@ func TestValidateCronNotification_Valid(t *testing.T) {
 func TestValidateCronNotification_Invalid(t *testing.T) {
 	invalid := []cron.CronNotification{
 		{
+			NoRunThreshhold:         cronitor.Int64Ptr(2),
+			RanLongerThanThreshhold: cronitor.Int64Ptr(4),
+		},
+		{
 			NoRunThreshhold:         cronitor.Int64Ptr(0),
 			RanLongerThanThreshhold: cronitor.Int64Ptr(0),
+			SlackChannel:            "#test",
 		},
 		{
 			NoRunThreshhold:         cronitor.Int64Ptr(59),
