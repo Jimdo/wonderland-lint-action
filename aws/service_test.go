@@ -60,6 +60,7 @@ func TestService_Apply_Creation(t *testing.T) {
 	mocks.v.EXPECT().ValidateCronName(cronName)
 	mocks.tds.EXPECT().AddRevisionFromCronDescription(cronName, cronDesc).Return(taskDefARN, taskDefFamily, nil)
 	mocks.cm.EXPECT().CreateRule(cronName, testTopicName, cronDesc.Schedule).Return(ruleARN, nil)
+	mocks.nc.EXPECT().CreateOrUpdateNotificationChannel(cronName, cronDesc.Notifications, "")
 	mocks.mn.EXPECT().CreateOrUpdate(context.Background(), cronitor.CreateOrUpdateParams{
 		Name:                    cronName,
 		NoRunThreshhold:         cronDesc.Notifications.NoRunThreshhold,
@@ -568,6 +569,7 @@ type mocks struct {
 	cs  *mock.MockCronStore
 	ces *mock.MockCronExecutionStore
 	mn  *mock.MockMonitorManager
+	nc  *mock.MockNotificationClient
 }
 
 func createServiceWithMocks(ctrl *gomock.Controller) (*Service, mocks) {
@@ -577,13 +579,15 @@ func createServiceWithMocks(ctrl *gomock.Controller) (*Service, mocks) {
 	cs := mock.NewMockCronStore(ctrl)
 	ces := mock.NewMockCronExecutionStore(ctrl)
 	mn := mock.NewMockMonitorManager(ctrl)
+	nc := mock.NewMockNotificationClient(ctrl)
 
-	return NewService(v, cm, tds, cs, ces, testTopicName, mn), mocks{
+	return NewService(v, cm, tds, cs, ces, testTopicName, mn, nc), mocks{
 		v:   v,
 		cm:  cm,
 		tds: tds,
 		cs:  cs,
 		ces: ces,
 		mn:  mn,
+		nc:  nc,
 	}
 }
