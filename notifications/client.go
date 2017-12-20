@@ -144,16 +144,30 @@ func (c *Client) createOrUpdateChannel(name, uri string) (*channel, error) {
 	} else {
 		err := c.do("get_notifications_team", "GET", fmt.Sprintf("/v1/teams/%s", c.team), nil, nil)
 		if err != nil {
-			log.Printf("Creating notification team %s", c.team)
+			log.WithFields(log.Fields{
+				"channel":   name,
+				"get_error": err,
+				"team":      c.team,
+			}).Info("Creating notification team")
 			err = c.do("create_notifications_team", "POST", "/v1/teams", &team{Name: c.team}, nil)
 			if err != nil {
+				log.WithError(err).WithFields(log.Fields{
+					"channel": name,
+					"team":    c.team,
+				}).Error("Error while creating notification team")
 				return nil, fmt.Errorf("error creating team: %s", err)
 			}
 		}
 
 		err = c.do("get_notifications_channel", "GET", fmt.Sprintf("/v1/teams/%s/channels/%s", c.team, channel.Slug), nil, channel)
 		if err != nil {
-			log.Printf("Creating notification channel %s", channel.Name)
+			log.WithFields(log.Fields{
+				"channel":   channel.Name,
+				"get_error": err,
+				"slug":      channel.Slug,
+				"team":      c.team,
+			}).Info("Creating notification channel")
+
 			err = c.do("create_notifications_channel", "POST", fmt.Sprintf("/v1/teams/%s/channels", c.team), channel, channel)
 			if err != nil {
 				return nil, fmt.Errorf("error requesting notifications API: %s", err)
