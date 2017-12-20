@@ -18,6 +18,7 @@ components:
       EXEC_TRIGGER_TOPIC_ARN: '{{env `EXEC_TRIGGER_TOPIC_ARN`}}'
       NO_SCHEDULE_ATTRIBUTE: '{{env `NO_SCHEDULE_ATTRIBUTE`}}'
       TIMEOUT_IMAGE: '{{ env `TIMEOUT_IMAGE` }}'
+      NOTIFICATIONS_API: '{{env `NOTIFICATIONS_API`}}'
       $ref_secrets: vault+secret://vault.{{env `ZONE`}}/wonderland/crons
     capacity:
       memory: M
