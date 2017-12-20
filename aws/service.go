@@ -101,10 +101,10 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 		}
 
 		cronitorMonitorID, err = s.mn.CreateOrUpdate(context.Background(), cronitor.CreateOrUpdateParams{
-			Name:                    name,
-			NoRunThreshhold:         cronDescription.Notifications.NoRunThreshhold,
-			RanLongerThanThreshhold: cronDescription.Notifications.RanLongerThanThreshhold,
-			Webhook:                 fmt.Sprintf("%s%s/webhook/cronitor", s.nc.GetApiEndpoint(), notificationUri),
+			Name:                   name,
+			NoRunThreshold:         cronDescription.Notifications.NoRunThreshold,
+			RanLongerThanThreshold: cronDescription.Notifications.RanLongerThanThreshold,
+			Webhook:                fmt.Sprintf("%s%s/webhook/cronitor", s.nc.GetApiEndpoint(), notificationUri),
 		})
 		if err != nil {
 			log.WithError(err).WithField("cron", name).Error("Could not create monitor at cronitor")

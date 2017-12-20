@@ -45,9 +45,9 @@ func New(apiKey, authKey string, hc *http.Client) *Client {
 
 type CreateOrUpdateParams struct {
 	// setup
-	Name                    string
-	NoRunThreshhold         *int64
-	RanLongerThanThreshhold *int64
+	Name                   string
+	NoRunThreshold         *int64
+	RanLongerThanThreshold *int64
 	// notifications
 	PagerDuty string
 	Slack     string
@@ -75,17 +75,17 @@ func (c *Client) CreateOrUpdate(ctx context.Context, params CreateOrUpdateParams
 		payload.Notifications.Webhooks = []string{params.Webhook}
 	}
 
-	if params.NoRunThreshhold != nil && *params.NoRunThreshhold > 0 {
+	if params.NoRunThreshold != nil && *params.NoRunThreshold > 0 {
 		payload.Rules = append(payload.Rules, &models.RuleHeartbeat{
 			RuleType: cronitor.StringPtr(models.RuleHeartbeatRuleTypeRunPingNotReceived),
-			Value:    params.NoRunThreshhold,
+			Value:    params.NoRunThreshold,
 			TimeUnit: models.RuleHeartbeatTimeUnitSeconds,
 		})
 	}
-	if params.RanLongerThanThreshhold != nil && *params.RanLongerThanThreshhold > 0 {
+	if params.RanLongerThanThreshold != nil && *params.RanLongerThanThreshold > 0 {
 		payload.Rules = append(payload.Rules, &models.RuleHeartbeat{
 			RuleType: cronitor.StringPtr(models.RuleHeartbeatRuleTypeRanLongerThan),
-			Value:    params.RanLongerThanThreshhold,
+			Value:    params.RanLongerThanThreshold,
 			TimeUnit: models.RuleHeartbeatTimeUnitSeconds,
 		})
 	}

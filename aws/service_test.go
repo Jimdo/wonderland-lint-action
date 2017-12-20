@@ -46,8 +46,8 @@ func TestService_Apply_Creation(t *testing.T) {
 			},
 		},
 		Notifications: &cron.CronNotification{
-			NoRunThreshhold:         cronitorclient.Int64Ptr(10),
-			RanLongerThanThreshhold: cronitorclient.Int64Ptr(15),
+			NoRunThreshold:         cronitorclient.Int64Ptr(10),
+			RanLongerThanThreshold: cronitorclient.Int64Ptr(15),
 		},
 	}
 
@@ -66,10 +66,10 @@ func TestService_Apply_Creation(t *testing.T) {
 	mocks.nc.EXPECT().CreateOrUpdateNotificationChannel(cronName, cronDesc.Notifications, "").Return(notificationUri, "", nil)
 	mocks.nc.EXPECT().GetApiEndpoint().Return(apiEndpoint)
 	mocks.mn.EXPECT().CreateOrUpdate(context.Background(), cronitor.CreateOrUpdateParams{
-		Name:                    cronName,
-		NoRunThreshhold:         cronDesc.Notifications.NoRunThreshhold,
-		RanLongerThanThreshhold: cronDesc.Notifications.RanLongerThanThreshhold,
-		Webhook:                 fmt.Sprintf("%s%s/webhook/cronitor", apiEndpoint, notificationUri),
+		Name:                   cronName,
+		NoRunThreshold:         cronDesc.Notifications.NoRunThreshold,
+		RanLongerThanThreshold: cronDesc.Notifications.RanLongerThanThreshold,
+		Webhook:                fmt.Sprintf("%s%s/webhook/cronitor", apiEndpoint, notificationUri),
 	}).Return(cronitorMonitorID, nil)
 	mocks.cs.EXPECT().Save(cronName, ruleARN, taskDefARN, taskDefFamily, cronDesc, cronitorMonitorID)
 
@@ -375,7 +375,7 @@ func TestService_TriggerExecution_FirstExecution(t *testing.T) {
 	testCron := &cron.Cron{
 		Description: &cron.CronDescription{
 			Notifications: &cron.CronNotification{
-				RanLongerThanThreshhold: cronitorclient.Int64Ptr(1),
+				RanLongerThanThreshold: cronitorclient.Int64Ptr(1),
 			},
 		},
 		CronitorMonitorID: cronitorMonitorID,
@@ -423,7 +423,7 @@ func TestService_TriggerExecution_SecondExecution(t *testing.T) {
 	testCron := &cron.Cron{
 		Description: &cron.CronDescription{
 			Notifications: &cron.CronNotification{
-				RanLongerThanThreshhold: cronitorclient.Int64Ptr(1),
+				RanLongerThanThreshold: cronitorclient.Int64Ptr(1),
 			},
 		},
 		CronitorMonitorID: cronitorMonitorID,
