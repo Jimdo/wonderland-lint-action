@@ -270,8 +270,7 @@ func main() {
 	hc := &http.Client{Timeout: time.Duration(10) * time.Second}
 	cronitorClient := cronitor.New(config.CronitorApiKey, config.CronitorAuthKey, hc)
 
-	nhc := &http.Client{Timeout: time.Duration(10) * time.Second}
-	notificationClient := notifications.NewClient(nhc, config.NotificationsAPIAddress, config.NotificationsAPIUser, config.NotificationsAPIPass, nil)
+	notificationClient := notifications.NewClient(http.DefaultTransport, config.NotificationsAPIAddress, config.NotificationsAPIUser, config.NotificationsAPIPass, config.NotificationsAPITeam)
 
 	service := aws.NewService(validator, cloudwatchcm, ecstds, dynamoDBCronStore, dynamoDBExecutionStore, config.ExecutionTriggerTopicARN, cronitorClient, notificationClient)
 
