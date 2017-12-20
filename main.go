@@ -38,6 +38,7 @@ import (
 	"github.com/Jimdo/wonderland-crons/events"
 	"github.com/Jimdo/wonderland-crons/locking"
 	"github.com/Jimdo/wonderland-crons/nomad"
+	"github.com/Jimdo/wonderland-crons/notifications"
 	"github.com/Jimdo/wonderland-crons/store"
 	"github.com/Jimdo/wonderland-crons/validation"
 	"github.com/Jimdo/wonderland-crons/vault"
@@ -97,6 +98,13 @@ var (
 
 		// Timeout
 		TimeoutImage string `flag:"timeout-image" env:"TIMEOUT_IMAGE" descriptions "Docker image that should be used as timeout container"`
+
+		// Notifications
+		NotificationsAPIAddress string `flag:"notifications-api" env:"NOTIFICATIONS_API" default:"" description:"The address of the notifications API"`
+		// TODO: get credentials from vault?
+		NotificationsAPIUser string `flag:"notifications-user" env:"WONDERLAND_USER" default:"" description:"The username to use for the notifications API"`
+		NotificationsAPIPass string `flag:"notifications-pass" env:"WONDERLAND_PASS" default:"" description:"The password to use for the notifications API"`
+		NotificationsAPITeam string `flag:"notifications-team" default:"werkzeugschmiede" description:"The notifications team to use"`
 	}
 	programIdentifier = "wonderland-crons"
 	programVersion    = "dev"
@@ -261,7 +269,11 @@ func main() {
 
 	hc := &http.Client{Timeout: time.Duration(10) * time.Second}
 	cronitorClient := cronitor.New(config.CronitorApiKey, config.CronitorAuthKey, hc)
-	service := aws.NewService(validator, cloudwatchcm, ecstds, dynamoDBCronStore, dynamoDBExecutionStore, config.ExecutionTriggerTopicARN, cronitorClient)
+
+	nhc := &http.Client{Timeout: time.Duration(10) * time.Second}
+	notificationClient := notifications.NewClient(nhc, config.NotificationsAPIAddress, config.NotificationsAPIUser, config.NotificationsAPIPass, nil)
+
+	service := aws.NewService(validator, cloudwatchcm, ecstds, dynamoDBCronStore, dynamoDBExecutionStore, config.ExecutionTriggerTopicARN, cronitorClient, notificationClient)
 
 	eventDispatcher := events.NewEventDispatcher()
 	eventDispatcher.On(events.EventCronExecutionStateChanged, events.CronExecutionStatePersister(dynamoDBExecutionStore))

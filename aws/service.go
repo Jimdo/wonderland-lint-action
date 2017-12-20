@@ -34,6 +34,10 @@ type MonitorManager interface {
 	CreateOrUpdate(ctx context.Context, params cronitor.CreateOrUpdateParams) (string, error)
 }
 
+type NotificationClient interface {
+	CreateOrUpdateNotificationChannel(name string, notifications *cron.CronNotification, uri string) (string, string, error)
+}
+
 type Service struct {
 	cm             RuleCronManager
 	cronStore      CronStore
@@ -41,11 +45,12 @@ type Service struct {
 	validator      CronValidator
 	executionStore CronExecutionStore
 	mn             MonitorManager
+	nc             NotificationClient
 
 	topicARN string
 }
 
-func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s CronStore, es CronExecutionStore, tarn string, mn MonitorManager) *Service {
+func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s CronStore, es CronExecutionStore, tarn string, mn MonitorManager, nc NotificationClient) *Service {
 	return &Service{
 		cm:             cm,
 		cronStore:      s,
@@ -54,6 +59,7 @@ func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s 
 		executionStore: es,
 		topicARN:       tarn,
 		mn:             mn,
+		nc:             nc,
 	}
 }
 
@@ -85,6 +91,17 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 
 	cronitorMonitorID := ""
 	if cronDescription.Notifications != nil {
+		// TODO: create notification channel
+		/*
+			notificationEndpoint := "https://notification.jimdo-platform-stage.net"
+			if cronDescription.Notifications.Pagerduty != "" {
+				req, _ := http.NewRequest(http.MethodPut, notificationEndpoint, nil)
+			}
+		*/
+
+		//TODO: prefix channel with cron-- in order to avoid duplicates with services?
+		s.nc.CreateOrUpdateNotificationChannel(name, cronDescription.Notifications, "")
+
 		cronitorMonitorID, err = s.mn.CreateOrUpdate(context.Background(), cronitor.CreateOrUpdateParams{
 			Name:                    name,
 			NoRunThreshhold:         cronDescription.Notifications.NoRunThreshhold,
