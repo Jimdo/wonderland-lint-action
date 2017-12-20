@@ -61,6 +61,7 @@ deploy: set-credentials dinah
 	NOMAD_AWS_REGION=$(NOMAD_AWS_REGION) \
 	WONDERLAND_ENV=$(JIMDO_ENVIRONMENT) \
 	TIMEOUT_IMAGE=$(shell dinah docker image --branch $(BRANCH) $(CRONS_TIMEOUT_IMAGE)) \
+	NOTIFICATIONS_API=$(NOTIFICATIONS_API) \
 	ZONE=$(ZONE) \
 		wl deploy $(PROJECT_NAME) -f wonderland.yaml
 

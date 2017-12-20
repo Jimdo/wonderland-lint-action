@@ -100,7 +100,7 @@ var (
 		TimeoutImage string `flag:"timeout-image" env:"TIMEOUT_IMAGE" descriptions "Docker image that should be used as timeout container"`
 
 		// Notifications
-		NotificationsAPIAddress string `flag:"notifications-api" env:"NOTIFICATIONS_API" default:"" description:"The address of the notifications API"`
+		NotificationsAPIAddress string `flag:"notifications-api" env:"NOTIFICATIONS_API" description:"The address of the notifications API"`
 		// TODO: get credentials from vault?
 		NotificationsAPIUser string `flag:"notifications-user" env:"WONDERLAND_USER" default:"" description:"The username to use for the notifications API"`
 		NotificationsAPIPass string `flag:"notifications-pass" env:"WONDERLAND_PASS" default:"" description:"The password to use for the notifications API"`
@@ -136,6 +136,10 @@ func main() {
 
 	if config.TimeoutImage == "" {
 		abort("Please pass a Timeout Image")
+	}
+
+	if config.NotificationsAPIAddress == "" {
+		abort("Please pass notifications api address")
 	}
 
 	stop := make(chan interface{})
