@@ -46,4 +46,4 @@ notifications:
 {{if eq (env `WONDERLAND_ENV`) "prod"}}
   pagerduty: https://events.pagerduty.com/adapter/cloudwatch_sns/v1/33046cc63c3d4e6dafda9c336be58ae8
 {{end}}
-  slack: '#werkzeugschmiede-bot'
+  slack: "#ws-alerts-{{ env `WONDERLAND_ENV`}}"
