@@ -1,0 +1,5 @@
+FROM alpine:3.6
+
+ADD script/timeout.sh /usr/local/bin/
+
+ENTRYPOINT ["timeout.sh"]

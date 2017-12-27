@@ -6,6 +6,7 @@ BRANCH ?= master
 
 CRONS_IMAGE = $(PROJECT_NAME)
 CRONS_TEST_IMAGE = $(CRONS_IMAGE).test
+CRONS_TIMEOUT_IMAGE = $(CRONS_IMAGE)-timeout
 AUTH_PROXY_IMAGE = auth-proxy
 
 JIMDO_ENVIRONMENT=stage
@@ -85,9 +86,16 @@ lint:
 container:
 	docker build -t $(CRONS_IMAGE) .
 
-push: container dinah
+timeout-container:
+	docker build \
+		-t $(CRONS_TIMEOUT_IMAGE) \
+		-f Dockerfile.timeout \
+		.
+
+push: container timeout-container dinah
 	# Push Docker images
 	@dinah docker push --user $(QUAY_USER_PROD) --pass $(QUAY_PASS_PROD) --branch $(BRANCH) $(CRONS_IMAGE)
+	@dinah docker push --user $(QUAY_USER_PROD) --pass $(QUAY_PASS_PROD) --branch $(BRANCH) $(CRONS_TIMEOUT_IMAGE)
 
 notify-jenkins: dinah
 	# Notify Jenkins
