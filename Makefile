@@ -76,12 +76,11 @@ test: test-container
 		-e CRONITOR_AUTH_KEY=$(CRONITOR_AUTH_KEY) \
 		$(CRONS_TEST_IMAGE) ./script/test
 
-lint: test-container
+lint:
 	docker run --rm -i \
 		-v $(PWD):/go/src/github.com/Jimdo/$(PROJECT_NAME) \
-		$(CRONS_TEST_IMAGE) ./script/lint
-
-ci: lint test
+		-w /go/src/github.com/Jimdo/$(PROJECT_NAME) \
+		quay.io/jimdo/gometalinter-container:latest
 
 container:
 	docker build -t $(CRONS_IMAGE) .
