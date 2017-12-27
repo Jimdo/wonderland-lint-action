@@ -29,4 +29,6 @@ fi
 sleep "$TIMEOUT_SECONDS" &
 wait $!
 
+echo "Timeout reached, killing container"
+
 exit "$TIMEOUT_EXITCODE"
