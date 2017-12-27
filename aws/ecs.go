@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"strconv"
 
 	awssdk "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
@@ -69,15 +70,15 @@ func (tds *ECSTaskDefinitionStore) AddRevisionFromCronDescription(cronName strin
 }
 
 func (tds *ECSTaskDefinitionStore) createTimeoutSidecarDefinition(cronName string, desc *cron.CronDescription) *ecs.ContainerDefinition {
-	timeoutCmd := fmt.Sprintf("trap 'exit' SIGTERM; sleep %d & wait $! && exit %d", *desc.Timeout, cron.TimeoutExitCode)
-
+	timeoutString := strconv.FormatInt(*desc.Timeout, 10)
+	timeoutExitCodeString := strconv.FormatInt(cron.TimeoutExitCode, 10)
 	timeoutSidecarDefinition := &ecs.ContainerDefinition{
-		Command: awssdk.StringSlice([]string{"/bin/sh", "-c", timeoutCmd}),
+		Command: awssdk.StringSlice([]string{timeoutString, timeoutExitCodeString}),
 		Cpu:     awssdk.Int64(int64(16)),
 		DockerLabels: map[string]*string{
 			"com.jimdo.wonderland.cron": awssdk.String(cronName),
 		},
-		Image:  awssdk.String("alpine:3.6"),
+		Image:  awssdk.String("quay.io/jimdo/wonderland-crons-timeout:latest"),
 		Memory: awssdk.Int64(int64(32)),
 		Name:   awssdk.String(cron.TimeoutContainerName),
 	}
