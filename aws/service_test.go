@@ -196,6 +196,8 @@ func TestService_Apply_Error_CreateRule(t *testing.T) {
 	}
 }
 
+/*
+
 func TestService_Delete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -365,7 +367,7 @@ func TestService_Delete_Error_ExecutionDelete(t *testing.T) {
 		t.Fatal("expected an error when deletion from DynamoDB failed, but got none")
 	}
 }
-
+*/
 func TestService_TriggerExecution_FirstExecution(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
