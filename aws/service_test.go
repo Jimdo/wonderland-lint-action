@@ -57,6 +57,8 @@ func TestService_Apply_Creation(t *testing.T) {
 	cronitorMonitorID := "someid"
 	notificationUri := fmt.Sprintf("/v1/teams/werkzeugschmiede/channels/%s", cronName)
 	apiEndpoint := "https://foo.bar"
+	notificationUser := "some-notification-user"
+	notificationPass := "some-notification-pass"
 
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.v.EXPECT().ValidateCronDescription(cronDesc)
@@ -65,11 +67,15 @@ func TestService_Apply_Creation(t *testing.T) {
 	mocks.cm.EXPECT().CreateRule(cronName, testTopicName, cronDesc.Schedule).Return(ruleARN, nil)
 	mocks.nc.EXPECT().CreateOrUpdateNotificationChannel(cronName, cronDesc.Notifications, "").Return(notificationUri, "", nil)
 	mocks.nc.EXPECT().GetApiEndpoint().Return(apiEndpoint)
+	mocks.mn.EXPECT().GetNotificationUser().Return(notificationUser)
+	mocks.mn.EXPECT().GetNotificationPass().Return(notificationPass)
 	mocks.mn.EXPECT().CreateOrUpdate(context.Background(), cronitor.CreateOrUpdateParams{
 		Name:                   cronName,
 		NoRunThreshold:         cronDesc.Notifications.NoRunThreshold,
 		RanLongerThanThreshold: cronDesc.Notifications.RanLongerThanThreshold,
-		Webhook:                fmt.Sprintf("%s%s/webhook/cronitor", apiEndpoint, notificationUri),
+		//Webhook:                fmt.Sprintf("%s%s/webhook/cronitor", apiEndpoint, notificationUri),
+		// TODO: fix test // mock/use notifications.GenerateWebhookUrl instead of hardcoding here
+		Webhook: fmt.Sprintf("https://%s:%s@foo.bar%s/webhook/cronitor", notificationUser, notificationPass, notificationUri),
 	}).Return(cronitorMonitorID, nil)
 	mocks.cs.EXPECT().Save(cronName, ruleARN, taskDefARN, taskDefFamily, cronDesc, cronitorMonitorID)
 

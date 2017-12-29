@@ -93,8 +93,10 @@ var (
 		LogzioAccountID string `flag:"logzio-account-id" env:"LOGZIO_ACCOUNT_ID" description:"The Logz.io account ID to use for Kibana URLs"`
 
 		// Cronitor
-		CronitorApiKey  string `flag:"cronitor-api-key" env:"CRONITOR_API_KEY" description:"Cronitor API Key"`
-		CronitorAuthKey string `flag:"cronitor-auth-key" env:"CRONITOR_AUTH_KEY" description:"Cronitor Auth Key"`
+		CronitorApiKey                 string `flag:"cronitor-api-key" env:"CRONITOR_API_KEY" description:"Cronitor API Key"`
+		CronitorAuthKey                string `flag:"cronitor-auth-key" env:"CRONITOR_AUTH_KEY" description:"Cronitor Auth Key"`
+		CronitorWlNotificationsAPIUser string `flag:"cronitor-wl-notifications-user" env:"CRONITOR_WL_NOTIFICATIONS_USER" default:"" description:"The username that cronitor should use for the notifications API"`
+		CronitorWlNotificationsAPIPass string `flag:"cronitor-wl-notifications-pass" env:"CRONITOR_WL_NOTIFICATIONS_PASS" default:"" description:"The pawssword that cronitor should use for the notifications API"`
 
 		// Timeout
 		TimeoutImage string `flag:"timeout-image" env:"TIMEOUT_IMAGE" descriptions "Docker image that should be used as timeout container"`
@@ -272,7 +274,7 @@ func main() {
 	}
 
 	hc := &http.Client{Timeout: time.Duration(10) * time.Second}
-	cronitorClient := cronitor.New(config.CronitorApiKey, config.CronitorAuthKey, hc)
+	cronitorClient := cronitor.New(config.CronitorApiKey, config.CronitorAuthKey, config.CronitorWlNotificationsAPIUser, config.CronitorWlNotificationsAPIPass, hc)
 
 	notificationClient := notifications.NewClient(http.DefaultTransport, config.NotificationsAPIAddress, config.NotificationsAPIUser, config.NotificationsAPIPass, config.NotificationsAPITeam)
 

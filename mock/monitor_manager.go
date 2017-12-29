@@ -59,6 +59,30 @@ func (mr *MockMonitorManagerMockRecorder) Delete(arg0, arg1 interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockMonitorManager)(nil).Delete), arg0, arg1)
 }
 
+// GetNotificationPass mocks base method
+func (m *MockMonitorManager) GetNotificationPass() string {
+	ret := m.ctrl.Call(m, "GetNotificationPass")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetNotificationPass indicates an expected call of GetNotificationPass
+func (mr *MockMonitorManagerMockRecorder) GetNotificationPass() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotificationPass", reflect.TypeOf((*MockMonitorManager)(nil).GetNotificationPass))
+}
+
+// GetNotificationUser mocks base method
+func (m *MockMonitorManager) GetNotificationUser() string {
+	ret := m.ctrl.Call(m, "GetNotificationUser")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetNotificationUser indicates an expected call of GetNotificationUser
+func (mr *MockMonitorManagerMockRecorder) GetNotificationUser() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotificationUser", reflect.TypeOf((*MockMonitorManager)(nil).GetNotificationUser))
+}
+
 // ReportRun mocks base method
 func (m *MockMonitorManager) ReportRun(arg0 context.Context, arg1 string) error {
 	ret := m.ctrl.Call(m, "ReportRun", arg0, arg1)

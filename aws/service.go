@@ -2,12 +2,12 @@ package aws
 
 import (
 	"context"
-	"fmt"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/Jimdo/wonderland-crons/cron"
 	"github.com/Jimdo/wonderland-crons/cronitor"
+	"github.com/Jimdo/wonderland-crons/notifications"
 	"github.com/Jimdo/wonderland-crons/store"
 )
 
@@ -33,6 +33,8 @@ type MonitorManager interface {
 	ReportRun(ctx context.Context, code string) error
 	Delete(ctx context.Context, name string) error
 	CreateOrUpdate(ctx context.Context, params cronitor.CreateOrUpdateParams) (string, error)
+	GetNotificationUser() string
+	GetNotificationPass() string
 }
 
 type NotificationClient interface {
@@ -101,11 +103,17 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 			return err
 		}
 
+		webhookUrl, err := notifications.GenerateWebhookUrl(s.nc.GetApiEndpoint(), notificationUri, s.mn.GetNotificationUser(), s.mn.GetNotificationPass())
+		if err != nil {
+			log.WithError(err).WithField("cron", name).Error("Could not generate Webhool URL")
+			return err
+		}
+
 		cronitorMonitorID, err = s.mn.CreateOrUpdate(context.Background(), cronitor.CreateOrUpdateParams{
 			Name:                   name,
 			NoRunThreshold:         cronDescription.Notifications.NoRunThreshold,
 			RanLongerThanThreshold: cronDescription.Notifications.RanLongerThanThreshold,
-			Webhook:                fmt.Sprintf("%s%s/webhook/cronitor", s.nc.GetApiEndpoint(), notificationUri),
+			Webhook:                webhookUrl,
 		})
 		if err != nil {
 			log.WithError(err).WithField("cron", name).Error("Could not create monitor at cronitor")

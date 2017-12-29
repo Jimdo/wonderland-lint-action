@@ -19,15 +19,21 @@ import (
 type CronitorAPI interface {
 	CreateOrUpdate(ctx context.Context, params CreateOrUpdateParams) error
 	Delete(ctx context.Context, name string) error
+	// TODO: make variable public instead?
+	GetNotificationUser() string
+	GetNotificationPass() string
 }
 
 type Client struct {
 	authInfo runtime.ClientAuthInfoWriter
 	authKey  string
 	client   *client.Cronitor
+	// TODO: do these credentials belong to cronitor client?
+	notificationUser string
+	notificationPass string
 }
 
-func New(apiKey, authKey string, hc *http.Client) *Client {
+func New(apiKey, authKey, notificationUser, notificationPass string, hc *http.Client) *Client {
 	cfg := client.DefaultTransportConfig()
 	transport := httptransport.NewWithClient(cfg.Host, cfg.BasePath, cfg.Schemes, hc)
 	authInfo := httptransport.BasicAuth(apiKey, "")
@@ -37,9 +43,11 @@ func New(apiKey, authKey string, hc *http.Client) *Client {
 	}
 
 	return &Client{
-		authInfo: authInfo,
-		authKey:  authKey,
-		client:   client,
+		authInfo:         authInfo,
+		authKey:          authKey,
+		client:           client,
+		notificationUser: notificationUser,
+		notificationPass: notificationPass,
 	}
 }
 
@@ -156,4 +164,12 @@ func (c *Client) ReportFail(ctx context.Context, code string) error {
 		Context: ctx,
 	})
 	return err
+}
+
+func (c *Client) GetNotificationUser() string {
+	return c.notificationUser
+}
+
+func (c *Client) GetNotificationPass() string {
+	return c.notificationPass
 }

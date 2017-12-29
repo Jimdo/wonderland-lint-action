@@ -18,7 +18,7 @@ import (
 func TestCreateOrUpdate(t *testing.T) {
 	cronName := fmt.Sprintf("integrationTestWonderlandCrons-%d", rand.Intn(999))
 	apiKey, authKey := os.Getenv("CRONITOR_API_KEY"), os.Getenv("CRONITOR_AUTH_KEY")
-	c := New(apiKey, authKey, http.DefaultClient)
+	c := New(apiKey, authKey, "some-user", "some-pass", http.DefaultClient)
 
 	defer func() {
 		// delete monitor again
