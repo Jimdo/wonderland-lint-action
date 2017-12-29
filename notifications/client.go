@@ -178,7 +178,18 @@ func (c *Client) createOrUpdateChannel(name, uri string) (*channel, error) {
 	return channel, nil
 }
 
-func (c *Client) DeleteNotificationChannel(name string) error {
+func (c *Client) DeleteNotificationChannelIfExists(name string) error {
+	err := c.do("get_notifications_channel", "GET", fmt.Sprintf("/v1/teams/%s/channels/%s", c.team, name), nil, nil)
+	if err != nil {
+		// TODO: let `do` return response code?
+		//channel does not exist
+		return nil
+	}
+
+	return c.deleteNotificationChannel(name)
+}
+
+func (c *Client) deleteNotificationChannel(name string) error {
 	uri := fmt.Sprintf("/v1/teams/%s/channels/%s", c.team, name)
 
 	log.Printf("Removing notification channel %s", uri)

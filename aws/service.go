@@ -38,7 +38,7 @@ type MonitorManager interface {
 type NotificationClient interface {
 	CreateOrUpdateNotificationChannel(name string, notifications *cron.CronNotification, uri string) (string, string, error)
 	GetApiEndpoint() string
-	DeleteNotificationChannel(uri string) error
+	DeleteNotificationChannelIfExists(uri string) error
 }
 
 type Service struct {
@@ -148,7 +148,8 @@ func (s *Service) Delete(cronName string) error {
 		errors = append(errors, err)
 	}
 
-	if err := s.nc.DeleteNotificationChannel(cronName); err != nil {
+	// TODO: delete targets as well? (should be done by notification service IMHO)
+	if err := s.nc.DeleteNotificationChannelIfExists(cronName); err != nil {
 		errors = append(errors, err)
 	}
 

@@ -47,16 +47,16 @@ func (mr *MockNotificationClientMockRecorder) CreateOrUpdateNotificationChannel(
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdateNotificationChannel", reflect.TypeOf((*MockNotificationClient)(nil).CreateOrUpdateNotificationChannel), arg0, arg1, arg2)
 }
 
-// DeleteNotificationChannel mocks base method
-func (m *MockNotificationClient) DeleteNotificationChannel(arg0 string) error {
-	ret := m.ctrl.Call(m, "DeleteNotificationChannel", arg0)
+// DeleteNotificationChannelIfExists mocks base method
+func (m *MockNotificationClient) DeleteNotificationChannelIfExists(arg0 string) error {
+	ret := m.ctrl.Call(m, "DeleteNotificationChannelIfExists", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteNotificationChannel indicates an expected call of DeleteNotificationChannel
-func (mr *MockNotificationClientMockRecorder) DeleteNotificationChannel(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteNotificationChannel", reflect.TypeOf((*MockNotificationClient)(nil).DeleteNotificationChannel), arg0)
+// DeleteNotificationChannelIfExists indicates an expected call of DeleteNotificationChannelIfExists
+func (mr *MockNotificationClientMockRecorder) DeleteNotificationChannelIfExists(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteNotificationChannelIfExists", reflect.TypeOf((*MockNotificationClient)(nil).DeleteNotificationChannelIfExists), arg0)
 }
 
 // GetApiEndpoint mocks base method
