@@ -196,8 +196,6 @@ func TestService_Apply_Error_CreateRule(t *testing.T) {
 	}
 }
 
-/*
-
 func TestService_Delete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -211,6 +209,7 @@ func TestService_Delete(t *testing.T) {
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.cs.EXPECT().GetByName(cronName).Return(cron, nil)
 	mocks.mn.EXPECT().Delete(context.Background(), cronName)
+	mocks.nc.EXPECT().DeleteNotificationChannelIfExists(cronName)
 	mocks.cm.EXPECT().DeleteRule(cron.RuleARN)
 	mocks.tds.EXPECT().DeleteByFamily(cron.TaskDefinitionFamily)
 	mocks.ces.EXPECT().Delete(cronName)
@@ -235,6 +234,7 @@ func TestService_Delete_Error_OnRuleDeletionError(t *testing.T) {
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.cs.EXPECT().GetByName(cronName).Return(cron, nil)
 	mocks.mn.EXPECT().Delete(context.Background(), cronName)
+	mocks.nc.EXPECT().DeleteNotificationChannelIfExists(cronName)
 	mocks.cm.EXPECT().DeleteRule(cron.RuleARN).Return(errors.New("foo"))
 	mocks.tds.EXPECT().DeleteByFamily(cron.TaskDefinitionFamily)
 
@@ -257,6 +257,7 @@ func TestService_Delete_Error_OnTaskDefinitionDeletionError(t *testing.T) {
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.cs.EXPECT().GetByName(cronName).Return(cron, nil)
 	mocks.mn.EXPECT().Delete(context.Background(), cronName)
+	mocks.nc.EXPECT().DeleteNotificationChannelIfExists(cronName)
 	mocks.cm.EXPECT().DeleteRule(cron.RuleARN)
 	mocks.tds.EXPECT().DeleteByFamily(cron.TaskDefinitionFamily).Return(errors.New("foo"))
 
@@ -279,6 +280,7 @@ func TestService_Delete_Error_OnlyFirstErrorReturned(t *testing.T) {
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.cs.EXPECT().GetByName(cronName).Return(cron, nil)
 	mocks.mn.EXPECT().Delete(context.Background(), cronName).Return(errors.New("foo1"))
+	mocks.nc.EXPECT().DeleteNotificationChannelIfExists(cronName)
 	mocks.cm.EXPECT().DeleteRule(cron.RuleARN).Return(errors.New("foo2"))
 	mocks.tds.EXPECT().DeleteByFamily(cron.TaskDefinitionFamily).Return(errors.New("foo3"))
 
@@ -304,6 +306,7 @@ func TestService_Delete_Error_OnStoreDelete(t *testing.T) {
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.cs.EXPECT().GetByName(cronName).Return(cron, nil)
 	mocks.mn.EXPECT().Delete(context.Background(), cronName)
+	mocks.nc.EXPECT().DeleteNotificationChannelIfExists(cronName)
 	mocks.cm.EXPECT().DeleteRule(cron.RuleARN)
 	mocks.tds.EXPECT().DeleteByFamily(cron.TaskDefinitionFamily)
 	mocks.ces.EXPECT().Delete(cronName)
@@ -358,6 +361,7 @@ func TestService_Delete_Error_ExecutionDelete(t *testing.T) {
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.cs.EXPECT().GetByName(cronName).Return(cron, nil)
 	mocks.mn.EXPECT().Delete(context.Background(), cronName)
+	mocks.nc.EXPECT().DeleteNotificationChannelIfExists(cronName)
 	mocks.cm.EXPECT().DeleteRule(cron.RuleARN)
 	mocks.tds.EXPECT().DeleteByFamily(cron.TaskDefinitionFamily)
 	mocks.ces.EXPECT().Delete(cronName).Return(errors.New("foo"))
@@ -367,7 +371,7 @@ func TestService_Delete_Error_ExecutionDelete(t *testing.T) {
 		t.Fatal("expected an error when deletion from DynamoDB failed, but got none")
 	}
 }
-*/
+
 func TestService_TriggerExecution_FirstExecution(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
