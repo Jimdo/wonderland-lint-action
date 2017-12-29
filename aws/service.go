@@ -38,6 +38,7 @@ type MonitorManager interface {
 type NotificationClient interface {
 	CreateOrUpdateNotificationChannel(name string, notifications *cron.CronNotification, uri string) (string, string, error)
 	GetApiEndpoint() string
+	DeleteNotificationChannel(uri string) error
 }
 
 type Service struct {
@@ -111,6 +112,7 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 			return err
 		}
 	} else {
+		// TODO: delete notification channel as well
 		if err := s.mn.Delete(context.Background(), name); err != nil {
 			log.WithError(err).WithField("cron", name).Error("Could not delete monitor at cronitor")
 			return err
@@ -141,7 +143,13 @@ func (s *Service) Delete(cronName string) error {
 	}
 
 	var errors []error
+
 	if err := s.mn.Delete(context.Background(), cronName); err != nil {
+		errors = append(errors, err)
+	}
+
+	teamName := "werkzeugschmiede"
+	if err := s.nc.DeleteNotificationChannel(fmt.Sprintf("/teams/%s/channels/%s", teamName, cronName)); err != nil {
 		errors = append(errors, err)
 	}
 
