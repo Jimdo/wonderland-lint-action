@@ -178,7 +178,9 @@ func (c *Client) createOrUpdateChannel(name, uri string) (*channel, error) {
 	return channel, nil
 }
 
-func (c *Client) DeleteNotificationChannel(uri string) error {
+func (c *Client) DeleteNotificationChannel(name string) error {
+	uri := fmt.Sprintf("/v1/teams/%s/channels/%s", c.team, name)
+
 	log.Printf("Removing notification channel %s", uri)
 	err := c.do("delete_notifications_channel", "DELETE", uri, nil, nil)
 	if err != nil {

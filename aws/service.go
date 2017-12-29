@@ -148,8 +148,7 @@ func (s *Service) Delete(cronName string) error {
 		errors = append(errors, err)
 	}
 
-	teamName := "werkzeugschmiede"
-	if err := s.nc.DeleteNotificationChannel(fmt.Sprintf("/teams/%s/channels/%s", teamName, cronName)); err != nil {
+	if err := s.nc.DeleteNotificationChannel(cronName); err != nil {
 		errors = append(errors, err)
 	}
 
