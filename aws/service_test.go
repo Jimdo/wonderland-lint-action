@@ -114,6 +114,7 @@ func TestService_Apply_NoNotifications(t *testing.T) {
 	mocks.cm.EXPECT().CreateRule(cronName, testTopicName, cronDesc.Schedule).Return(ruleARN, nil)
 	mocks.cs.EXPECT().Save(cronName, ruleARN, taskDefARN, taskDefFamily, cronDesc, "")
 	mocks.mn.EXPECT().Delete(context.Background(), cronName)
+	mocks.nc.EXPECT().DeleteNotificationChannelIfExists(cronName)
 
 	err := service.Apply(cronName, cronDesc)
 	if err != nil {

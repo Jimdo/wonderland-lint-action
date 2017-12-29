@@ -112,9 +112,12 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 			return err
 		}
 	} else {
-		// TODO: delete notification channel as well
 		if err := s.mn.Delete(context.Background(), name); err != nil {
 			log.WithError(err).WithField("cron", name).Error("Could not delete monitor at cronitor")
+			return err
+		}
+
+		if err := s.nc.DeleteNotificationChannelIfExists(name); err != nil {
 			return err
 		}
 	}
