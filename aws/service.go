@@ -148,7 +148,6 @@ func (s *Service) Delete(cronName string) error {
 		errors = append(errors, err)
 	}
 
-	// TODO: delete targets as well? (should be done by notification service IMHO)
 	if err := s.nc.DeleteNotificationChannelIfExists(cronName); err != nil {
 		errors = append(errors, err)
 	}
