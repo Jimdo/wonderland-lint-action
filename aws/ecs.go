@@ -25,15 +25,17 @@ type ECSTaskDefinitionStore struct {
 	clusterARN                string
 	ecsRunnerIdentifier       string
 	noScheduleMarkerAttribute string
+	timeoutImage              string
 }
 
-func NewECSTaskDefinitionStore(e ecsiface.ECSAPI, tdm *ECSTaskDefinitionMapper, clusterARN, ecsRunnerIdentifier, noScheduleMarkerAttribute string) *ECSTaskDefinitionStore {
+func NewECSTaskDefinitionStore(e ecsiface.ECSAPI, tdm *ECSTaskDefinitionMapper, clusterARN, ecsRunnerIdentifier, noScheduleMarkerAttribute, timeoutImage string) *ECSTaskDefinitionStore {
 	return &ECSTaskDefinitionStore{
 		ecs:                       e,
 		tdm:                       tdm,
 		clusterARN:                clusterARN,
 		ecsRunnerIdentifier:       ecsRunnerIdentifier,
 		noScheduleMarkerAttribute: noScheduleMarkerAttribute,
+		timeoutImage:              timeoutImage,
 	}
 }
 
@@ -78,7 +80,7 @@ func (tds *ECSTaskDefinitionStore) createTimeoutSidecarDefinition(cronName strin
 		DockerLabels: map[string]*string{
 			"com.jimdo.wonderland.cron": awssdk.String(cronName),
 		},
-		Image:  awssdk.String("quay.io/jimdo/wonderland-crons-timeout:latest"),
+		Image:  awssdk.String(tds.timeoutImage),
 		Memory: awssdk.Int64(int64(32)),
 		Name:   awssdk.String(cron.TimeoutContainerName),
 	}
