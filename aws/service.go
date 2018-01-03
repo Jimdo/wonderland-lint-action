@@ -7,7 +7,6 @@ import (
 
 	"github.com/Jimdo/wonderland-crons/cron"
 	"github.com/Jimdo/wonderland-crons/cronitor"
-	"github.com/Jimdo/wonderland-crons/notifications"
 	"github.com/Jimdo/wonderland-crons/store"
 )
 
@@ -33,14 +32,16 @@ type MonitorManager interface {
 	ReportRun(ctx context.Context, code string) error
 	Delete(ctx context.Context, name string) error
 	CreateOrUpdate(ctx context.Context, params cronitor.CreateOrUpdateParams) (string, error)
-	GetNotificationUser() string
-	GetNotificationPass() string
 }
 
 type NotificationClient interface {
 	CreateOrUpdateNotificationChannel(name string, notifications *cron.CronNotification, uri string) (string, string, error)
 	GetApiEndpoint() string
 	DeleteNotificationChannelIfExists(uri string) error
+}
+
+type URLGenerator interface {
+	GenerateWebhookURL(notificationURI string) (string, error)
 }
 
 type Service struct {
@@ -51,11 +52,12 @@ type Service struct {
 	executionStore CronExecutionStore
 	mn             MonitorManager
 	nc             NotificationClient
+	ug             URLGenerator
 
 	topicARN string
 }
 
-func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s CronStore, es CronExecutionStore, tarn string, mn MonitorManager, nc NotificationClient) *Service {
+func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s CronStore, es CronExecutionStore, tarn string, mn MonitorManager, nc NotificationClient, ug URLGenerator) *Service {
 	return &Service{
 		cm:             cm,
 		cronStore:      s,
@@ -65,6 +67,7 @@ func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s 
 		topicARN:       tarn,
 		mn:             mn,
 		nc:             nc,
+		ug:             ug,
 	}
 }
 
@@ -97,13 +100,13 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 	cronitorMonitorID := ""
 	if cronDescription.Notifications != nil {
 		//TODO: prefix channel with cron-- in order to avoid duplicates with services?
-		notificationUri, _, err := s.nc.CreateOrUpdateNotificationChannel(name, cronDescription.Notifications, "")
+		notificationURI, _, err := s.nc.CreateOrUpdateNotificationChannel(name, cronDescription.Notifications, "")
 		if err != nil {
 			log.WithError(err).WithField("cron", name).Error("Could not create notification channel")
 			return err
 		}
 
-		webhookUrl, err := notifications.GenerateWebhookUrl(s.nc.GetApiEndpoint(), notificationUri, s.mn.GetNotificationUser(), s.mn.GetNotificationPass())
+		webhookUrl, err := s.ug.GenerateWebhookURL(notificationURI)
 		if err != nil {
 			log.WithError(err).WithField("cron", name).Error("Could not generate Webhool URL")
 			return err

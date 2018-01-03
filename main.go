@@ -273,11 +273,13 @@ func main() {
 	}
 
 	hc := &http.Client{Timeout: time.Duration(10) * time.Second}
-	cronitorClient := cronitor.New(config.CronitorApiKey, config.CronitorAuthKey, config.CronitorWlNotificationsAPIUser, config.CronitorWlNotificationsAPIPass, hc)
+	cronitorClient := cronitor.New(config.CronitorApiKey, config.CronitorAuthKey, hc)
 
 	notificationClient := notifications.NewClient(http.DefaultTransport, config.NotificationsAPIAddress, config.NotificationsAPIUser, config.NotificationsAPIPass, config.NotificationsAPITeam)
 
-	service := aws.NewService(validator, cloudwatchcm, ecstds, dynamoDBCronStore, dynamoDBExecutionStore, config.ExecutionTriggerTopicARN, cronitorClient, notificationClient)
+	urlGenerator := notifications.NewURLGenerator(config.CronitorWlNotificationsAPIUser, config.CronitorWlNotificationsAPIPass, config.NotificationsAPIAddress)
+
+	service := aws.NewService(validator, cloudwatchcm, ecstds, dynamoDBCronStore, dynamoDBExecutionStore, config.ExecutionTriggerTopicARN, cronitorClient, notificationClient, urlGenerator)
 
 	eventDispatcher := events.NewEventDispatcher()
 	eventDispatcher.On(events.EventCronExecutionStateChanged, events.CronExecutionStatePersister(dynamoDBExecutionStore))
