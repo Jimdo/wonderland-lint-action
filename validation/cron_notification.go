@@ -14,12 +14,12 @@ func (cn cronNotification) validate(notification *cron.CronNotification) error {
 		return Error{"At least no-run-threshhold or ran-longer-than-threshhold has to be configured when using notifications"}
 	}
 
-	if noRunThreshhold != nil && *noRunThreshhold < 1 {
-		return Error{"The value of no-run-threshhold has to be greater than 0"}
+	if noRunThreshhold != nil && *noRunThreshhold < 60 {
+		return Error{"The no-run-threshhold has to be at least 60 (seconds)"}
 	}
 
-	if ranLongerThanThreshhold != nil && *ranLongerThanThreshhold < 1 {
-		return Error{"The value of ran-longer-than-threshhold has to be greater than 0"}
+	if ranLongerThanThreshhold != nil && *ranLongerThanThreshhold < 60 {
+		return Error{"The ran-longer-than-threshhold has to be at least 60 (seconds)"}
 	}
 	return nil
 }
