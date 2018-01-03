@@ -275,7 +275,8 @@ func main() {
 	hc := &http.Client{Timeout: time.Duration(10) * time.Second}
 	cronitorClient := cronitor.New(config.CronitorApiKey, config.CronitorAuthKey, hc)
 
-	notificationClient := notifications.NewClient(http.DefaultTransport, config.NotificationsAPIAddress, config.NotificationsAPIUser, config.NotificationsAPIPass, config.NotificationsAPITeam)
+	userAgent := fmt.Sprintf("%s/%s", programIdentifier, programVersion)
+	notificationClient := notifications.NewClient(http.DefaultTransport, config.NotificationsAPIAddress, config.NotificationsAPIUser, config.NotificationsAPIPass, userAgent, config.NotificationsAPITeam)
 
 	urlGenerator := notifications.NewURLGenerator(config.CronitorWlNotificationsAPIUser, config.CronitorWlNotificationsAPIPass, config.NotificationsAPIAddress)
 

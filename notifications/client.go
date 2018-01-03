@@ -14,8 +14,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func NewClient(client http.RoundTripper, api, user, password, team string) *Client {
-	return &Client{client, api, user, password, team}
+func NewClient(client http.RoundTripper, api, user, password, userAgent, team string) *Client {
+	return &Client{client, api, user, password, userAgent, team}
 }
 
 func init() {
@@ -38,6 +38,7 @@ type Client struct {
 	apiEndpoint   string
 	user          string
 	password      string
+	userAgent     string
 	team          string
 }
 
@@ -268,6 +269,7 @@ func (c *Client) do(action, method, resource string, data interface{}, result in
 				req.Header.Add("Content-Type", "application/json")
 			}
 			c.authenticate(req)
+			c.setUserAgent(req)
 
 			response, err = c.httpTransport.RoundTrip(req)
 			if err != nil {
@@ -329,5 +331,11 @@ func (c *Client) uri(resource string) string {
 func (c *Client) authenticate(req *http.Request) {
 	if c.user != "" || c.password != "" {
 		req.SetBasicAuth(c.user, c.password)
+	}
+}
+
+func (c *Client) setUserAgent(req *http.Request) {
+	if c.userAgent != "" {
+		req.Header.Set("User-Agent", c.userAgent)
 	}
 }
