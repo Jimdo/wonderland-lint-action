@@ -94,6 +94,9 @@ var (
 		// Cronitor
 		CronitorApiKey  string `flag:"cronitor-api-key" env:"CRONITOR_API_KEY" description:"Cronitor API Key"`
 		CronitorAuthKey string `flag:"cronitor-auth-key" env:"CRONITOR_AUTH_KEY" description:"Cronitor Auth Key"`
+
+		// Timeout
+		TimeoutImage string `flag:"timeout-image" env:"TIMEOUT_IMAGE" descriptions "Docker image that should be used as timeout container"`
 	}
 	programIdentifier = "wonderland-crons"
 	programVersion    = "dev"
@@ -121,6 +124,10 @@ func main() {
 
 	if config.WorkerLeaderLockTableName == "" {
 		abort("Please pass a lock DynamoDB table name")
+	}
+
+	if config.TimeoutImage == "" {
+		abort("Please pass a Timeout Image")
 	}
 
 	stop := make(chan interface{})
@@ -244,6 +251,7 @@ func main() {
 		config.ECSClusterARN,
 		fmt.Sprintf("%s/%s", programIdentifier, programVersion),
 		config.ECSNoScheduleMarkerAttribute,
+		config.TimeoutImage,
 	)
 	cloudwatchcm := aws.NewCloudwatchRuleCronManager(cwClient, config.ECSClusterARN, config.CronRoleARN)
 	dynamoDBCronStore, err := store.NewDynamoDBCronStore(dynamoDBClient, config.CronsTableName)
