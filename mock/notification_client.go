@@ -58,15 +58,3 @@ func (m *MockNotificationClient) DeleteNotificationChannelIfExists(arg0 string) 
 func (mr *MockNotificationClientMockRecorder) DeleteNotificationChannelIfExists(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteNotificationChannelIfExists", reflect.TypeOf((*MockNotificationClient)(nil).DeleteNotificationChannelIfExists), arg0)
 }
-
-// GetApiEndpoint mocks base method
-func (m *MockNotificationClient) GetApiEndpoint() string {
-	ret := m.ctrl.Call(m, "GetApiEndpoint")
-	ret0, _ := ret[0].(string)
-	return ret0
-}
-
-// GetApiEndpoint indicates an expected call of GetApiEndpoint
-func (mr *MockNotificationClientMockRecorder) GetApiEndpoint() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetApiEndpoint", reflect.TypeOf((*MockNotificationClient)(nil).GetApiEndpoint))
-}

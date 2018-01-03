@@ -36,7 +36,6 @@ type MonitorManager interface {
 
 type NotificationClient interface {
 	CreateOrUpdateNotificationChannel(name string, notifications *cron.CronNotification, uri string) (string, string, error)
-	GetApiEndpoint() string
 	DeleteNotificationChannelIfExists(uri string) error
 }
 
