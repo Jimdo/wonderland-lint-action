@@ -55,11 +55,15 @@ func (e *Execution) GetExecutionStatus() string {
 			log.WithField("task_arn", e.TaskArn).Error("Exit code(s) of stopped ECS unavailable")
 			return ExecutionStatusUnknown
 		}
-		if aws.Int64Value(e.ExitCode) == 0 {
-			return ExecutionStatusSuccess
-		}
+		// Returning timeout status has precedence over the exit status because main containers
+		// will receive a SIGTERM signal when the timeout container shuts down and therefore
+		// have a chance to shutdown gracefully. Returning the main container's exit code would
+		// in this case shadow the fact that is was shut down because of a timeout.
 		if aws.Int64Value(e.TimeoutExitCode) == TimeoutExitCode {
 			return ExecutionStatusTimeout
+		}
+		if aws.Int64Value(e.ExitCode) == 0 {
+			return ExecutionStatusSuccess
 		}
 		return ExecutionStatusFailed
 	case ecs.DesiredStatusPending:

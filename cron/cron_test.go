@@ -50,6 +50,12 @@ func TestExecution_GetExecutionStatus(t *testing.T) {
 			ExpectedStatus:  "TIMEOUT",
 		},
 		{
+			ExitCode:        aws.Int64(0),
+			LastStatus:      "STOPPED",
+			TimeoutExitCode: aws.Int64(TimeoutExitCode),
+			ExpectedStatus:  "TIMEOUT",
+		},
+		{
 			ExitCode:        nil,
 			LastStatus:      "STOPPED",
 			TimeoutExitCode: nil,
