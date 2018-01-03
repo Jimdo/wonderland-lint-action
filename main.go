@@ -126,6 +126,10 @@ func main() {
 		abort("Please pass a lock DynamoDB table name")
 	}
 
+	if config.TimeoutImage == "" {
+		abort("Please pass a Timeout Image")
+	}
+
 	stop := make(chan interface{})
 	defer close(stop)
 
