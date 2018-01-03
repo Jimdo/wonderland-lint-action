@@ -12,14 +12,14 @@ import (
 func TestValidateCronNotification_Valid(t *testing.T) {
 	valid := []cron.CronNotification{
 		{
-			NoRunThreshhold:         cronitor.Int64Ptr(10),
-			RanLongerThanThreshhold: cronitor.Int64Ptr(5),
+			NoRunThreshhold:         cronitor.Int64Ptr(70),
+			RanLongerThanThreshhold: cronitor.Int64Ptr(65),
 		},
 		{
-			NoRunThreshhold: cronitor.Int64Ptr(1),
+			NoRunThreshhold: cronitor.Int64Ptr(60),
 		},
 		{
-			RanLongerThanThreshhold: cronitor.Int64Ptr(5),
+			RanLongerThanThreshhold: cronitor.Int64Ptr(65),
 		},
 	}
 
@@ -33,10 +33,14 @@ func TestValidateCronNotification_Valid(t *testing.T) {
 }
 
 func TestValidateCronNotification_Invalid(t *testing.T) {
-	valid := []cron.CronNotification{
+	invalid := []cron.CronNotification{
 		{
 			NoRunThreshhold:         cronitor.Int64Ptr(0),
 			RanLongerThanThreshhold: cronitor.Int64Ptr(0),
+		},
+		{
+			NoRunThreshhold:         cronitor.Int64Ptr(59),
+			RanLongerThanThreshhold: cronitor.Int64Ptr(59),
 		},
 		{
 			NoRunThreshhold: cronitor.Int64Ptr(0),
@@ -49,7 +53,7 @@ func TestValidateCronNotification_Invalid(t *testing.T) {
 
 	v := &cronNotification{}
 
-	for _, notification := range valid {
+	for _, notification := range invalid {
 		if err := v.validate(&notification); err == nil {
 			t.Errorf("%+v should not be a valid cron notification, err = %s", notification, err)
 		}

@@ -23,8 +23,8 @@ func TestValidateCronDescription_Valid(t *testing.T) {
 			},
 		},
 		Notifications: &cron.CronNotification{
-			NoRunThreshhold:         cronitor.Int64Ptr(1),
-			RanLongerThanThreshhold: cronitor.Int64Ptr(5),
+			NoRunThreshhold:         cronitor.Int64Ptr(60),
+			RanLongerThanThreshhold: cronitor.Int64Ptr(300),
 		},
 	}
 
