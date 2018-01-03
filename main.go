@@ -103,10 +103,9 @@ var (
 
 		// Notifications
 		NotificationsAPIAddress string `flag:"notifications-api" env:"NOTIFICATIONS_API" description:"The address of the notifications API"`
-		// TODO: get credentials from vault?
-		NotificationsAPIUser string `flag:"notifications-user" env:"NOTIFICATIONS_API_USER" default:"" description:"The username to use for the notifications API"`
-		NotificationsAPIPass string `flag:"notifications-pass" env:"NOTIFICATIONS_API_PASS" default:"" description:"The password to use for the notifications API"`
-		NotificationsAPITeam string `flag:"notifications-team" default:"werkzeugschmiede" description:"The notifications team to use"`
+		NotificationsAPIUser    string `flag:"notifications-user" env:"NOTIFICATIONS_API_USER" default:"" description:"The username to use for the notifications API"`
+		NotificationsAPIPass    string `flag:"notifications-pass" env:"NOTIFICATIONS_API_PASS" default:"" description:"The password to use for the notifications API"`
+		NotificationsAPITeam    string `flag:"notifications-team" default:"werkzeugschmiede" description:"The notifications team to use"`
 	}
 	programIdentifier = "wonderland-crons"
 	programVersion    = "dev"
