@@ -98,7 +98,6 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 
 	cronitorMonitorID := ""
 	if cronDescription.Notifications != nil {
-		//TODO: prefix channel with cron-- in order to avoid duplicates with services?
 		notificationURI, _, err := s.nc.CreateOrUpdateNotificationChannel(name, cronDescription.Notifications, "")
 		if err != nil {
 			log.WithError(err).WithField("cron", name).Error("Could not create notification channel")
