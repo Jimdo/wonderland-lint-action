@@ -35,8 +35,8 @@ type MonitorManager interface {
 }
 
 type NotificationClient interface {
-	CreateOrUpdateNotificationChannel(name string, notifications *cron.CronNotification, uri string) (string, string, error)
-	DeleteNotificationChannelIfExists(uri string) error
+	CreateOrUpdateNotificationChannel(name string, notifications *cron.CronNotification) (string, string, error)
+	DeleteNotificationChannel(uri string) error
 }
 
 type URLGenerator interface {
@@ -98,7 +98,7 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 
 	cronitorMonitorID := ""
 	if cronDescription.Notifications != nil {
-		notificationURI, _, err := s.nc.CreateOrUpdateNotificationChannel(name, cronDescription.Notifications, "")
+		notificationURI, _, err := s.nc.CreateOrUpdateNotificationChannel(name, cronDescription.Notifications)
 		if err != nil {
 			log.WithError(err).WithField("cron", name).Error("Could not create notification channel")
 			return err
@@ -126,7 +126,7 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 			return err
 		}
 
-		if err := s.nc.DeleteNotificationChannelIfExists(name); err != nil {
+		if err := s.nc.DeleteNotificationChannel(name); err != nil {
 			return err
 		}
 	}
@@ -160,7 +160,7 @@ func (s *Service) Delete(cronName string) error {
 		errors = append(errors, err)
 	}
 
-	if err := s.nc.DeleteNotificationChannelIfExists(cronName); err != nil {
+	if err := s.nc.DeleteNotificationChannel(cronName); err != nil {
 		errors = append(errors, err)
 	}
 

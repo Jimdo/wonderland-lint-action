@@ -28,6 +28,8 @@ func init() {
 		"get_notifications_channel":    {Timeout: 6000},
 		"get_notifications_targets":    {Timeout: 6000},
 		"get_notifications_team":       {Timeout: 6000},
+		"update_notifications_channel": {Timeout: 6000},
+		"update_notifications_team":    {Timeout: 6000},
 	})
 }
 
@@ -54,17 +56,17 @@ type target struct {
 	Endpoint string `json:"uri"`
 }
 
-func (c *Client) CreateOrUpdateNotificationChannel(name string, notifications *cron.CronNotification, uri string) (string, string, error) {
+func (c *Client) CreateOrUpdateNotificationChannel(name string, notifications *cron.CronNotification) (string, string, error) {
 	if notifications == nil {
 		return "", "", nil
 	}
 
-	channel, err := c.createOrUpdateChannel(name, uri)
+	channel, err := c.createOrUpdateChannel(name)
 	if err != nil {
 		return "", "", err
 	}
 
-	uri = fmt.Sprintf("/v1/teams/%s/channels/%s", c.team, channel.Slug)
+	uri := fmt.Sprintf("/v1/teams/%s/channels/%s", c.team, channel.Slug)
 
 	err = c.enforceNotificationTargets(uri, channel, notifications)
 	if err != nil {
@@ -76,7 +78,7 @@ func (c *Client) CreateOrUpdateNotificationChannel(name string, notifications *c
 
 func (c *Client) enforceNotificationTargets(uri string, channel *channel, notifications *cron.CronNotification) error {
 	targets := []target{}
-	err := c.do("get_notifications_targets", "GET", fmt.Sprintf("%s/targets", uri), nil, &targets)
+	_, err := c.do("get_notifications_targets", "GET", fmt.Sprintf("%s/targets", uri), nil, &targets)
 	if err != nil {
 		return fmt.Errorf("error requesting notifications API: %s", err)
 	}
@@ -131,70 +133,98 @@ func (c *Client) enforceNotificationTargets(uri string, channel *channel, notifi
 	return nil
 }
 
-func (c *Client) createOrUpdateChannel(name, uri string) (*channel, error) {
+func (c *Client) createOrUpdateChannel(name string) (*channel, error) {
 	channel := &channel{
 		Name: name,
 		Slug: strings.ToLower(name),
 	}
-	if uri != "" {
-		err := c.do("get_notifications_channel", "GET", uri, nil, channel)
-		if err != nil {
+
+	if err := c.createOrUpdateTeam(c.team); err != nil {
+		return nil, err
+	}
+
+	statusCode, err := c.do("get_notifications_channel", "GET", fmt.Sprintf("/v1/teams/%s/channels/%s", c.team, channel.Slug), nil, channel)
+	if err != nil {
+		if statusCode != http.StatusNotFound {
 			return nil, err
 		}
-	} else {
-		err := c.do("get_notifications_team", "GET", fmt.Sprintf("/v1/teams/%s", c.team), nil, nil)
+
+		log.WithFields(log.Fields{
+			"channel":   channel.Name,
+			"get_error": err,
+			"slug":      channel.Slug,
+			"team":      c.team,
+		}).Info("Creating notification channel")
+
+		statusCode, err = c.do("create_notifications_channel", "POST", fmt.Sprintf("/v1/teams/%s/channels", c.team), channel, channel)
 		if err != nil {
-			log.WithFields(log.Fields{
-				"channel":   name,
-				"get_error": err,
-				"team":      c.team,
-			}).Info("Creating notification team")
-			err = c.do("create_notifications_team", "POST", "/v1/teams", &team{Name: c.team}, nil)
-			if err != nil {
-				log.WithError(err).WithFields(log.Fields{
-					"channel": name,
-					"team":    c.team,
-				}).Error("Error while creating notification team")
-				return nil, fmt.Errorf("error creating team: %s", err)
-			}
+			log.WithError(err).WithFields(log.Fields{
+				"channel":     name,
+				"team":        c.team,
+				"status_code": statusCode,
+			}).Error("Error while creating notification channel")
+			return nil, fmt.Errorf("error requesting notifications API: %s", err)
 		}
-
-		err = c.do("get_notifications_channel", "GET", fmt.Sprintf("/v1/teams/%s/channels/%s", c.team, channel.Slug), nil, channel)
+	} else {
+		statusCode, err = c.do("update_notifications_channel", "PUT", fmt.Sprintf("/v1/teams/%s/channels/%s", c.team, channel.Slug), channel, channel)
 		if err != nil {
-			log.WithFields(log.Fields{
-				"channel":   channel.Name,
-				"get_error": err,
-				"slug":      channel.Slug,
-				"team":      c.team,
-			}).Info("Creating notification channel")
-
-			err = c.do("create_notifications_channel", "POST", fmt.Sprintf("/v1/teams/%s/channels", c.team), channel, channel)
-			if err != nil {
-				return nil, fmt.Errorf("error requesting notifications API: %s", err)
-			}
+			log.WithError(err).WithFields(log.Fields{
+				"channel":     name,
+				"team":        c.team,
+				"status_code": statusCode,
+			}).Error("Error while updating notification channel")
+			return nil, fmt.Errorf("error requesting notifications API: %s", err)
 		}
 	}
 
 	return channel, nil
 }
 
-func (c *Client) DeleteNotificationChannelIfExists(name string) error {
-	uri := fmt.Sprintf("/v1/teams/%s/channels/%s", c.team, name)
-
-	err := c.do("get_notifications_channel", "GET", uri, nil, nil)
+func (c *Client) createOrUpdateTeam(name string) error {
+	statusCode, err := c.do("get_notifications_team", "GET", fmt.Sprintf("/v1/teams/%s", c.team), nil, nil)
 	if err != nil {
-		// TODO: let `do` return response code?
-		//channel does not exist
-		return nil
-	}
+		if statusCode != http.StatusNotFound {
+			return err
+		}
 
-	return c.deleteNotificationChannel(uri)
+		log.WithFields(log.Fields{
+			"channel":   name,
+			"get_error": err,
+			"team":      c.team,
+		}).Info("Creating notification team")
+
+		statusCode, err = c.do("create_notifications_team", "POST", "/v1/teams", &team{Name: c.team}, nil)
+		if err != nil {
+			log.WithError(err).WithFields(log.Fields{
+				"channel":     name,
+				"team":        c.team,
+				"status_code": statusCode,
+			}).Error("Error while creating notification team")
+			return fmt.Errorf("error creating team: %s", err)
+		}
+	} else {
+		statusCode, err = c.do("update_notifications_team", "PUT", fmt.Sprintf("/v1/teams/%s", c.team), &team{Name: c.team}, nil)
+		if err != nil {
+			log.WithError(err).WithFields(log.Fields{
+				"channel":     name,
+				"team":        c.team,
+				"status_code": statusCode,
+			}).Error("Error while updating notification team")
+			return fmt.Errorf("error updating team: %s", err)
+		}
+	}
+	return nil
 }
 
-func (c *Client) deleteNotificationChannel(uri string) error {
+func (c *Client) DeleteNotificationChannel(name string) error {
+	uri := fmt.Sprintf("/v1/teams/%s/channels/%s", c.team, name)
+
 	log.Printf("Removing notification channel %s", uri)
-	err := c.do("delete_notifications_channel", "DELETE", uri, nil, nil)
+	statusCode, err := c.do("delete_notifications_channel", "DELETE", uri, nil, nil)
 	if err != nil {
+		if statusCode == http.StatusNotFound {
+			return nil
+		}
 		return fmt.Errorf("error deleting notifications channel: %s", err)
 	}
 
@@ -203,20 +233,25 @@ func (c *Client) deleteNotificationChannel(uri string) error {
 
 func (c *Client) createTarget(ch *channel, t target) error {
 	log.Printf("Creating %s notification target", t.Type)
-	return c.do("create_notifications_target", "POST", fmt.Sprintf("/v1/teams/%s/channels/%s/targets", c.team, ch.Slug), t, nil)
+	_, err := c.do("create_notifications_target", "POST", fmt.Sprintf("/v1/teams/%s/channels/%s/targets", c.team, ch.Slug), t, nil)
+	return err
 }
 
 func (c *Client) removeTarget(ch *channel, t target) error {
 	log.Printf("Removing %s notification target", t.Type)
-	return c.do("delete_notifications_target", "DELETE", fmt.Sprintf("/v1/teams/%s/channels/%s/targets/%s", c.team, ch.Slug, t.ID), t, nil)
+	_, err := c.do("delete_notifications_target", "DELETE", fmt.Sprintf("/v1/teams/%s/channels/%s/targets/%s", c.team, ch.Slug, t.ID), t, nil)
+	return err
 }
 
-func (c *Client) do(action, method, resource string, data interface{}, result interface{}) error {
-	var bodyreader io.Reader
+func (c *Client) do(action, method, resource string, data interface{}, result interface{}) (int, error) {
+	var (
+		bodyreader io.Reader
+		statusCode int
+	)
 	if method != "GET" && data != nil {
 		bjson, err := json.Marshal(data)
 		if err != nil {
-			return err
+			return statusCode, err
 		}
 		bodyreader = bytes.NewReader(bjson)
 	}
@@ -239,6 +274,7 @@ func (c *Client) do(action, method, resource string, data interface{}, result in
 				return err
 			}
 			defer response.Body.Close()
+			statusCode = response.StatusCode
 			if response.StatusCode == 302 || response.StatusCode == 201 && response.Header.Get("Location") != "" {
 				resource = response.Header.Get("Location")
 				method = "GET"
@@ -271,9 +307,9 @@ func (c *Client) do(action, method, resource string, data interface{}, result in
 
 	select {
 	case err := <-errors:
-		return err
+		return statusCode, err
 	case <-ready:
-		return nil
+		return statusCode, nil
 	}
 }
 
