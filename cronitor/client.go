@@ -74,14 +74,14 @@ func (c *Client) CreateOrUpdate(ctx context.Context, params CreateOrUpdateParams
 		payload.Rules = append(payload.Rules, &models.RuleHeartbeat{
 			RuleType: cronitor.StringPtr(models.RuleHeartbeatRuleTypeRunPingNotReceived),
 			Value:    params.NoRunThreshhold,
-			TimeUnit: models.RuleHeartbeatTimeUnitMinutes,
+			TimeUnit: models.RuleHeartbeatTimeUnitSeconds,
 		})
 	}
 	if params.RanLongerThanThreshhold != nil && *params.RanLongerThanThreshhold > 0 {
 		payload.Rules = append(payload.Rules, &models.RuleHeartbeat{
 			RuleType: cronitor.StringPtr(models.RuleHeartbeatRuleTypeRanLongerThan),
 			Value:    params.RanLongerThanThreshhold,
-			TimeUnit: models.RuleHeartbeatTimeUnitMinutes,
+			TimeUnit: models.RuleHeartbeatTimeUnitSeconds,
 		})
 	}
 
