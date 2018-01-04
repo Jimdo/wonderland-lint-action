@@ -56,8 +56,19 @@ func CronitorHeartbeatUpdater(ef ExecutionFetcher, cf CronFetcher, mn MonitorNot
 		}
 
 		cronContainer := cron.GetUserContainerFromTask(c.Task)
+		cronContainerExitCode := aws.Int64Value(cronContainer.ExitCode)
 
-		if aws.Int64Value(cronContainer.ExitCode) == 0 {
+		timeoutContainerExitCode := int64(0)
+		timeoutContainer := cron.GetTimeoutContainerFromTask(c.Task)
+		if timeoutContainer != nil {
+			timeoutContainerExitCode = aws.Int64Value(timeoutContainer.ExitCode)
+		}
+
+		// Successes will only be reported when there was not timeout because main containers
+		// will receive a SIGTERM signal when the timeout container shuts down and therefore
+		// have a chance to shutdown gracefully. Only relying on the main container's exit
+		// code would in this case shadow the fact that is was shut down because of a timeout.
+		if cronContainerExitCode == 0 && timeoutContainerExitCode != cron.TimeoutExitCode {
 			return mn.ReportSuccess(context.Background(), desc.CronitorMonitorID)
 		}
 		return mn.ReportFail(context.Background(), desc.CronitorMonitorID)
