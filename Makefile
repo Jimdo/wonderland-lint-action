@@ -23,10 +23,13 @@ NOMAD_PASS=$(WONDERLAND_PASS)
 AUTH_USER=$(WONDERLAND_USER)
 AUTH_PASS=$(WONDERLAND_PASS)
 
+NOTIFICATIONS_API=https://notifications.jimdo-platform-stage.net
+
 prod: JIMDO_ENVIRONMENT=prod
 prod: ZONE=jimdo-platform.net
 prod: WONDERLAND_REGISTRY=registry.jimdo-platform.net
 prod: NOMAD_API=https://nomad.jimdo-platform.net
+prod: NOTIFICATIONS_API=https://notifications.jimdo-platform.net
 prod: deploy
 
 stage: deploy
@@ -43,7 +46,12 @@ set-credentials:
 			QUAY_REGISTRY_PASS=$(QUAY_PASS) \
 			LOGZIO_ACCOUNT_ID=$(LOGZIO_ACCOUNT_ID) \
 			CRONITOR_API_KEY=$(CRONITOR_API_KEY) \
-			CRONITOR_AUTH_KEY=$(CRONITOR_AUTH_KEY)
+			CRONITOR_AUTH_KEY=$(CRONITOR_AUTH_KEY) \
+			CRONITOR_WL_NOTIFICATIONS_USER=$(CRONITOR_WL_NOTIFICATIONS_USER) \
+			CRONITOR_WL_NOTIFICATIONS_PASS=$(CRONITOR_WL_NOTIFICATIONS_PASS) \
+			NOTIFICATIONS_API_USER=$(WONDERLAND_USER) \
+			NOTIFICATIONS_API_PASS=$(WONDERLAND_PASS)
+
 	WONDERLAND_ENV=$(JIMDO_ENVIRONMENT) \
 		wl vault write secret/wonderland/crons/proxy \
 			HTTP_USER="$(AUTH_USER)" \
@@ -58,6 +66,7 @@ deploy: set-credentials dinah
 	NOMAD_AWS_REGION=$(NOMAD_AWS_REGION) \
 	WONDERLAND_ENV=$(JIMDO_ENVIRONMENT) \
 	TIMEOUT_IMAGE=$(shell dinah docker image --branch $(BRANCH) $(CRONS_TIMEOUT_IMAGE)) \
+	NOTIFICATIONS_API=$(NOTIFICATIONS_API) \
 	ZONE=$(ZONE) \
 		wl deploy $(PROJECT_NAME) -f wonderland.yaml
 
@@ -117,6 +126,8 @@ gen-mocks:
 	mockgen -package mock github.com/Jimdo/wonderland-crons/aws MonitorManager > mock/monitor_manager.go
 	mockgen -package mock github.com/Jimdo/wonderland-crons/aws VaultSecretProvider > mock/vault_secret_provider.go
 	mockgen -package mock github.com/Jimdo/wonderland-crons/aws VaultAppRoleProvider > mock/vault_app_role_provider.go
+	mockgen -package mock github.com/Jimdo/wonderland-crons/aws NotificationClient > mock/notification_client.go
+	mockgen -package mock github.com/Jimdo/wonderland-crons/aws URLGenerator > mock/urlgenerator.go
 	mockgen -package mock github.com/Jimdo/wonderland-crons/events TaskStore > mock/task_store.go
 	mockgen -package mock github.com/aws/aws-sdk-go/service/sqs/sqsiface SQSAPI > mock/sqsapi.go
 

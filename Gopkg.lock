@@ -37,6 +37,12 @@
   revision = "de5bf2ad457846296e2031421a34e2568e304e35"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/afex/hystrix-go"
+  packages = ["hystrix","hystrix/metric_collector","hystrix/rolling"]
+  revision = "f118cd938f786d24f46cc307981d8f63b7951020"
+
+[[projects]]
   name = "github.com/asaskevich/govalidator"
   packages = ["."]
   revision = "521b25f4b05fd26bec69d9dedeb8f9c9a83939a8"
@@ -332,6 +338,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "df7d4c68f2ba5dddebdfc06e9d648233dc41ca363220ba00b8cd2a37480cb662"
+  inputs-digest = "83a5092c3b007d425482549a8f435822b57e94f173b6ee5292a4a9ce4b499222"
   solver-name = "gps-cdcl"
   solver-version = 1

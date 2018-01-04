@@ -38,6 +38,7 @@ import (
 	"github.com/Jimdo/wonderland-crons/events"
 	"github.com/Jimdo/wonderland-crons/locking"
 	"github.com/Jimdo/wonderland-crons/nomad"
+	"github.com/Jimdo/wonderland-crons/notifications"
 	"github.com/Jimdo/wonderland-crons/store"
 	"github.com/Jimdo/wonderland-crons/validation"
 	"github.com/Jimdo/wonderland-crons/vault"
@@ -92,11 +93,19 @@ var (
 		LogzioAccountID string `flag:"logzio-account-id" env:"LOGZIO_ACCOUNT_ID" description:"The Logz.io account ID to use for Kibana URLs"`
 
 		// Cronitor
-		CronitorApiKey  string `flag:"cronitor-api-key" env:"CRONITOR_API_KEY" description:"Cronitor API Key"`
-		CronitorAuthKey string `flag:"cronitor-auth-key" env:"CRONITOR_AUTH_KEY" description:"Cronitor Auth Key"`
+		CronitorApiKey                 string `flag:"cronitor-api-key" env:"CRONITOR_API_KEY" description:"Cronitor API Key"`
+		CronitorAuthKey                string `flag:"cronitor-auth-key" env:"CRONITOR_AUTH_KEY" description:"Cronitor Auth Key"`
+		CronitorWlNotificationsAPIUser string `flag:"cronitor-wl-notifications-user" env:"CRONITOR_WL_NOTIFICATIONS_USER" default:"" description:"The username that cronitor should use for the notifications API"`
+		CronitorWlNotificationsAPIPass string `flag:"cronitor-wl-notifications-pass" env:"CRONITOR_WL_NOTIFICATIONS_PASS" default:"" description:"The pawssword that cronitor should use for the notifications API"`
 
 		// Timeout
 		TimeoutImage string `flag:"timeout-image" env:"TIMEOUT_IMAGE" descriptions "Docker image that should be used as timeout container"`
+
+		// Notifications
+		NotificationsAPIAddress string `flag:"notifications-api" env:"NOTIFICATIONS_API" description:"The address of the notifications API"`
+		NotificationsAPIUser    string `flag:"notifications-user" env:"NOTIFICATIONS_API_USER" default:"" description:"The username to use for the notifications API"`
+		NotificationsAPIPass    string `flag:"notifications-pass" env:"NOTIFICATIONS_API_PASS" default:"" description:"The password to use for the notifications API"`
+		NotificationsAPITeam    string `flag:"notifications-team" default:"werkzeugschmiede" description:"The notifications team to use"`
 	}
 	programIdentifier = "wonderland-crons"
 	programVersion    = "dev"
@@ -128,6 +137,10 @@ func main() {
 
 	if config.TimeoutImage == "" {
 		abort("Please pass a Timeout Image")
+	}
+
+	if config.NotificationsAPIAddress == "" {
+		abort("Please pass notifications api address")
 	}
 
 	stop := make(chan interface{})
@@ -261,7 +274,13 @@ func main() {
 
 	hc := &http.Client{Timeout: time.Duration(10) * time.Second}
 	cronitorClient := cronitor.New(config.CronitorApiKey, config.CronitorAuthKey, hc)
-	service := aws.NewService(validator, cloudwatchcm, ecstds, dynamoDBCronStore, dynamoDBExecutionStore, config.ExecutionTriggerTopicARN, cronitorClient)
+
+	userAgent := fmt.Sprintf("%s/%s", programIdentifier, programVersion)
+	notificationClient := notifications.NewClient(http.DefaultTransport, config.NotificationsAPIAddress, config.NotificationsAPIUser, config.NotificationsAPIPass, userAgent, config.NotificationsAPITeam)
+
+	urlGenerator := notifications.NewURLGenerator(config.CronitorWlNotificationsAPIUser, config.CronitorWlNotificationsAPIPass, config.NotificationsAPIAddress)
+
+	service := aws.NewService(validator, cloudwatchcm, ecstds, dynamoDBCronStore, dynamoDBExecutionStore, config.ExecutionTriggerTopicARN, cronitorClient, notificationClient, urlGenerator)
 
 	eventDispatcher := events.NewEventDispatcher()
 	eventDispatcher.On(events.EventCronExecutionStateChanged, events.CronExecutionStatePersister(dynamoDBExecutionStore))

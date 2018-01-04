@@ -23,8 +23,10 @@ func TestValidateCronDescription_Valid(t *testing.T) {
 			},
 		},
 		Notifications: &cron.CronNotification{
-			NoRunThreshhold:         cronitor.Int64Ptr(60),
-			RanLongerThanThreshhold: cronitor.Int64Ptr(300),
+			NoRunThreshold:         cronitor.Int64Ptr(60),
+			RanLongerThanThreshold: cronitor.Int64Ptr(300),
+			SlackChannel:           "#test",
+			PagerdutyURI:           "http://foo.bar",
 		},
 	}
 

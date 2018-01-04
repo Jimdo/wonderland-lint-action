@@ -7,19 +7,20 @@ import (
 type cronNotification struct{}
 
 func (cn cronNotification) validate(notification *cron.CronNotification) error {
-	noRunThreshhold := notification.NoRunThreshhold
-	ranLongerThanThreshhold := notification.RanLongerThanThreshhold
+	noRunThreshold := notification.NoRunThreshold
+	ranLongerThanThreshold := notification.RanLongerThanThreshold
 
-	if noRunThreshhold == nil && ranLongerThanThreshhold == nil {
-		return Error{"At least no-run-threshhold or ran-longer-than-threshhold has to be configured when using notifications"}
+	if notification.PagerdutyURI == "" && notification.SlackChannel == "" {
+		return Error{"Either pagerduty or slack notification option has to be specified"}
 	}
 
-	if noRunThreshhold != nil && *noRunThreshhold < 60 {
-		return Error{"The no-run-threshhold has to be at least 60 (seconds)"}
+	if noRunThreshold != nil && *noRunThreshold < 60 {
+		return Error{"The no-run-threshold has to be at least 60 (seconds)"}
 	}
 
-	if ranLongerThanThreshhold != nil && *ranLongerThanThreshhold < 60 {
-		return Error{"The ran-longer-than-threshhold has to be at least 60 (seconds)"}
+	if ranLongerThanThreshold != nil && *ranLongerThanThreshold < 60 {
+		return Error{"The ran-longer-than-threshold has to be at least 60 (seconds)"}
 	}
+
 	return nil
 }

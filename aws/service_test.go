@@ -3,6 +3,7 @@ package aws
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	cronitorclient "github.com/Jimdo/cronitor-api-client"
@@ -45,8 +46,8 @@ func TestService_Apply_Creation(t *testing.T) {
 			},
 		},
 		Notifications: &cron.CronNotification{
-			NoRunThreshhold:         cronitorclient.Int64Ptr(10),
-			RanLongerThanThreshhold: cronitorclient.Int64Ptr(15),
+			NoRunThreshold:         cronitorclient.Int64Ptr(10),
+			RanLongerThanThreshold: cronitorclient.Int64Ptr(15),
 		},
 	}
 
@@ -54,18 +55,23 @@ func TestService_Apply_Creation(t *testing.T) {
 	taskDefFamily := "task-defintion-family"
 	ruleARN := "rule-arn"
 	cronitorMonitorID := "someid"
+	notificationUri := fmt.Sprintf("/v1/teams/werkzeugschmiede/channels/%s", cronName)
+	notificationUser := "some-notification-user"
+	notificationPass := "some-notification-pass"
+	webhookURL := fmt.Sprintf("https://%s:%s@foo.bar%s/webhook/cronitor", notificationUser, notificationPass, notificationUri)
 
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.v.EXPECT().ValidateCronDescription(cronDesc)
 	mocks.v.EXPECT().ValidateCronName(cronName)
 	mocks.tds.EXPECT().AddRevisionFromCronDescription(cronName, cronDesc).Return(taskDefARN, taskDefFamily, nil)
 	mocks.cm.EXPECT().CreateRule(cronName, testTopicName, cronDesc.Schedule).Return(ruleARN, nil)
+	mocks.nc.EXPECT().CreateOrUpdateNotificationChannel(cronName, cronDesc.Notifications).Return(notificationUri, "", nil)
+	mocks.ug.EXPECT().GenerateWebhookURL(notificationUri).Return(webhookURL, nil)
 	mocks.mn.EXPECT().CreateOrUpdate(context.Background(), cronitor.CreateOrUpdateParams{
-		Name:                    cronName,
-		NoRunThreshhold:         cronDesc.Notifications.NoRunThreshhold,
-		RanLongerThanThreshhold: cronDesc.Notifications.RanLongerThanThreshhold,
-		PagerDuty:               "",
-		Slack:                   "",
+		Name:                   cronName,
+		NoRunThreshold:         cronDesc.Notifications.NoRunThreshold,
+		RanLongerThanThreshold: cronDesc.Notifications.RanLongerThanThreshold,
+		Webhook:                webhookURL,
 	}).Return(cronitorMonitorID, nil)
 	mocks.cs.EXPECT().Save(cronName, ruleARN, taskDefARN, taskDefFamily, cronDesc, cronitorMonitorID)
 
@@ -110,6 +116,7 @@ func TestService_Apply_NoNotifications(t *testing.T) {
 	mocks.cm.EXPECT().CreateRule(cronName, testTopicName, cronDesc.Schedule).Return(ruleARN, nil)
 	mocks.cs.EXPECT().Save(cronName, ruleARN, taskDefARN, taskDefFamily, cronDesc, "")
 	mocks.mn.EXPECT().Delete(context.Background(), cronName)
+	mocks.nc.EXPECT().DeleteNotificationChannel(cronName)
 
 	err := service.Apply(cronName, cronDesc)
 	if err != nil {
@@ -205,6 +212,7 @@ func TestService_Delete(t *testing.T) {
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.cs.EXPECT().GetByName(cronName).Return(cron, nil)
 	mocks.mn.EXPECT().Delete(context.Background(), cronName)
+	mocks.nc.EXPECT().DeleteNotificationChannel(cronName)
 	mocks.cm.EXPECT().DeleteRule(cron.RuleARN)
 	mocks.tds.EXPECT().DeleteByFamily(cron.TaskDefinitionFamily)
 	mocks.ces.EXPECT().Delete(cronName)
@@ -229,6 +237,7 @@ func TestService_Delete_Error_OnRuleDeletionError(t *testing.T) {
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.cs.EXPECT().GetByName(cronName).Return(cron, nil)
 	mocks.mn.EXPECT().Delete(context.Background(), cronName)
+	mocks.nc.EXPECT().DeleteNotificationChannel(cronName)
 	mocks.cm.EXPECT().DeleteRule(cron.RuleARN).Return(errors.New("foo"))
 	mocks.tds.EXPECT().DeleteByFamily(cron.TaskDefinitionFamily)
 
@@ -251,6 +260,7 @@ func TestService_Delete_Error_OnTaskDefinitionDeletionError(t *testing.T) {
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.cs.EXPECT().GetByName(cronName).Return(cron, nil)
 	mocks.mn.EXPECT().Delete(context.Background(), cronName)
+	mocks.nc.EXPECT().DeleteNotificationChannel(cronName)
 	mocks.cm.EXPECT().DeleteRule(cron.RuleARN)
 	mocks.tds.EXPECT().DeleteByFamily(cron.TaskDefinitionFamily).Return(errors.New("foo"))
 
@@ -273,6 +283,7 @@ func TestService_Delete_Error_OnlyFirstErrorReturned(t *testing.T) {
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.cs.EXPECT().GetByName(cronName).Return(cron, nil)
 	mocks.mn.EXPECT().Delete(context.Background(), cronName).Return(errors.New("foo1"))
+	mocks.nc.EXPECT().DeleteNotificationChannel(cronName)
 	mocks.cm.EXPECT().DeleteRule(cron.RuleARN).Return(errors.New("foo2"))
 	mocks.tds.EXPECT().DeleteByFamily(cron.TaskDefinitionFamily).Return(errors.New("foo3"))
 
@@ -298,6 +309,7 @@ func TestService_Delete_Error_OnStoreDelete(t *testing.T) {
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.cs.EXPECT().GetByName(cronName).Return(cron, nil)
 	mocks.mn.EXPECT().Delete(context.Background(), cronName)
+	mocks.nc.EXPECT().DeleteNotificationChannel(cronName)
 	mocks.cm.EXPECT().DeleteRule(cron.RuleARN)
 	mocks.tds.EXPECT().DeleteByFamily(cron.TaskDefinitionFamily)
 	mocks.ces.EXPECT().Delete(cronName)
@@ -352,6 +364,7 @@ func TestService_Delete_Error_ExecutionDelete(t *testing.T) {
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.cs.EXPECT().GetByName(cronName).Return(cron, nil)
 	mocks.mn.EXPECT().Delete(context.Background(), cronName)
+	mocks.nc.EXPECT().DeleteNotificationChannel(cronName)
 	mocks.cm.EXPECT().DeleteRule(cron.RuleARN)
 	mocks.tds.EXPECT().DeleteByFamily(cron.TaskDefinitionFamily)
 	mocks.ces.EXPECT().Delete(cronName).Return(errors.New("foo"))
@@ -371,7 +384,7 @@ func TestService_TriggerExecution_FirstExecution(t *testing.T) {
 	testCron := &cron.Cron{
 		Description: &cron.CronDescription{
 			Notifications: &cron.CronNotification{
-				RanLongerThanThreshhold: cronitorclient.Int64Ptr(1),
+				RanLongerThanThreshold: cronitorclient.Int64Ptr(1),
 			},
 		},
 		CronitorMonitorID: cronitorMonitorID,
@@ -419,7 +432,7 @@ func TestService_TriggerExecution_SecondExecution(t *testing.T) {
 	testCron := &cron.Cron{
 		Description: &cron.CronDescription{
 			Notifications: &cron.CronNotification{
-				RanLongerThanThreshhold: cronitorclient.Int64Ptr(1),
+				RanLongerThanThreshold: cronitorclient.Int64Ptr(1),
 			},
 		},
 		CronitorMonitorID: cronitorMonitorID,
@@ -568,6 +581,8 @@ type mocks struct {
 	cs  *mock.MockCronStore
 	ces *mock.MockCronExecutionStore
 	mn  *mock.MockMonitorManager
+	nc  *mock.MockNotificationClient
+	ug  *mock.MockURLGenerator
 }
 
 func createServiceWithMocks(ctrl *gomock.Controller) (*Service, mocks) {
@@ -577,13 +592,17 @@ func createServiceWithMocks(ctrl *gomock.Controller) (*Service, mocks) {
 	cs := mock.NewMockCronStore(ctrl)
 	ces := mock.NewMockCronExecutionStore(ctrl)
 	mn := mock.NewMockMonitorManager(ctrl)
+	nc := mock.NewMockNotificationClient(ctrl)
+	ug := mock.NewMockURLGenerator(ctrl)
 
-	return NewService(v, cm, tds, cs, ces, testTopicName, mn), mocks{
+	return NewService(v, cm, tds, cs, ces, testTopicName, mn, nc, ug), mocks{
 		v:   v,
 		cm:  cm,
 		tds: tds,
 		cs:  cs,
 		ces: ces,
 		mn:  mn,
+		nc:  nc,
+		ug:  ug,
 	}
 }
