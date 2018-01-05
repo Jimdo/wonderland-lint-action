@@ -5,7 +5,7 @@
   branch = "master"
   name = "github.com/Jimdo/cronitor-api-client"
   packages = [".","client","client/heartbeat","client/monitor","models"]
-  revision = "24513c5beea815bd0609c4bebab69f3e6b65ea6a"
+  revision = "dda194b7c49fd86c09bfb1c825123f8de798d60d"
 
 [[projects]]
   name = "github.com/Jimdo/wonderland-validator"

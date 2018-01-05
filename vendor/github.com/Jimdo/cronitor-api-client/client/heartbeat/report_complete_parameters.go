@@ -14,6 +14,7 @@ import (
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
+	"github.com/go-openapi/swag"
 
 	strfmt "github.com/go-openapi/strfmt"
 )
@@ -69,6 +70,31 @@ type ReportCompleteParams struct {
 
 	*/
 	Code string
+	/*Duration
+	  Total runtime as float
+
+	*/
+	Duration *float64
+	/*Host
+	  The name of the server sending this request
+
+	*/
+	Host *string
+	/*Msg
+	  A url-encoded message, up to 1000 chars
+
+	*/
+	Msg *string
+	/*Series
+	  A unique user-supplied ID to collate related pings
+
+	*/
+	Series *string
+	/*StatusCode
+	  Exit code returned from the task
+
+	*/
+	StatusCode *int64
 
 	timeout    time.Duration
 	Context    context.Context
@@ -130,6 +156,61 @@ func (o *ReportCompleteParams) SetCode(code string) {
 	o.Code = code
 }
 
+// WithDuration adds the duration to the report complete params
+func (o *ReportCompleteParams) WithDuration(duration *float64) *ReportCompleteParams {
+	o.SetDuration(duration)
+	return o
+}
+
+// SetDuration adds the duration to the report complete params
+func (o *ReportCompleteParams) SetDuration(duration *float64) {
+	o.Duration = duration
+}
+
+// WithHost adds the host to the report complete params
+func (o *ReportCompleteParams) WithHost(host *string) *ReportCompleteParams {
+	o.SetHost(host)
+	return o
+}
+
+// SetHost adds the host to the report complete params
+func (o *ReportCompleteParams) SetHost(host *string) {
+	o.Host = host
+}
+
+// WithMsg adds the msg to the report complete params
+func (o *ReportCompleteParams) WithMsg(msg *string) *ReportCompleteParams {
+	o.SetMsg(msg)
+	return o
+}
+
+// SetMsg adds the msg to the report complete params
+func (o *ReportCompleteParams) SetMsg(msg *string) {
+	o.Msg = msg
+}
+
+// WithSeries adds the series to the report complete params
+func (o *ReportCompleteParams) WithSeries(series *string) *ReportCompleteParams {
+	o.SetSeries(series)
+	return o
+}
+
+// SetSeries adds the series to the report complete params
+func (o *ReportCompleteParams) SetSeries(series *string) {
+	o.Series = series
+}
+
+// WithStatusCode adds the statusCode to the report complete params
+func (o *ReportCompleteParams) WithStatusCode(statusCode *int64) *ReportCompleteParams {
+	o.SetStatusCode(statusCode)
+	return o
+}
+
+// SetStatusCode adds the statusCode to the report complete params
+func (o *ReportCompleteParams) SetStatusCode(statusCode *int64) {
+	o.StatusCode = statusCode
+}
+
 // WriteToRequest writes these params to a swagger request
 func (o *ReportCompleteParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
@@ -157,6 +238,86 @@ func (o *ReportCompleteParams) WriteToRequest(r runtime.ClientRequest, reg strfm
 	// path param code
 	if err := r.SetPathParam("code", o.Code); err != nil {
 		return err
+	}
+
+	if o.Duration != nil {
+
+		// query param duration
+		var qrDuration float64
+		if o.Duration != nil {
+			qrDuration = *o.Duration
+		}
+		qDuration := swag.FormatFloat64(qrDuration)
+		if qDuration != "" {
+			if err := r.SetQueryParam("duration", qDuration); err != nil {
+				return err
+			}
+		}
+
+	}
+
+	if o.Host != nil {
+
+		// query param host
+		var qrHost string
+		if o.Host != nil {
+			qrHost = *o.Host
+		}
+		qHost := qrHost
+		if qHost != "" {
+			if err := r.SetQueryParam("host", qHost); err != nil {
+				return err
+			}
+		}
+
+	}
+
+	if o.Msg != nil {
+
+		// query param msg
+		var qrMsg string
+		if o.Msg != nil {
+			qrMsg = *o.Msg
+		}
+		qMsg := qrMsg
+		if qMsg != "" {
+			if err := r.SetQueryParam("msg", qMsg); err != nil {
+				return err
+			}
+		}
+
+	}
+
+	if o.Series != nil {
+
+		// query param series
+		var qrSeries string
+		if o.Series != nil {
+			qrSeries = *o.Series
+		}
+		qSeries := qrSeries
+		if qSeries != "" {
+			if err := r.SetQueryParam("series", qSeries); err != nil {
+				return err
+			}
+		}
+
+	}
+
+	if o.StatusCode != nil {
+
+		// query param status_code
+		var qrStatusCode int64
+		if o.StatusCode != nil {
+			qrStatusCode = *o.StatusCode
+		}
+		qStatusCode := swag.FormatInt64(qrStatusCode)
+		if qStatusCode != "" {
+			if err := r.SetQueryParam("status_code", qStatusCode); err != nil {
+				return err
+			}
+		}
+
 	}
 
 	if len(res) > 0 {

@@ -69,6 +69,21 @@ type ReportRunParams struct {
 
 	*/
 	Code string
+	/*Host
+	  The name of the server sending this request
+
+	*/
+	Host *string
+	/*Msg
+	  A url-encoded message, up to 1000 chars
+
+	*/
+	Msg *string
+	/*Series
+	  A unique user-supplied ID to collate related pings
+
+	*/
+	Series *string
 
 	timeout    time.Duration
 	Context    context.Context
@@ -130,6 +145,39 @@ func (o *ReportRunParams) SetCode(code string) {
 	o.Code = code
 }
 
+// WithHost adds the host to the report run params
+func (o *ReportRunParams) WithHost(host *string) *ReportRunParams {
+	o.SetHost(host)
+	return o
+}
+
+// SetHost adds the host to the report run params
+func (o *ReportRunParams) SetHost(host *string) {
+	o.Host = host
+}
+
+// WithMsg adds the msg to the report run params
+func (o *ReportRunParams) WithMsg(msg *string) *ReportRunParams {
+	o.SetMsg(msg)
+	return o
+}
+
+// SetMsg adds the msg to the report run params
+func (o *ReportRunParams) SetMsg(msg *string) {
+	o.Msg = msg
+}
+
+// WithSeries adds the series to the report run params
+func (o *ReportRunParams) WithSeries(series *string) *ReportRunParams {
+	o.SetSeries(series)
+	return o
+}
+
+// SetSeries adds the series to the report run params
+func (o *ReportRunParams) SetSeries(series *string) {
+	o.Series = series
+}
+
 // WriteToRequest writes these params to a swagger request
 func (o *ReportRunParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
@@ -157,6 +205,54 @@ func (o *ReportRunParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Reg
 	// path param code
 	if err := r.SetPathParam("code", o.Code); err != nil {
 		return err
+	}
+
+	if o.Host != nil {
+
+		// query param host
+		var qrHost string
+		if o.Host != nil {
+			qrHost = *o.Host
+		}
+		qHost := qrHost
+		if qHost != "" {
+			if err := r.SetQueryParam("host", qHost); err != nil {
+				return err
+			}
+		}
+
+	}
+
+	if o.Msg != nil {
+
+		// query param msg
+		var qrMsg string
+		if o.Msg != nil {
+			qrMsg = *o.Msg
+		}
+		qMsg := qrMsg
+		if qMsg != "" {
+			if err := r.SetQueryParam("msg", qMsg); err != nil {
+				return err
+			}
+		}
+
+	}
+
+	if o.Series != nil {
+
+		// query param series
+		var qrSeries string
+		if o.Series != nil {
+			qrSeries = *o.Series
+		}
+		qSeries := qrSeries
+		if qSeries != "" {
+			if err := r.SetQueryParam("series", qSeries); err != nil {
+				return err
+			}
+		}
+
 	}
 
 	if len(res) > 0 {
