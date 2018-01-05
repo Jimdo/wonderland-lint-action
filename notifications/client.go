@@ -91,7 +91,7 @@ func (c *Client) enforceNotificationTargets(uri string, channel *channel, notifi
 
 	for _, target := range targets {
 		switch target.Type {
-		case "pagerduty":
+		case "pagerduty-api":
 			if notifications.PagerdutyURI == target.Endpoint {
 				createPagerdutyTarget = false
 				continue
@@ -123,7 +123,7 @@ func (c *Client) enforceNotificationTargets(uri string, channel *channel, notifi
 	}
 	if createPagerdutyTarget {
 		err := c.createTarget(channel, target{
-			Type:     "pagerduty",
+			Type:     "pagerduty-api",
 			Endpoint: notifications.PagerdutyURI,
 		})
 		if err != nil {
