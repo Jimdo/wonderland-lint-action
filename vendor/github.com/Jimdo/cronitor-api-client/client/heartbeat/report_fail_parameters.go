@@ -14,6 +14,7 @@ import (
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
+	"github.com/go-openapi/swag"
 
 	strfmt "github.com/go-openapi/strfmt"
 )
@@ -69,6 +70,31 @@ type ReportFailParams struct {
 
 	*/
 	Code string
+	/*Duration
+	  Total runtime as float
+
+	*/
+	Duration *float64
+	/*Host
+	  The name of the server sending this request
+
+	*/
+	Host *string
+	/*Msg
+	  A url-encoded message, up to 1000 chars
+
+	*/
+	Msg *string
+	/*Series
+	  A unique user-supplied ID to collate related pings
+
+	*/
+	Series *string
+	/*StatusCode
+	  Exit code returned from the task
+
+	*/
+	StatusCode *int64
 
 	timeout    time.Duration
 	Context    context.Context
@@ -130,6 +156,61 @@ func (o *ReportFailParams) SetCode(code string) {
 	o.Code = code
 }
 
+// WithDuration adds the duration to the report fail params
+func (o *ReportFailParams) WithDuration(duration *float64) *ReportFailParams {
+	o.SetDuration(duration)
+	return o
+}
+
+// SetDuration adds the duration to the report fail params
+func (o *ReportFailParams) SetDuration(duration *float64) {
+	o.Duration = duration
+}
+
+// WithHost adds the host to the report fail params
+func (o *ReportFailParams) WithHost(host *string) *ReportFailParams {
+	o.SetHost(host)
+	return o
+}
+
+// SetHost adds the host to the report fail params
+func (o *ReportFailParams) SetHost(host *string) {
+	o.Host = host
+}
+
+// WithMsg adds the msg to the report fail params
+func (o *ReportFailParams) WithMsg(msg *string) *ReportFailParams {
+	o.SetMsg(msg)
+	return o
+}
+
+// SetMsg adds the msg to the report fail params
+func (o *ReportFailParams) SetMsg(msg *string) {
+	o.Msg = msg
+}
+
+// WithSeries adds the series to the report fail params
+func (o *ReportFailParams) WithSeries(series *string) *ReportFailParams {
+	o.SetSeries(series)
+	return o
+}
+
+// SetSeries adds the series to the report fail params
+func (o *ReportFailParams) SetSeries(series *string) {
+	o.Series = series
+}
+
+// WithStatusCode adds the statusCode to the report fail params
+func (o *ReportFailParams) WithStatusCode(statusCode *int64) *ReportFailParams {
+	o.SetStatusCode(statusCode)
+	return o
+}
+
+// SetStatusCode adds the statusCode to the report fail params
+func (o *ReportFailParams) SetStatusCode(statusCode *int64) {
+	o.StatusCode = statusCode
+}
+
 // WriteToRequest writes these params to a swagger request
 func (o *ReportFailParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
@@ -157,6 +238,86 @@ func (o *ReportFailParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Re
 	// path param code
 	if err := r.SetPathParam("code", o.Code); err != nil {
 		return err
+	}
+
+	if o.Duration != nil {
+
+		// query param duration
+		var qrDuration float64
+		if o.Duration != nil {
+			qrDuration = *o.Duration
+		}
+		qDuration := swag.FormatFloat64(qrDuration)
+		if qDuration != "" {
+			if err := r.SetQueryParam("duration", qDuration); err != nil {
+				return err
+			}
+		}
+
+	}
+
+	if o.Host != nil {
+
+		// query param host
+		var qrHost string
+		if o.Host != nil {
+			qrHost = *o.Host
+		}
+		qHost := qrHost
+		if qHost != "" {
+			if err := r.SetQueryParam("host", qHost); err != nil {
+				return err
+			}
+		}
+
+	}
+
+	if o.Msg != nil {
+
+		// query param msg
+		var qrMsg string
+		if o.Msg != nil {
+			qrMsg = *o.Msg
+		}
+		qMsg := qrMsg
+		if qMsg != "" {
+			if err := r.SetQueryParam("msg", qMsg); err != nil {
+				return err
+			}
+		}
+
+	}
+
+	if o.Series != nil {
+
+		// query param series
+		var qrSeries string
+		if o.Series != nil {
+			qrSeries = *o.Series
+		}
+		qSeries := qrSeries
+		if qSeries != "" {
+			if err := r.SetQueryParam("series", qSeries); err != nil {
+				return err
+			}
+		}
+
+	}
+
+	if o.StatusCode != nil {
+
+		// query param status_code
+		var qrStatusCode int64
+		if o.StatusCode != nil {
+			qrStatusCode = *o.StatusCode
+		}
+		qStatusCode := swag.FormatInt64(qrStatusCode)
+		if qStatusCode != "" {
+			if err := r.SetQueryParam("status_code", qStatusCode); err != nil {
+				return err
+			}
+		}
+
 	}
 
 	if len(res) > 0 {

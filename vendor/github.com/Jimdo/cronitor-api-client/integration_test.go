@@ -88,13 +88,20 @@ func TestIntegrationFull(t *testing.T) {
 		AuthKey: authKey,
 		Code:    res1.Payload.Code,
 		Context: context.Background(),
+		Msg:     StringPtr("Some Message Text"),
+		Host:    StringPtr("test-host"),
+		Series:  StringPtr("run-1"),
 	})
 
 	// Report complete
 	_, err = api.Heartbeat.ReportComplete(&heartbeat.ReportCompleteParams{
-		AuthKey: authKey,
-		Code:    res1.Payload.Code,
-		Context: context.Background(),
+		AuthKey:    authKey,
+		Code:       res1.Payload.Code,
+		Context:    context.Background(),
+		Msg:        StringPtr("Some Message Text"),
+		Host:       StringPtr("test-host"),
+		Series:     StringPtr("run-1"),
+		StatusCode: Int64Ptr(0),
 	})
 
 	// Report run
@@ -102,13 +109,20 @@ func TestIntegrationFull(t *testing.T) {
 		AuthKey: authKey,
 		Code:    res1.Payload.Code,
 		Context: context.Background(),
+		Msg:     StringPtr("Some Message Text"),
+		Host:    StringPtr("test-host"),
+		Series:  StringPtr("run-2"),
 	})
 
 	// Report fail
 	_, err = api.Heartbeat.ReportFail(&heartbeat.ReportFailParams{
-		AuthKey: authKey,
-		Code:    res1.Payload.Code,
-		Context: context.Background(),
+		AuthKey:    authKey,
+		Code:       res1.Payload.Code,
+		Context:    context.Background(),
+		Msg:        StringPtr("Some Message Text"),
+		Host:       StringPtr("test-host"),
+		Series:     StringPtr("run-2"),
+		StatusCode: Int64Ptr(137),
 	})
 
 	// Report pause
@@ -119,31 +133,33 @@ func TestIntegrationFull(t *testing.T) {
 		Context: context.Background(),
 	})
 
-	// Delete the monitor
-	_, err = api.Monitor.Delete(&monitor.DeleteParams{
-		Code:    "smon-test-monitor-00",
-		Context: context.Background(),
-	}, auth)
-	assert.NoError(t, err)
+	/*
+		// Delete the monitor
+		_, err = api.Monitor.Delete(&monitor.DeleteParams{
+			Code:    "smon-test-monitor-00",
+			Context: context.Background(),
+		}, auth)
+		assert.NoError(t, err)
 
-	// Delete a monitor that does not exist should result in a 404 not found
-	_, err = api.Monitor.Delete(&monitor.DeleteParams{
-		Code:    "smon-test-monitor-00",
-		Context: context.Background(),
-	}, auth)
-	assert.Error(t, err)
-	assert.IsType(t, &monitor.DeleteNotFound{}, err)
+		// Delete a monitor that does not exist should result in a 404 not found
+		_, err = api.Monitor.Delete(&monitor.DeleteParams{
+			Code:    "smon-test-monitor-00",
+			Context: context.Background(),
+		}, auth)
+		assert.Error(t, err)
+		assert.IsType(t, &monitor.DeleteNotFound{}, err)
 
-	// Updating a monitor that does not exist should result in a 404 not found
-	_, err = api.Monitor.Update(&monitor.UpdateParams{
-		Code:    "smon-test-monitor-00",
-		Context: context.Background(),
-		Payload: &models.MonitorParams{
-			Name: StringPtr(res1.Payload.Name),
-		},
-	}, auth)
-	assert.Error(t, err)
-	assert.IsType(t, &monitor.UpdateNotFound{}, err)
+		// Updating a monitor that does not exist should result in a 404 not found
+		_, err = api.Monitor.Update(&monitor.UpdateParams{
+			Code:    "smon-test-monitor-00",
+			Context: context.Background(),
+			Payload: &models.MonitorParams{
+				Name: StringPtr(res1.Payload.Name),
+			},
+		}, auth)
+		assert.Error(t, err)
+		assert.IsType(t, &monitor.UpdateNotFound{}, err)
+	*/
 }
 
 func newMonitorAPIClient() *client.Cronitor {

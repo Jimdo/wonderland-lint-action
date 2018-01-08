@@ -129,6 +129,18 @@ paths:
         required: true
         description: "Might be the monitor code or name"
       - in: query
+        name: msg
+        type: string
+        description: "A url-encoded message, up to 1000 chars"
+      - in: query
+        name: host
+        type: string
+        description: "The name of the server sending this request"
+      - in: query
+        name: series
+        type: string
+        description: "A unique user-supplied ID to collate related pings"
+      - in: query
         name: auth_key
         type: string
       tags:
@@ -149,6 +161,26 @@ paths:
         required: true
         description: "Might be the monitor code or name"
       - in: query
+        name: msg
+        type: string
+        description: "A url-encoded message, up to 1000 chars"
+      - in: query
+        name: host
+        type: string
+        description: "The name of the server sending this request"
+      - in: query
+        name: series
+        type: string
+        description: "A unique user-supplied ID to collate related pings"
+      - in: query
+        name: status_code
+        type: integer
+        description: "Exit code returned from the task"
+      - in: query
+        name: duration
+        type: number
+        description: "Total runtime as float"
+      - in: query
         name: auth_key
         type: string
       tags:
@@ -168,6 +200,26 @@ paths:
         type: string
         required: true
         description: "Might be the monitor code or name"
+      - in: query
+        name: msg
+        type: string
+        description: "A url-encoded message, up to 1000 chars"
+      - in: query
+        name: host
+        type: string
+        description: "The name of the server sending this request"
+      - in: query
+        name: series
+        type: string
+        description: "A unique user-supplied ID to collate related pings"
+      - in: query
+        name: status_code
+        type: integer
+        description: "Exit code returned from the task"
+      - in: query
+        name: duration
+        type: number
+        description: "Total runtime as float"
       - in: query
         name: auth_key
         type: string

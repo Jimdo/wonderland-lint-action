@@ -13,7 +13,7 @@ import (
 
 	strfmt "github.com/go-openapi/strfmt"
 
-	"github.com/Jimdo/cronitor-api-client/models"
+	models "github.com/Jimdo/cronitor-api-client/models"
 )
 
 // CreateReader is a Reader for the Create structure.
