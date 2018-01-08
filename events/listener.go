@@ -26,9 +26,8 @@ type CronFetcher interface {
 }
 
 type MonitorNotfier interface {
-	ReportRun(ctx context.Context, code string) error
 	ReportSuccess(ctx context.Context, code string) error
-	ReportFail(ctx context.Context, code string) error
+	ReportFail(ctx context.Context, code, msg string) error
 }
 
 func CronExecutionStatePersister(ts TaskStore) func(c EventContext) error {
@@ -71,7 +70,12 @@ func CronitorHeartbeatUpdater(ef ExecutionFetcher, cf CronFetcher, mn MonitorNot
 		if cronContainerExitCode == 0 && timeoutContainerExitCode != cron.TimeoutExitCode {
 			return mn.ReportSuccess(context.Background(), desc.CronitorMonitorID)
 		}
-		return mn.ReportFail(context.Background(), desc.CronitorMonitorID)
+
+		additionalMessage := "Execution failed"
+		if timeoutContainerExitCode == cron.TimeoutExitCode {
+			additionalMessage = "Execution timed out"
+		}
+		return mn.ReportFail(context.Background(), desc.CronitorMonitorID, additionalMessage)
 
 	}
 }

@@ -149,10 +149,11 @@ func (c *Client) ReportSuccess(ctx context.Context, code string) error {
 	return err
 }
 
-func (c *Client) ReportFail(ctx context.Context, code string) error {
+func (c *Client) ReportFail(ctx context.Context, code, msg string) error {
 	_, err := c.client.Heartbeat.ReportFail(&heartbeat.ReportFailParams{
 		AuthKey: cronitor.StringPtr(c.authKey),
 		Code:    code,
+		Msg:     cronitor.StringPtr(msg),
 		Context: ctx,
 	})
 	return err
