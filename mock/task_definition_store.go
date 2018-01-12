@@ -5,9 +5,11 @@
 package mock
 
 import (
-	cron "github.com/Jimdo/wonderland-crons/cron"
-	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
+
+	cron "github.com/Jimdo/wonderland-crons/cron"
+	ecs "github.com/aws/aws-sdk-go/service/ecs"
+	gomock "github.com/golang/mock/gomock"
 )
 
 // MockTaskDefinitionStore is a mock of TaskDefinitionStore interface
@@ -60,10 +62,11 @@ func (mr *MockTaskDefinitionStoreMockRecorder) DeleteByFamily(arg0 interface{}) 
 }
 
 // RunTaskDefinition mocks base method
-func (m *MockTaskDefinitionStore) RunTaskDefinition(arg0 string) error {
+func (m *MockTaskDefinitionStore) RunTaskDefinition(arg0 string) (*ecs.Task, error) {
 	ret := m.ctrl.Call(m, "RunTaskDefinition", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(*ecs.Task)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // RunTaskDefinition indicates an expected call of RunTaskDefinition

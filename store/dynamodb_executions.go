@@ -53,6 +53,18 @@ func (es *DynamoDBExecutionStore) Update(cronName string, t *ecs.Task) error {
 		TimeoutExitCode: timeoutContainer.ExitCode,
 	}
 
+	return es.save(execution)
+}
+
+func (es *DynamoDBExecutionStore) CreateSkippedExecution(cronName string) error {
+	execution := &cron.Execution{
+		Name:      cronName,
+		StartTime: time.Now(),
+	}
+	return es.save(execution)
+}
+
+func (es *DynamoDBExecutionStore) save(execution *cron.Execution) error {
 	data, err := dynamodbattribute.MarshalMap(execution)
 	if err != nil {
 		return fmt.Errorf("Could not marshal execution into DynamoDB value: %s", err)
