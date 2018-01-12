@@ -64,7 +64,16 @@ func (es *DynamoDBExecutionStore) CreateSkippedExecution(cronName string) error 
 	return es.save(execution)
 }
 
+func reduceTimePrecisionToSeconds(t time.Time) time.Time {
+	return t.Truncate(time.Second)
+}
+
 func (es *DynamoDBExecutionStore) save(execution *cron.Execution) error {
+	// Align precision of time fields because they can be different depending on which
+	// part of the AWS APIs provides the information.
+	execution.StartTime = reduceTimePrecisionToSeconds(execution.StartTime)
+	execution.EndTime = reduceTimePrecisionToSeconds(execution.EndTime)
+
 	data, err := dynamodbattribute.MarshalMap(execution)
 	if err != nil {
 		return fmt.Errorf("Could not marshal execution into DynamoDB value: %s", err)
