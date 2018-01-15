@@ -247,7 +247,7 @@ func (s *Service) TriggerExecution(cronRuleARN string) error {
 		return err
 	}
 
-	executions, err := s.executionStore.GetLastNExecutions(cron.Name, 1)
+	executions, err := s.executionStore.GetLastNExecutions(cron.Name, 10)
 	if err != nil {
 		return err
 	}
