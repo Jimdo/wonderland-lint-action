@@ -2,7 +2,9 @@ package aws
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/aws/aws-sdk-go/service/ecs"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/Jimdo/wonderland-crons/cron"
@@ -24,8 +26,10 @@ type CronStore interface {
 }
 
 type CronExecutionStore interface {
-	GetLastNExecutions(string, int64) ([]*cron.Execution, error)
 	Delete(string) error
+	GetLastNExecutions(string, int64) ([]*cron.Execution, error)
+	Update(string, *ecs.Task) error
+	CreateSkippedExecution(string) error
 }
 
 type MonitorManager interface {
@@ -239,21 +243,48 @@ func (s *Service) TriggerExecution(cronRuleARN string) error {
 		return err
 	}
 
-	startExecution := len(executions) == 0 || !executions[0].IsRunning()
-	log.WithFields(log.Fields{
+	skipExecution := len(executions) > 0 && executions[0].IsRunning()
+	fields := log.Fields{
 		"cron_name": cron.Name,
 		"rule_arn":  cron.RuleARN,
-	}).Infof("Trigger cron execution, started: %t", startExecution)
+	}
+	if skipExecution {
+		log.WithFields(fields).
+			WithField("currentExecutionArn", executions[0].TaskArn).
+			Warn("Cron execution skipped because previous execution is still running")
+	} else {
+		log.WithFields(fields).Infof("Cron executing")
+	}
 
-	if startExecution {
-		if err := s.tds.RunTaskDefinition(cron.LatestTaskDefinitionRevisionARN); err != nil {
-			return err
+	if skipExecution {
+		if err := s.executionStore.CreateSkippedExecution(cron.Name); err != nil {
+			return fmt.Errorf("storing skipped cron execution in DynamoDB failed: %s", err)
 		}
+		return nil
+	}
 
-		if cron.Description.Notifications != nil {
-			return s.mn.ReportRun(context.Background(), cron.CronitorMonitorID)
+	task, err := s.tds.RunTaskDefinition(cron.LatestTaskDefinitionRevisionARN)
+	if err != nil {
+		return err
+	}
+
+	errors := []error{}
+
+	if cron.Description.Notifications != nil {
+		if err := s.mn.ReportRun(context.Background(), cron.CronitorMonitorID); err != nil {
+			errors = append(errors, err)
 		}
 	}
 
+	if err := s.executionStore.Update(cron.Name, task); err != nil {
+		errors = append(errors, fmt.Errorf("storing cron execution in DynamoDB failed: %s", err))
+	}
+
+	if len(errors) == 1 {
+		return err
+	}
+	if len(errors) > 1 {
+		return fmt.Errorf("Multiple errors occured: %q", errors)
+	}
 	return nil
 }

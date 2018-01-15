@@ -67,6 +67,12 @@ func TestExecution_GetExecutionStatus(t *testing.T) {
 			TimeoutExitCode: nil,
 			ExpectedStatus:  "UNKNOWN",
 		},
+		{
+			ExitCode:        nil,
+			LastStatus:      "",
+			TimeoutExitCode: nil,
+			ExpectedStatus:  "SKIPPED",
+		},
 	}
 
 	for _, tc := range testCases {

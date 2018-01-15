@@ -53,6 +53,27 @@ func (es *DynamoDBExecutionStore) Update(cronName string, t *ecs.Task) error {
 		TimeoutExitCode: timeoutContainer.ExitCode,
 	}
 
+	return es.save(execution)
+}
+
+func (es *DynamoDBExecutionStore) CreateSkippedExecution(cronName string) error {
+	execution := &cron.Execution{
+		Name:      cronName,
+		StartTime: time.Now(),
+	}
+	return es.save(execution)
+}
+
+func reduceTimePrecisionToSeconds(t time.Time) time.Time {
+	return t.Truncate(time.Second)
+}
+
+func (es *DynamoDBExecutionStore) save(execution *cron.Execution) error {
+	// Align precision of time fields because they can be different depending on which
+	// part of the AWS APIs provides the information.
+	execution.StartTime = reduceTimePrecisionToSeconds(execution.StartTime)
+	execution.EndTime = reduceTimePrecisionToSeconds(execution.EndTime)
+
 	data, err := dynamodbattribute.MarshalMap(execution)
 	if err != nil {
 		return fmt.Errorf("Could not marshal execution into DynamoDB value: %s", err)

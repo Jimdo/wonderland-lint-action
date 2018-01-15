@@ -16,6 +16,7 @@ const (
 	ExecutionStatusUnknown = "UNKNOWN"
 	ExecutionStatusTimeout = "TIMEOUT"
 	ExecutionStatusNone    = "NONE"
+	ExecutionStatusSkipped = "SKIPPED"
 )
 
 type Cron struct {
@@ -50,6 +51,9 @@ type Execution struct {
 // LastStatus and the exit codes of the task's containers
 func (e *Execution) GetExecutionStatus() string {
 	switch e.AWSStatus {
+	case "":
+		// An empty AWS status indicates when no execution was created due to a skip.
+		return ExecutionStatusSkipped
 	case ecs.DesiredStatusStopped:
 		if e.ExitCode == nil || e.TimeoutExitCode == nil {
 			log.WithField("task_arn", e.TaskArn).Error("Exit code(s) of stopped ECS unavailable")

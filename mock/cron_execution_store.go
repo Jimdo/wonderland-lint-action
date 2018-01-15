@@ -5,9 +5,11 @@
 package mock
 
 import (
-	cron "github.com/Jimdo/wonderland-crons/cron"
-	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
+
+	cron "github.com/Jimdo/wonderland-crons/cron"
+	ecs "github.com/aws/aws-sdk-go/service/ecs"
+	gomock "github.com/golang/mock/gomock"
 )
 
 // MockCronExecutionStore is a mock of CronExecutionStore interface
@@ -33,6 +35,18 @@ func (m *MockCronExecutionStore) EXPECT() *MockCronExecutionStoreMockRecorder {
 	return m.recorder
 }
 
+// CreateSkippedExecution mocks base method
+func (m *MockCronExecutionStore) CreateSkippedExecution(arg0 string) error {
+	ret := m.ctrl.Call(m, "CreateSkippedExecution", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateSkippedExecution indicates an expected call of CreateSkippedExecution
+func (mr *MockCronExecutionStoreMockRecorder) CreateSkippedExecution(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSkippedExecution", reflect.TypeOf((*MockCronExecutionStore)(nil).CreateSkippedExecution), arg0)
+}
+
 // Delete mocks base method
 func (m *MockCronExecutionStore) Delete(arg0 string) error {
 	ret := m.ctrl.Call(m, "Delete", arg0)
@@ -56,4 +70,16 @@ func (m *MockCronExecutionStore) GetLastNExecutions(arg0 string, arg1 int64) ([]
 // GetLastNExecutions indicates an expected call of GetLastNExecutions
 func (mr *MockCronExecutionStoreMockRecorder) GetLastNExecutions(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLastNExecutions", reflect.TypeOf((*MockCronExecutionStore)(nil).GetLastNExecutions), arg0, arg1)
+}
+
+// Update mocks base method
+func (m *MockCronExecutionStore) Update(arg0 string, arg1 *ecs.Task) error {
+	ret := m.ctrl.Call(m, "Update", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Update indicates an expected call of Update
+func (mr *MockCronExecutionStoreMockRecorder) Update(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockCronExecutionStore)(nil).Update), arg0, arg1)
 }
