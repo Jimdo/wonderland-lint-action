@@ -280,9 +280,11 @@ func (s *Service) TriggerExecution(cronRuleARN string) error {
 		errors = append(errors, fmt.Errorf("storing cron execution in DynamoDB failed: %s", err))
 	}
 
-	// TODO: Print all errors
-	if len(errors) > 0 {
-		return errors[0]
+	if len(errors) == 1 {
+		return err
+	}
+	if len(errors) > 1 {
+		return fmt.Errorf("Multiple errors occured: %q", errors)
 	}
 	return nil
 }
