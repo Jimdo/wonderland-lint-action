@@ -232,6 +232,15 @@ func (s *Service) Exists(cronName string) (bool, error) {
 	return true, nil
 }
 
+func getRunningExecution(executions []*cron.Execution) *cron.Execution {
+	for _, e := range executions {
+		if e.IsRunning() {
+			return e
+		}
+	}
+	return nil
+}
+
 func (s *Service) TriggerExecution(cronRuleARN string) error {
 	cron, err := s.cronStore.GetByRuleARN(cronRuleARN)
 	if err != nil {
@@ -243,26 +252,23 @@ func (s *Service) TriggerExecution(cronRuleARN string) error {
 		return err
 	}
 
-	skipExecution := len(executions) > 0 && executions[0].IsRunning()
+	runningExecution := getRunningExecution(executions)
 	fields := log.Fields{
 		"cron_name": cron.Name,
 		"rule_arn":  cron.RuleARN,
 	}
-	if skipExecution {
-		log.WithFields(fields).
-			WithField("currentExecutionArn", executions[0].TaskArn).
-			Warn("Cron execution skipped because previous execution is still running")
-	} else {
-		log.WithFields(fields).Infof("Cron executing")
-	}
 
-	if skipExecution {
+	if runningExecution != nil {
+		log.WithFields(fields).
+			WithField("currentExecutionArn", runningExecution.TaskArn).
+			Warn("Cron execution skipped because previous execution is still running")
 		if err := s.executionStore.CreateSkippedExecution(cron.Name); err != nil {
 			return fmt.Errorf("storing skipped cron execution in DynamoDB failed: %s", err)
 		}
 		return nil
 	}
 
+	log.WithFields(fields).Infof("Cron executing")
 	task, err := s.tds.RunTaskDefinition(cron.LatestTaskDefinitionRevisionARN)
 	if err != nil {
 		return err
