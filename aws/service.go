@@ -243,40 +243,46 @@ func (s *Service) TriggerExecution(cronRuleARN string) error {
 		return err
 	}
 
-	// TODO: Evaluation needs to be inverted here
-	startExecution := len(executions) == 0 || !executions[0].IsRunning()
-	log.WithFields(log.Fields{
+	skipExecution := len(executions) > 0 && executions[0].IsRunning()
+	fields := log.Fields{
 		"cron_name": cron.Name,
 		"rule_arn":  cron.RuleARN,
-	}).Infof("Trigger cron execution, started: %t", startExecution)
-
-	if startExecution {
-		task, err := s.tds.RunTaskDefinition(cron.LatestTaskDefinitionRevisionARN)
-		if err != nil {
-			return err
-		}
-
-		errors := []error{}
-
-		if cron.Description.Notifications != nil {
-			if err := s.mn.ReportRun(context.Background(), cron.CronitorMonitorID); err != nil {
-				errors = append(errors, err)
-			}
-		}
-
-		if err := s.executionStore.Update(cron.Name, task); err != nil {
-			errors = append(errors, fmt.Errorf("storing cron execution in DynamoDB failed: %s", err))
-		}
-
-		// TODO: Print all errors
-		if len(errors) > 0 {
-			return errors[0]
-		}
+	}
+	if skipExecution {
+		log.WithFields(fields).
+			WithField("currentExecutionArn", executions[0].TaskArn).
+			Warn("Cron execution skipped because previous execution is still running")
 	} else {
+		log.WithFields(fields).Infof("Cron executing")
+	}
+
+	if skipExecution {
 		if err := s.executionStore.CreateSkippedExecution(cron.Name); err != nil {
 			return fmt.Errorf("storing skipped cron execution in DynamoDB failed: %s", err)
 		}
+		return nil
 	}
 
+	task, err := s.tds.RunTaskDefinition(cron.LatestTaskDefinitionRevisionARN)
+	if err != nil {
+		return err
+	}
+
+	errors := []error{}
+
+	if cron.Description.Notifications != nil {
+		if err := s.mn.ReportRun(context.Background(), cron.CronitorMonitorID); err != nil {
+			errors = append(errors, err)
+		}
+	}
+
+	if err := s.executionStore.Update(cron.Name, task); err != nil {
+		errors = append(errors, fmt.Errorf("storing cron execution in DynamoDB failed: %s", err))
+	}
+
+	// TODO: Print all errors
+	if len(errors) > 0 {
+		return errors[0]
+	}
 	return nil
 }
