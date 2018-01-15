@@ -1,7 +1,11 @@
 package v2
 
 import (
+	"fmt"
+	"regexp"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/Jimdo/wonderland-crons/cron"
 )
@@ -32,13 +36,36 @@ type CronV2Description struct {
 type CronV2Execution struct {
 	StartTime time.Time
 	EndTime   time.Time
+	ID        string
 	TaskArn   string
 	ExitCode  *int64
 	Status    string
 }
 
+func getTaskIdFromArn(arn string) (string, error) {
+	re := regexp.MustCompile("^arn:aws:ecs:[a-z0-9-]+:[0-9]+:task/([a-z0-9-]+)$")
+	parts := re.FindStringSubmatch(arn)
+	if len(parts) != 2 {
+		return "", fmt.Errorf("ARN regex did not match")
+	}
+
+	return parts[1], nil
+}
+
 func MapToCronApiExecution(e *cron.Execution) *CronV2Execution {
+	executionID := ""
+	if e.TaskArn != "" {
+		id, err := getTaskIdFromArn(e.TaskArn)
+		if err != nil {
+			log.WithField("taskArn", e.TaskArn).
+				WithError(err).
+				Warn("could not parse ECS task ID from ARN")
+		}
+		executionID = id
+	}
+
 	return &CronV2Execution{
+		ID:        executionID,
 		StartTime: e.StartTime,
 		EndTime:   e.EndTime,
 		TaskArn:   e.TaskArn,
@@ -58,7 +85,8 @@ func MapToCronApiCronStatus(internal *cron.CronStatus) *CronV2Status {
 		},
 	}
 	for _, e := range internal.Executions {
-		s.Executions = append(s.Executions, MapToCronApiExecution(e))
+		execution := MapToCronApiExecution(e)
+		s.Executions = append(s.Executions, execution)
 	}
 	return &s
 }
