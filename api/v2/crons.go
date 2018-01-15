@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/Jimdo/wonderland-crons/api"
 	"github.com/Jimdo/wonderland-crons/cron"
@@ -116,6 +117,12 @@ func (a *API) ExecutionTriggerHandler(w http.ResponseWriter, req *http.Request) 
 
 		ruleARN := cwEvent.Resources[0]
 		if err := a.config.Service.TriggerExecution(ruleARN); err != nil {
+			log.
+				WithFields(log.Fields{
+					"ruleARN": ruleARN,
+				}).
+				WithError(err).
+				Error("TriggerExecution failed")
 			sendServerError(w, err)
 			return
 		}
