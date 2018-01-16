@@ -4,11 +4,40 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/gorilla/mux"
+
 	log "github.com/sirupsen/logrus"
 )
 
-func sendServerError(w http.ResponseWriter, err error) {
-	log.WithError(err).Warn("Server Error")
+func newContextError(err error) *contextError {
+	return &contextError{
+		fields: log.Fields{},
+		err:    err,
+	}
+}
+
+type contextError struct {
+	fields log.Fields
+	err    error
+}
+
+func (ce *contextError) WithField(k string, v interface{}) *contextError {
+	ce.fields[k] = v
+	return ce
+}
+
+func (ce *contextError) Error() string {
+	return ce.err.Error()
+}
+
+func sendServerError(r *http.Request, w http.ResponseWriter, err error) {
+	entry := log.WithError(err).WithField("route", mux.CurrentRoute(r).GetName())
+
+	if ce, ok := err.(*contextError); ok {
+		entry = entry.WithFields(ce.fields)
+	}
+
+	entry.Warn("Server Error")
 	sendError(w, err, http.StatusInternalServerError)
 }
 
