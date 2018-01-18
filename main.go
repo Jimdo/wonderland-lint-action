@@ -26,6 +26,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/Jimdo/wonderland-crons/api"
 	"github.com/Jimdo/wonderland-crons/api/v2"
 	"github.com/Jimdo/wonderland-crons/aws"
 	"github.com/Jimdo/wonderland-crons/cron"
@@ -240,6 +241,8 @@ func main() {
 			log.Fatalf("Error consuming ECS events: %s", err)
 		}
 	}()
+
+	router.HandleFunc("/status", api.StatusHandler)
 
 	v2.New(&v2.Config{
 		Router:  router.PathPrefix("/v2").Subrouter(),

@@ -31,7 +31,7 @@ components:
         alias: app
     env:
       APP_PORT: '8000'
-      APP_HEALTHCHECK: /v1/status
+      APP_HEALTHCHECK: /status
       $ref_secrets: vault+secret://vault.{{env `ZONE`}}/wonderland/crons/proxy
     logging:
       types:
@@ -40,7 +40,7 @@ components:
 endpoint:
   component: auth-proxy
   domain: crons.{{env `ZONE`}}
-  healthcheck: /v1/status
+  healthcheck: /status
   port: 80
 notifications:
 {{if eq (env `WONDERLAND_ENV`) "prod"}}
