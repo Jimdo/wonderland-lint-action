@@ -4,12 +4,10 @@ components:
   - name: crons
     image: {{env `CRONS_IMAGE`}}
     env:
-      AWS_REGION: '{{env `NOMAD_AWS_REGION`}}'
+      AWS_REGION: '{{env `AWS_REGION`}}'
       CRON_ROLE_ARN: '{{ env `CRON_ROLE_ARN`}}'
       ECS_CLUSTER_ARN: '{{ env `ECS_CLUSTER_ARN`}}'
       ECS_EVENTS_QUEUE_URL: {{env `ECS_EVENTS_QUEUE_URL`}}
-      NOMAD_API: '{{env `NOMAD_API`}}'
-      NOMAD_WL_DOCKER_IMAGE: '{{ env `NOMAD_WL_DOCKER_IMAGE`}}'
       WONDERLAND_ENV: '{{env `WONDERLAND_ENV`}}'
       WONDERLAND_REGISTRY_ADDRESS: '{{env `WONDERLAND_REGISTRY` }}'
       CRONS_TABLE_NAME: '{{env `CRONS_TABLE_NAME` }}'
@@ -33,7 +31,7 @@ components:
         alias: app
     env:
       APP_PORT: '8000'
-      APP_HEALTHCHECK: /v1/status
+      APP_HEALTHCHECK: /status
       $ref_secrets: vault+secret://vault.{{env `ZONE`}}/wonderland/crons/proxy
     logging:
       types:
@@ -42,7 +40,7 @@ components:
 endpoint:
   component: auth-proxy
   domain: crons.{{env `ZONE`}}
-  healthcheck: /v1/status
+  healthcheck: /status
   port: 80
 notifications:
 {{if eq (env `WONDERLAND_ENV`) "prod"}}
