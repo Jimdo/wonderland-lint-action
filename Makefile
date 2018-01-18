@@ -14,12 +14,6 @@ ZONE=jimdo-platform-stage.net
 
 WONDERLAND_REGISTRY=registry.jimdo-platform-stage.net
 
-NOMAD_API=https://nomad.jimdo-platform-stage.net
-NOMAD_WL_DOCKER_IMAGE=quay.io/jimdo/wl
-NOMAD_AWS_REGION=$(AWS_REGION)
-NOMAD_USER=$(WONDERLAND_USER)
-NOMAD_PASS=$(WONDERLAND_PASS)
-
 AUTH_USER=$(WONDERLAND_USER)
 AUTH_PASS=$(WONDERLAND_PASS)
 
@@ -28,7 +22,6 @@ NOTIFICATIONS_API=https://notifications.jimdo-platform-stage.net
 prod: JIMDO_ENVIRONMENT=prod
 prod: ZONE=jimdo-platform.net
 prod: WONDERLAND_REGISTRY=registry.jimdo-platform.net
-prod: NOMAD_API=https://nomad.jimdo-platform.net
 prod: NOTIFICATIONS_API=https://notifications.jimdo-platform.net
 prod: deploy
 
@@ -37,8 +30,6 @@ stage: deploy
 set-credentials:
 	WONDERLAND_ENV=$(JIMDO_ENVIRONMENT) \
 		wl vault write secret/wonderland/crons \
-			NOMAD_USER=$(NOMAD_USER) \
-			NOMAD_PASS=$(NOMAD_PASS) \
 			WONDERLAND_GITHUB_TOKEN=$(CRONS_GITHUB_TOKEN) \
 			WONDERLAND_REGISTRY_USER=$(WONDERLAND_USER) \
 			WONDERLAND_REGISTRY_PASS=$(WONDERLAND_PASS) \
@@ -61,9 +52,6 @@ deploy: set-credentials dinah
 	AUTH_PROXY_IMAGE=$(shell dinah docker image $(AUTH_PROXY_IMAGE)) \
 	CRONS_IMAGE=$(shell dinah docker image --branch $(BRANCH) $(CRONS_IMAGE)) \
 	WONDERLAND_REGISTRY=$(WONDERLAND_REGISTRY) \
-	NOMAD_API=$(NOMAD_API) \
-	NOMAD_WL_DOCKER_IMAGE=$(NOMAD_WL_DOCKER_IMAGE) \
-	NOMAD_AWS_REGION=$(NOMAD_AWS_REGION) \
 	WONDERLAND_ENV=$(JIMDO_ENVIRONMENT) \
 	TIMEOUT_IMAGE=$(shell dinah docker image --branch $(BRANCH) $(CRONS_TIMEOUT_IMAGE)) \
 	NOTIFICATIONS_API=$(NOTIFICATIONS_API) \
