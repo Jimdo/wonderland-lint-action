@@ -4,6 +4,7 @@ components:
   - name: crons
     image: {{env `CRONS_IMAGE`}}
     env:
+      AWS_REGION: '{{env `AWS_REGION`}}'
       CRON_ROLE_ARN: '{{ env `CRON_ROLE_ARN`}}'
       ECS_CLUSTER_ARN: '{{ env `ECS_CLUSTER_ARN`}}'
       ECS_EVENTS_QUEUE_URL: {{env `ECS_EVENTS_QUEUE_URL`}}

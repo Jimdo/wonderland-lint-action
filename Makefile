@@ -53,6 +53,7 @@ deploy: set-credentials dinah
 	CRONS_IMAGE=$(shell dinah docker image --branch $(BRANCH) $(CRONS_IMAGE)) \
 	WONDERLAND_REGISTRY=$(WONDERLAND_REGISTRY) \
 	WONDERLAND_ENV=$(JIMDO_ENVIRONMENT) \
+	AWS_REGION=$(AWS_REGION) \
 	TIMEOUT_IMAGE=$(shell dinah docker image --branch $(BRANCH) $(CRONS_TIMEOUT_IMAGE)) \
 	NOTIFICATIONS_API=$(NOTIFICATIONS_API) \
 	ZONE=$(ZONE) \

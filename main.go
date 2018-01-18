@@ -59,6 +59,7 @@ var (
 		QuayRegistryPass          string `flag:"query-registry-pass" env:"QUAY_REGISTRY_PASS" description:"The passwordfor the Quay registry"`
 
 		// AWS
+		AWSRegion                       string        `flag:"region" env:"AWS_REGION" default:"eu-west-1" description:"The AWS region to use"`
 		CronRoleARN                     string        `flag:"cron-role-arn" env:"CRON_ROLE_ARN" description:"The IAM Role that grants Cloudwatch access to ECS"`
 		ECSClusterARN                   string        `flag:"cluster-arn" env:"ECS_CLUSTER_ARN" description:"The ARN of the ECS cluster crons should run on"`
 		ECSEventsQueueURL               string        `flag:"ecs-events-queue-url" env:"ECS_EVENTS_QUEUE_URL" description:"The URL of the SQS queue receiving ECS events"`
@@ -91,6 +92,8 @@ var (
 	}
 	programIdentifier = "wonderland-crons"
 	programVersion    = "dev"
+
+	awsSession *session.Session
 )
 
 func main() {
@@ -269,11 +272,7 @@ func abort(format string, a ...interface{}) {
 }
 
 func ecsClient() *ecs.ECS {
-	httpClient := &http.Client{
-		Timeout: time.Duration(10) * time.Second,
-	}
-	s := session.Must(session.NewSession(awssdk.NewConfig().WithHTTPClient(httpClient)))
-	c := ecs.New(s)
+	c := ecs.New(getAWSSession())
 
 	// prefix user-agent with program name and version
 	c.Handlers.Build.PushFront(request.MakeAddToUserAgentHandler(programIdentifier, programVersion))
@@ -282,11 +281,7 @@ func ecsClient() *ecs.ECS {
 }
 
 func cloudwatchEventsClient() *cloudwatchevents.CloudWatchEvents {
-	httpClient := &http.Client{
-		Timeout: time.Duration(10) * time.Second,
-	}
-	s := session.Must(session.NewSession(awssdk.NewConfig().WithHTTPClient(httpClient)))
-	c := cloudwatchevents.New(s)
+	c := cloudwatchevents.New(getAWSSession())
 
 	// prefix user-agent with program name and version
 	c.Handlers.Build.PushFront(request.MakeAddToUserAgentHandler(programIdentifier, programVersion))
@@ -295,11 +290,7 @@ func cloudwatchEventsClient() *cloudwatchevents.CloudWatchEvents {
 }
 
 func dynamoDBClient() *dynamodb.DynamoDB {
-	httpClient := &http.Client{
-		Timeout: time.Duration(10) * time.Second,
-	}
-	s := session.Must(session.NewSession(awssdk.NewConfig().WithHTTPClient(httpClient)))
-	c := dynamodb.New(s)
+	c := dynamodb.New(getAWSSession())
 
 	// prefix user-agent with program name and version
 	c.Handlers.Build.PushFront(request.MakeAddToUserAgentHandler(programIdentifier, programVersion))
@@ -308,14 +299,22 @@ func dynamoDBClient() *dynamodb.DynamoDB {
 }
 
 func sqsClient() *sqs.SQS {
-	httpClient := &http.Client{
-		Timeout: time.Duration(10) * time.Second,
-	}
-	s := session.Must(session.NewSession(awssdk.NewConfig().WithHTTPClient(httpClient)))
-	c := sqs.New(s)
+	c := sqs.New(getAWSSession())
 
 	// prefix user-agent with program name and version
 	c.Handlers.Build.PushFront(request.MakeAddToUserAgentHandler(programIdentifier, programVersion))
 
 	return c
+}
+
+func getAWSSession() *session.Session {
+	if awsSession == nil {
+		httpClient := &http.Client{
+			Timeout: time.Duration(10) * time.Second,
+		}
+		awsSession = session.Must(session.NewSession(awssdk.NewConfig().
+			WithHTTPClient(httpClient).
+			WithRegion(config.AWSRegion)))
+	}
+	return awsSession
 }
