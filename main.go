@@ -45,6 +45,7 @@ var (
 		// Server
 		Addr            string        `flag:"addr" default:":8000" description:"The address/port combination to listen on"`
 		ShutdownTimeout time.Duration `flag:"shutdown-timeout" default:"10s" description:"The time to wait for active requests to finish when shutting down"`
+
 		// Vault
 		VaultAddress string `flag:"vault-address" env:"VAULT_ADDR" default:"http://127.0.0.1:8282" description:"Vault Address"`
 		VaultRoleID  string `flag:"vault-role-id" env:"VAULT_ROLE_ID" description:"RoleID with sufficient access"`
@@ -58,9 +59,6 @@ var (
 		QuayRegistryPass          string `flag:"query-registry-pass" env:"QUAY_REGISTRY_PASS" description:"The passwordfor the Quay registry"`
 
 		// AWS
-
-		// TODO: Check why the region is not used
-		AWSRegion                       string        `flag:"region" env:"AWS_REGION" default:"eu-west-1" description:"The AWS region to use"`
 		CronRoleARN                     string        `flag:"cron-role-arn" env:"CRON_ROLE_ARN" description:"The IAM Role that grants Cloudwatch access to ECS"`
 		ECSClusterARN                   string        `flag:"cluster-arn" env:"ECS_CLUSTER_ARN" description:"The ARN of the ECS cluster crons should run on"`
 		ECSEventsQueueURL               string        `flag:"ecs-events-queue-url" env:"ECS_EVENTS_QUEUE_URL" description:"The URL of the SQS queue receiving ECS events"`
