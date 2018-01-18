@@ -59,7 +59,6 @@ var (
 		QuayRegistryPass          string `flag:"query-registry-pass" env:"QUAY_REGISTRY_PASS" description:"The passwordfor the Quay registry"`
 
 		// AWS
-		AWSRegion                       string        `flag:"region" env:"AWS_REGION" default:"eu-west-1" description:"The AWS region to use"`
 		CronRoleARN                     string        `flag:"cron-role-arn" env:"CRON_ROLE_ARN" description:"The IAM Role that grants Cloudwatch access to ECS"`
 		ECSClusterARN                   string        `flag:"cluster-arn" env:"ECS_CLUSTER_ARN" description:"The ARN of the ECS cluster crons should run on"`
 		ECSEventsQueueURL               string        `flag:"ecs-events-queue-url" env:"ECS_EVENTS_QUEUE_URL" description:"The URL of the SQS queue receiving ECS events"`
@@ -312,9 +311,7 @@ func getAWSSession() *session.Session {
 		httpClient := &http.Client{
 			Timeout: time.Duration(10) * time.Second,
 		}
-		awsSession = session.Must(session.NewSession(awssdk.NewConfig().
-			WithHTTPClient(httpClient).
-			WithRegion(config.AWSRegion)))
+		awsSession = session.Must(session.NewSession(awssdk.NewConfig().WithHTTPClient(httpClient)))
 	}
 	return awsSession
 }
