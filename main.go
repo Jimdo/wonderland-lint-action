@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 	graceful "gopkg.in/tylerb/graceful.v1"
 
@@ -242,6 +243,7 @@ func main() {
 		}
 	}()
 
+	router.Handle("/metrics", prometheus.Handler())
 	router.HandleFunc("/status", api.StatusHandler)
 
 	v2.New(&v2.Config{
