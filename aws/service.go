@@ -9,6 +9,7 @@ import (
 
 	"github.com/Jimdo/wonderland-crons/cron"
 	"github.com/Jimdo/wonderland-crons/cronitor"
+	"github.com/Jimdo/wonderland-crons/metrics"
 	"github.com/Jimdo/wonderland-crons/store"
 )
 
@@ -54,13 +55,14 @@ type Service struct {
 	validator      CronValidator
 	executionStore CronExecutionStore
 	mn             MonitorManager
+	mu             metrics.Updater
 	nc             NotificationClient
 	ug             URLGenerator
 
 	topicARN string
 }
 
-func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s CronStore, es CronExecutionStore, tarn string, mn MonitorManager, nc NotificationClient, ug URLGenerator) *Service {
+func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s CronStore, es CronExecutionStore, tarn string, mn MonitorManager, mu metrics.Updater, nc NotificationClient, ug URLGenerator) *Service {
 	return &Service{
 		cm:             cm,
 		cronStore:      s,
@@ -69,6 +71,7 @@ func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s 
 		executionStore: es,
 		topicARN:       tarn,
 		mn:             mn,
+		mu:             mu,
 		nc:             nc,
 		ug:             ug,
 	}
@@ -242,47 +245,48 @@ func getRunningExecution(executions []*cron.Execution) *cron.Execution {
 }
 
 func (s *Service) TriggerExecution(cronRuleARN string) error {
-	cron, err := s.cronStore.GetByRuleARN(cronRuleARN)
+	c, err := s.cronStore.GetByRuleARN(cronRuleARN)
 	if err != nil {
 		return err
 	}
 
-	executions, err := s.executionStore.GetLastNExecutions(cron.Name, 10)
+	executions, err := s.executionStore.GetLastNExecutions(c.Name, 10)
 	if err != nil {
 		return err
 	}
 
 	runningExecution := getRunningExecution(executions)
 	fields := log.Fields{
-		"cron_name": cron.Name,
-		"rule_arn":  cron.RuleARN,
+		"cron_name": c.Name,
+		"rule_arn":  c.RuleARN,
 	}
 
 	if runningExecution != nil {
 		log.WithFields(fields).
 			WithField("currentExecutionArn", runningExecution.TaskArn).
 			Warn("Cron execution skipped because previous execution is still running")
-		if err := s.executionStore.CreateSkippedExecution(cron.Name); err != nil {
+		if err := s.executionStore.CreateSkippedExecution(c.Name); err != nil {
 			return fmt.Errorf("storing skipped cron execution in DynamoDB failed: %s", err)
 		}
+		s.mu.IncExecutionTriggeredCounter(c, cron.ExecutionStatusSkipped)
 		return nil
 	}
 
 	log.WithFields(fields).Infof("Cron executing")
-	task, err := s.tds.RunTaskDefinition(cron.LatestTaskDefinitionRevisionARN)
+	task, err := s.tds.RunTaskDefinition(c.LatestTaskDefinitionRevisionARN)
 	if err != nil {
 		return err
 	}
 
 	errors := []error{}
 
-	if cron.Description.Notifications != nil {
-		if err := s.mn.ReportRun(context.Background(), cron.CronitorMonitorID); err != nil {
+	if c.Description.Notifications != nil {
+		if err := s.mn.ReportRun(context.Background(), c.CronitorMonitorID); err != nil {
 			errors = append(errors, err)
 		}
 	}
 
-	if err := s.executionStore.Update(cron.Name, task); err != nil {
+	if err := s.executionStore.Update(c.Name, task); err != nil {
 		errors = append(errors, fmt.Errorf("storing cron execution in DynamoDB failed: %s", err))
 	}
 

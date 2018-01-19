@@ -114,6 +114,7 @@ gen-mocks:
 	mockgen -package mock github.com/Jimdo/wonderland-crons/aws CronStore > mock/cron_store.go
 	mockgen -package mock github.com/Jimdo/wonderland-crons/aws CronExecutionStore > mock/cron_execution_store.go
 	mockgen -package mock github.com/Jimdo/wonderland-crons/aws MonitorManager > mock/monitor_manager.go
+	mockgen -package mock github.com/Jimdo/wonderland-crons/metrics Updater > mock/metrics_updater.go
 	mockgen -package mock github.com/Jimdo/wonderland-crons/aws VaultSecretProvider > mock/vault_secret_provider.go
 	mockgen -package mock github.com/Jimdo/wonderland-crons/aws VaultAppRoleProvider > mock/vault_app_role_provider.go
 	mockgen -package mock github.com/Jimdo/wonderland-crons/aws NotificationClient > mock/notification_client.go

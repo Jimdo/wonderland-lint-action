@@ -33,6 +33,7 @@ import (
 	"github.com/Jimdo/wonderland-crons/cronitor"
 	"github.com/Jimdo/wonderland-crons/events"
 	"github.com/Jimdo/wonderland-crons/locking"
+	"github.com/Jimdo/wonderland-crons/metrics"
 	"github.com/Jimdo/wonderland-crons/notifications"
 	"github.com/Jimdo/wonderland-crons/store"
 	"github.com/Jimdo/wonderland-crons/validation"
@@ -219,9 +220,10 @@ func main() {
 	userAgent := fmt.Sprintf("%s/%s", programIdentifier, programVersion)
 	notificationClient := notifications.NewClient(http.DefaultTransport, config.NotificationsAPIAddress, config.NotificationsAPIUser, config.NotificationsAPIPass, userAgent, config.NotificationsAPITeam)
 
+	metricsUpdater := metrics.NewPrometheus()
 	urlGenerator := notifications.NewURLGenerator(config.CronitorWlNotificationsAPIUser, config.CronitorWlNotificationsAPIPass, config.NotificationsAPIAddress)
 
-	service := aws.NewService(validator, cloudwatchcm, ecstds, dynamoDBCronStore, dynamoDBExecutionStore, config.ExecutionTriggerTopicARN, cronitorClient, notificationClient, urlGenerator)
+	service := aws.NewService(validator, cloudwatchcm, ecstds, dynamoDBCronStore, dynamoDBExecutionStore, config.ExecutionTriggerTopicARN, cronitorClient, metricsUpdater, notificationClient, urlGenerator)
 
 	eventDispatcher := events.NewEventDispatcher()
 	eventDispatcher.On(events.EventCronExecutionStateChanged, events.CronExecutionStatePersister(dynamoDBExecutionStore))
