@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"net/http/pprof"
 	"os"
 	"time"
 
@@ -254,11 +253,6 @@ func main() {
 			LogzioURL:       config.LogzioURL,
 		},
 	}).Register()
-
-	router.HandleFunc("/debug/pprof/profile", pprof.Profile)
-	router.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
-	router.HandleFunc("/debug/pprof/trace", pprof.Trace)
-	router.PathPrefix("/debug/pprof/").HandlerFunc(pprof.Index)
 
 	signals := make(chan os.Signal, 1)
 	go func() {
