@@ -33,6 +33,36 @@ func (m *MockUpdater) EXPECT() *MockUpdaterMockRecorder {
 	return m.recorder
 }
 
+// IncECSEventsErrorsCounter mocks base method
+func (m *MockUpdater) IncECSEventsErrorsCounter(arg0 string) {
+	m.ctrl.Call(m, "IncECSEventsErrorsCounter", arg0)
+}
+
+// IncECSEventsErrorsCounter indicates an expected call of IncECSEventsErrorsCounter
+func (mr *MockUpdaterMockRecorder) IncECSEventsErrorsCounter(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IncECSEventsErrorsCounter", reflect.TypeOf((*MockUpdater)(nil).IncECSEventsErrorsCounter), arg0)
+}
+
+// IncECSEventsReceivedCounter mocks base method
+func (m *MockUpdater) IncECSEventsReceivedCounter() {
+	m.ctrl.Call(m, "IncECSEventsReceivedCounter")
+}
+
+// IncECSEventsReceivedCounter indicates an expected call of IncECSEventsReceivedCounter
+func (mr *MockUpdaterMockRecorder) IncECSEventsReceivedCounter() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IncECSEventsReceivedCounter", reflect.TypeOf((*MockUpdater)(nil).IncECSEventsReceivedCounter))
+}
+
+// IncExecutionActivatedCounter mocks base method
+func (m *MockUpdater) IncExecutionActivatedCounter(arg0 *cron.Cron) {
+	m.ctrl.Call(m, "IncExecutionActivatedCounter", arg0)
+}
+
+// IncExecutionActivatedCounter indicates an expected call of IncExecutionActivatedCounter
+func (mr *MockUpdaterMockRecorder) IncExecutionActivatedCounter(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IncExecutionActivatedCounter", reflect.TypeOf((*MockUpdater)(nil).IncExecutionActivatedCounter), arg0)
+}
+
 // IncExecutionFinishedCounter mocks base method
 func (m *MockUpdater) IncExecutionFinishedCounter(arg0 *cron.Cron, arg1 string) {
 	m.ctrl.Call(m, "IncExecutionFinishedCounter", arg0, arg1)

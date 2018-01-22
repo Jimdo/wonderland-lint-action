@@ -278,6 +278,8 @@ func (s *Service) TriggerExecution(cronRuleARN string) error {
 		return err
 	}
 
+	s.mu.IncExecutionTriggeredCounter(c, cron.ExecutionStatusPending)
+
 	errors := []error{}
 
 	if c.Description.Notifications != nil {

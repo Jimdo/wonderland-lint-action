@@ -227,10 +227,11 @@ func main() {
 
 	eventDispatcher := events.NewEventDispatcher()
 	eventDispatcher.On(events.EventCronExecutionStateChanged, events.CronExecutionStatePersister(dynamoDBExecutionStore))
-	eventDispatcher.On(events.EventCronExecutionStateChanged, events.CronitorHeartbeatUpdater(
+	eventDispatcher.On(events.EventCronExecutionStateChanged, events.CronitorHeartbeatReporter(
 		dynamoDBExecutionStore,
 		dynamoDBCronStore,
 		cronitorClient,
+		metricsUpdater,
 	))
 
 	lm := locking.NewDynamoDBLockManager(dynamoDBClient, config.WorkerLeaderLockTableName)

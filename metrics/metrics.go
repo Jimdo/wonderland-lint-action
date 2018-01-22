@@ -7,12 +7,19 @@ import (
 
 type Updater interface {
 	IncExecutionTriggeredCounter(cron *cron.Cron, status string)
+	IncExecutionActivatedCounter(cron *cron.Cron)
 	IncExecutionFinishedCounter(cron *cron.Cron, status string)
+
+	IncECSEventsReceivedCounter()
+	IncECSEventsErrorsCounter(cronName string)
 }
 
 type prometheusUpdater struct {
 	executionTriggeredCounter *prometheus.CounterVec
+	executionActivatedCounter *prometheus.CounterVec
 	executionFinishedCounter  *prometheus.CounterVec
+	ecsEventsReceivedCounter  prometheus.Counter
+	ecsEventsErrorsCounter    *prometheus.CounterVec
 }
 
 func NewPrometheus() Updater {
@@ -29,6 +36,17 @@ func NewPrometheus() Updater {
 				"type", // skipped, pending
 			},
 		),
+		executionActivatedCounter: prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Namespace: "wonderland",
+				Subsystem: "crons",
+				Name:      "executions_activated_total",
+				Help:      "Nummber of activated executions.",
+			},
+			[]string{
+				"cron_name",
+			},
+		),
 		executionFinishedCounter: prometheus.NewCounterVec(
 			prometheus.CounterOpts{
 				Namespace: "wonderland",
@@ -41,13 +59,44 @@ func NewPrometheus() Updater {
 				"type", // success, failed, timeout
 			},
 		),
+		ecsEventsReceivedCounter: prometheus.NewCounter(
+			prometheus.CounterOpts{
+				Namespace: "wonderland",
+				Subsystem: "crons",
+				Name:      "ecs_events_received_total",
+				Help:      "Nummber of received ECS events.",
+			},
+		),
+		ecsEventsErrorsCounter: prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Namespace: "wonderland",
+				Subsystem: "crons",
+				Name:      "ecs_events_errors_total",
+				Help:      "Nummber of errors when handling ECS events.",
+			},
+			[]string{
+				"cron_name",
+			},
+		),
 	}
 }
 
 func (p *prometheusUpdater) IncExecutionTriggeredCounter(cron *cron.Cron, status string) {
-	p.executionTriggeredCounter.WithLabelValues(cron.Name, status)
+	p.executionTriggeredCounter.WithLabelValues(cron.Name, status).Inc()
+}
+
+func (p *prometheusUpdater) IncExecutionActivatedCounter(cron *cron.Cron) {
+	p.executionActivatedCounter.WithLabelValues(cron.Name).Inc()
 }
 
 func (p *prometheusUpdater) IncExecutionFinishedCounter(cron *cron.Cron, status string) {
-	p.executionFinishedCounter.WithLabelValues(cron.Name, status)
+	p.executionFinishedCounter.WithLabelValues(cron.Name, status).Inc()
+}
+
+func (p *prometheusUpdater) IncECSEventsReceivedCounter() {
+	p.ecsEventsReceivedCounter.Inc()
+}
+
+func (p *prometheusUpdater) IncECSEventsErrorsCounter(cronName string) {
+	p.ecsEventsErrorsCounter.WithLabelValues(cronName).Inc()
 }

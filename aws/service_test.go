@@ -399,6 +399,7 @@ func TestService_TriggerExecution_FirstExecution(t *testing.T) {
 	mocks.ces.EXPECT().GetLastNExecutions(gomock.Any(), gomock.Any()).Return(testExecutions, nil)
 	mocks.tds.EXPECT().RunTaskDefinition(gomock.Any()).Return(testTask, nil)
 	mocks.mn.EXPECT().ReportRun(context.Background(), cronitorMonitorID)
+	mocks.mu.EXPECT().IncExecutionTriggeredCounter(gomock.Any(), gomock.Any())
 	mocks.ces.EXPECT().Update(gomock.Any(), testTask)
 
 	if err := service.TriggerExecution(ruleARN); err != nil {
@@ -422,6 +423,7 @@ func TestService_TriggerExecution_FirstExecutionWithoutNotifications(t *testing.
 	mocks.cs.EXPECT().GetByRuleARN(gomock.Any()).Return(testCron, nil)
 	mocks.ces.EXPECT().GetLastNExecutions(gomock.Any(), gomock.Any()).Return(testExecutions, nil)
 	mocks.tds.EXPECT().RunTaskDefinition(gomock.Any()).Return(testTask, nil)
+	mocks.mu.EXPECT().IncExecutionTriggeredCounter(gomock.Any(), gomock.Any())
 	mocks.ces.EXPECT().Update(gomock.Any(), testTask)
 
 	if err := service.TriggerExecution(ruleARN); err != nil {
@@ -455,6 +457,7 @@ func TestService_TriggerExecution_SecondExecution(t *testing.T) {
 	mocks.ces.EXPECT().GetLastNExecutions(gomock.Any(), gomock.Any()).Return(testExecutions, nil)
 	mocks.tds.EXPECT().RunTaskDefinition(gomock.Any()).Return(testTask, nil)
 	mocks.mn.EXPECT().ReportRun(context.Background(), cronitorMonitorID)
+	mocks.mu.EXPECT().IncExecutionTriggeredCounter(gomock.Any(), gomock.Any())
 	mocks.ces.EXPECT().Update(gomock.Any(), testTask)
 
 	if err := service.TriggerExecution(ruleARN); err != nil {
