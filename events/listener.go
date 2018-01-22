@@ -55,8 +55,9 @@ func CronitorHeartbeatReporter(ef ExecutionFetcher, cf CronFetcher, mn MonitorNo
 			return nil
 		}
 
-		if desc.Description.Notifications == nil {
-			return nil
+		notifyMonitor := false
+		if desc.Description.Notifications != nil {
+			notifyMonitor = true
 		}
 
 		cronContainer := cron.GetUserContainerFromTask(c.Task)
@@ -74,16 +75,24 @@ func CronitorHeartbeatReporter(ef ExecutionFetcher, cf CronFetcher, mn MonitorNo
 		// code would in this case shadow the fact that is was shut down because of a timeout.
 		if cronContainerExitCode == 0 && timeoutContainerExitCode != cron.TimeoutExitCode {
 			updater.IncExecutionFinishedCounter(desc, cron.ExecutionStatusSuccess)
-			return mn.ReportSuccess(context.Background(), desc.CronitorMonitorID)
+			if notifyMonitor {
+				return mn.ReportSuccess(context.Background(), desc.CronitorMonitorID)
+			}
+			return nil
 		}
 
 		if timeoutContainerExitCode == cron.TimeoutExitCode {
 			updater.IncExecutionFinishedCounter(desc, cron.ExecutionStatusTimeout)
-			return mn.ReportFail(context.Background(), desc.CronitorMonitorID, "Execution timed out")
+			if notifyMonitor {
+				return mn.ReportFail(context.Background(), desc.CronitorMonitorID, "Execution timed out")
+			}
+			return nil
 		}
 
 		updater.IncExecutionFinishedCounter(desc, cron.ExecutionStatusFailed)
-		return mn.ReportFail(context.Background(), desc.CronitorMonitorID, "Execution failed")
-
+		if notifyMonitor {
+			return mn.ReportFail(context.Background(), desc.CronitorMonitorID, "Execution failed")
+		}
+		return nil
 	}
 }
