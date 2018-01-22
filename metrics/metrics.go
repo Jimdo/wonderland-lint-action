@@ -23,7 +23,7 @@ type prometheusUpdater struct {
 }
 
 func NewPrometheus() Updater {
-	return &prometheusUpdater{
+	u := &prometheusUpdater{
 		executionTriggeredCounter: prometheus.NewCounterVec(
 			prometheus.CounterOpts{
 				Namespace: "wonderland",
@@ -79,6 +79,14 @@ func NewPrometheus() Updater {
 			},
 		),
 	}
+
+	prometheus.MustRegister(u.executionTriggeredCounter)
+	prometheus.MustRegister(u.executionActivatedCounter)
+	prometheus.MustRegister(u.executionFinishedCounter)
+	prometheus.MustRegister(u.ecsEventsReceivedCounter)
+	prometheus.MustRegister(u.ecsEventsErrorsCounter)
+
+	return u
 }
 
 func (p *prometheusUpdater) IncExecutionTriggeredCounter(cron *cron.Cron, status string) {
