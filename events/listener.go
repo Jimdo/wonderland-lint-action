@@ -40,7 +40,7 @@ func CronExecutionStatePersister(ts TaskStore) func(c EventContext) error {
 	}
 }
 
-func CronitorHeartbeatReporter(ef ExecutionFetcher, cf CronFetcher, mn MonitorNotfier, updater metrics.Updater) func(c EventContext) error {
+func ExecutionReporter(ef ExecutionFetcher, cf CronFetcher, mn MonitorNotfier, updater metrics.Updater) func(c EventContext) error {
 	return func(c EventContext) error {
 		desc, err := cf.GetByName(c.CronName)
 		if err != nil {
