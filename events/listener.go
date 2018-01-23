@@ -47,7 +47,7 @@ func ExecutionReporter(ef ExecutionFetcher, cf CronFetcher, mn MonitorNotfier, u
 			return err
 		}
 
-		if aws.StringValue(c.Task.LastStatus) != ecs.DesiredStatusRunning {
+		if aws.StringValue(c.Task.LastStatus) != ecs.DesiredStatusRunning && aws.StringValue(c.Task.DesiredStatus) == ecs.DesiredStatusRunning {
 			updater.IncExecutionActivatedCounter(desc)
 		}
 
