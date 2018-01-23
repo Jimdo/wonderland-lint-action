@@ -119,5 +119,6 @@ gen-mocks:
 	mockgen -package mock github.com/Jimdo/wonderland-crons/aws NotificationClient > mock/notification_client.go
 	mockgen -package mock github.com/Jimdo/wonderland-crons/aws URLGenerator > mock/urlgenerator.go
 	mockgen -package mock github.com/Jimdo/wonderland-crons/events TaskStore > mock/task_store.go
+	mockgen -package mock github.com/Jimdo/wonderland-crons/metrics Updater > mock/metrics_updater.go
 	mockgen -package mock github.com/aws/aws-sdk-go/service/sqs/sqsiface SQSAPI > mock/sqsapi.go
 

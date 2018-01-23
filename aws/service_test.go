@@ -399,6 +399,7 @@ func TestService_TriggerExecution_FirstExecution(t *testing.T) {
 	mocks.ces.EXPECT().GetLastNExecutions(gomock.Any(), gomock.Any()).Return(testExecutions, nil)
 	mocks.tds.EXPECT().RunTaskDefinition(gomock.Any()).Return(testTask, nil)
 	mocks.mn.EXPECT().ReportRun(context.Background(), cronitorMonitorID)
+	mocks.mu.EXPECT().IncExecutionTriggeredCounter(gomock.Any(), gomock.Any())
 	mocks.ces.EXPECT().Update(gomock.Any(), testTask)
 
 	if err := service.TriggerExecution(ruleARN); err != nil {
@@ -422,6 +423,7 @@ func TestService_TriggerExecution_FirstExecutionWithoutNotifications(t *testing.
 	mocks.cs.EXPECT().GetByRuleARN(gomock.Any()).Return(testCron, nil)
 	mocks.ces.EXPECT().GetLastNExecutions(gomock.Any(), gomock.Any()).Return(testExecutions, nil)
 	mocks.tds.EXPECT().RunTaskDefinition(gomock.Any()).Return(testTask, nil)
+	mocks.mu.EXPECT().IncExecutionTriggeredCounter(gomock.Any(), gomock.Any())
 	mocks.ces.EXPECT().Update(gomock.Any(), testTask)
 
 	if err := service.TriggerExecution(ruleARN); err != nil {
@@ -455,6 +457,7 @@ func TestService_TriggerExecution_SecondExecution(t *testing.T) {
 	mocks.ces.EXPECT().GetLastNExecutions(gomock.Any(), gomock.Any()).Return(testExecutions, nil)
 	mocks.tds.EXPECT().RunTaskDefinition(gomock.Any()).Return(testTask, nil)
 	mocks.mn.EXPECT().ReportRun(context.Background(), cronitorMonitorID)
+	mocks.mu.EXPECT().IncExecutionTriggeredCounter(gomock.Any(), gomock.Any())
 	mocks.ces.EXPECT().Update(gomock.Any(), testTask)
 
 	if err := service.TriggerExecution(ruleARN); err != nil {
@@ -479,6 +482,7 @@ func TestService_TriggerExecution_ExecutionRunning(t *testing.T) {
 	mocks.cs.EXPECT().GetByRuleARN(gomock.Any()).Return(testCron, nil)
 	mocks.ces.EXPECT().GetLastNExecutions(gomock.Any(), gomock.Any()).Return(testExecutions, nil)
 	mocks.ces.EXPECT().CreateSkippedExecution(gomock.Any())
+	mocks.mu.EXPECT().IncExecutionTriggeredCounter(gomock.Any(), gomock.Any())
 
 	if err := service.TriggerExecution(ruleARN); err != nil {
 		assert.NoError(t, err)
@@ -589,6 +593,7 @@ type mocks struct {
 	cs  *mock.MockCronStore
 	ces *mock.MockCronExecutionStore
 	mn  *mock.MockMonitorManager
+	mu  *mock.MockUpdater
 	nc  *mock.MockNotificationClient
 	ug  *mock.MockURLGenerator
 }
@@ -600,16 +605,18 @@ func createServiceWithMocks(ctrl *gomock.Controller) (*Service, mocks) {
 	cs := mock.NewMockCronStore(ctrl)
 	ces := mock.NewMockCronExecutionStore(ctrl)
 	mn := mock.NewMockMonitorManager(ctrl)
+	mu := mock.NewMockUpdater(ctrl)
 	nc := mock.NewMockNotificationClient(ctrl)
 	ug := mock.NewMockURLGenerator(ctrl)
 
-	return NewService(v, cm, tds, cs, ces, testTopicName, mn, nc, ug), mocks{
+	return NewService(v, cm, tds, cs, ces, testTopicName, mn, mu, nc, ug), mocks{
 		v:   v,
 		cm:  cm,
 		tds: tds,
 		cs:  cs,
 		ces: ces,
 		mn:  mn,
+		mu:  mu,
 		nc:  nc,
 		ug:  ug,
 	}

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Jimdo/wonderland-crons/cron"
+	"github.com/Jimdo/wonderland-crons/metrics"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
 )
@@ -39,20 +40,22 @@ func CronExecutionStatePersister(ts TaskStore) func(c EventContext) error {
 	}
 }
 
-func CronitorHeartbeatUpdater(ef ExecutionFetcher, cf CronFetcher, mn MonitorNotfier) func(c EventContext) error {
+func ExecutionReporter(ef ExecutionFetcher, cf CronFetcher, mn MonitorNotfier, updater metrics.Updater) func(c EventContext) error {
 	return func(c EventContext) error {
-		if aws.StringValue(c.Task.LastStatus) != ecs.DesiredStatusStopped {
-			return nil
-		}
-
 		desc, err := cf.GetByName(c.CronName)
 		if err != nil {
 			return err
 		}
 
-		if desc.Description.Notifications == nil {
+		if aws.StringValue(c.Task.LastStatus) != ecs.DesiredStatusRunning && aws.StringValue(c.Task.DesiredStatus) == ecs.DesiredStatusRunning {
+			updater.IncExecutionActivatedCounter(desc)
+		}
+
+		if aws.StringValue(c.Task.LastStatus) != ecs.DesiredStatusStopped {
 			return nil
 		}
+
+		notifyMonitor := desc.Description.Notifications != nil
 
 		cronContainer := cron.GetUserContainerFromTask(c.Task)
 		cronContainerExitCode := aws.Int64Value(cronContainer.ExitCode)
@@ -68,14 +71,25 @@ func CronitorHeartbeatUpdater(ef ExecutionFetcher, cf CronFetcher, mn MonitorNot
 		// have a chance to shutdown gracefully. Only relying on the main container's exit
 		// code would in this case shadow the fact that is was shut down because of a timeout.
 		if cronContainerExitCode == 0 && timeoutContainerExitCode != cron.TimeoutExitCode {
-			return mn.ReportSuccess(context.Background(), desc.CronitorMonitorID)
+			updater.IncExecutionFinishedCounter(desc, cron.ExecutionStatusSuccess)
+			if notifyMonitor {
+				return mn.ReportSuccess(context.Background(), desc.CronitorMonitorID)
+			}
+			return nil
 		}
 
-		additionalMessage := "Execution failed"
 		if timeoutContainerExitCode == cron.TimeoutExitCode {
-			additionalMessage = "Execution timed out"
+			updater.IncExecutionFinishedCounter(desc, cron.ExecutionStatusTimeout)
+			if notifyMonitor {
+				return mn.ReportFail(context.Background(), desc.CronitorMonitorID, "Execution timed out")
+			}
+			return nil
 		}
-		return mn.ReportFail(context.Background(), desc.CronitorMonitorID, additionalMessage)
 
+		updater.IncExecutionFinishedCounter(desc, cron.ExecutionStatusFailed)
+		if notifyMonitor {
+			return mn.ReportFail(context.Background(), desc.CronitorMonitorID, "Execution failed")
+		}
+		return nil
 	}
 }

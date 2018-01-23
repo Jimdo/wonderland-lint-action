@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"net/http/pprof"
 	"os"
 	"time"
 
@@ -16,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 	graceful "gopkg.in/tylerb/graceful.v1"
 
@@ -33,6 +33,7 @@ import (
 	"github.com/Jimdo/wonderland-crons/cronitor"
 	"github.com/Jimdo/wonderland-crons/events"
 	"github.com/Jimdo/wonderland-crons/locking"
+	"github.com/Jimdo/wonderland-crons/metrics"
 	"github.com/Jimdo/wonderland-crons/notifications"
 	"github.com/Jimdo/wonderland-crons/store"
 	"github.com/Jimdo/wonderland-crons/validation"
@@ -219,20 +220,22 @@ func main() {
 	userAgent := fmt.Sprintf("%s/%s", programIdentifier, programVersion)
 	notificationClient := notifications.NewClient(http.DefaultTransport, config.NotificationsAPIAddress, config.NotificationsAPIUser, config.NotificationsAPIPass, userAgent, config.NotificationsAPITeam)
 
+	metricsUpdater := metrics.NewPrometheus()
 	urlGenerator := notifications.NewURLGenerator(config.CronitorWlNotificationsAPIUser, config.CronitorWlNotificationsAPIPass, config.NotificationsAPIAddress)
 
-	service := aws.NewService(validator, cloudwatchcm, ecstds, dynamoDBCronStore, dynamoDBExecutionStore, config.ExecutionTriggerTopicARN, cronitorClient, notificationClient, urlGenerator)
+	service := aws.NewService(validator, cloudwatchcm, ecstds, dynamoDBCronStore, dynamoDBExecutionStore, config.ExecutionTriggerTopicARN, cronitorClient, metricsUpdater, notificationClient, urlGenerator)
 
 	eventDispatcher := events.NewEventDispatcher()
 	eventDispatcher.On(events.EventCronExecutionStateChanged, events.CronExecutionStatePersister(dynamoDBExecutionStore))
-	eventDispatcher.On(events.EventCronExecutionStateChanged, events.CronitorHeartbeatUpdater(
+	eventDispatcher.On(events.EventCronExecutionStateChanged, events.ExecutionReporter(
 		dynamoDBExecutionStore,
 		dynamoDBCronStore,
 		cronitorClient,
+		metricsUpdater,
 	))
 
 	lm := locking.NewDynamoDBLockManager(dynamoDBClient, config.WorkerLeaderLockTableName)
-	w := events.NewWorker(lm, sqsClient, config.ECSEventsQueueURL, eventDispatcher,
+	w := events.NewWorker(lm, sqsClient, config.ECSEventsQueueURL, eventDispatcher, metricsUpdater,
 		events.WithPollInterval(config.ECSEventQueuePollInterval),
 		events.WithLockRefreshInterval(config.WorkerLeaderLockRefreshInterval))
 
@@ -242,6 +245,7 @@ func main() {
 		}
 	}()
 
+	router.Handle("/metrics", prometheus.Handler())
 	router.HandleFunc("/status", api.StatusHandler)
 
 	v2.New(&v2.Config{
@@ -252,11 +256,6 @@ func main() {
 			LogzioURL:       config.LogzioURL,
 		},
 	}).Register()
-
-	router.HandleFunc("/debug/pprof/profile", pprof.Profile)
-	router.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
-	router.HandleFunc("/debug/pprof/trace", pprof.Trace)
-	router.PathPrefix("/debug/pprof/").HandlerFunc(pprof.Index)
 
 	signals := make(chan os.Signal, 1)
 	go func() {
