@@ -55,10 +55,7 @@ func CronitorHeartbeatReporter(ef ExecutionFetcher, cf CronFetcher, mn MonitorNo
 			return nil
 		}
 
-		notifyMonitor := false
-		if desc.Description.Notifications != nil {
-			notifyMonitor = true
-		}
+		notifyMonitor := desc.Description.Notifications != nil
 
 		cronContainer := cron.GetUserContainerFromTask(c.Task)
 		cronContainerExitCode := aws.Int64Value(cronContainer.ExitCode)
