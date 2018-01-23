@@ -34,23 +34,13 @@ func (m *MockUpdater) EXPECT() *MockUpdaterMockRecorder {
 }
 
 // IncECSEventsErrorsCounter mocks base method
-func (m *MockUpdater) IncECSEventsErrorsCounter(arg0 string) {
-	m.ctrl.Call(m, "IncECSEventsErrorsCounter", arg0)
+func (m *MockUpdater) IncECSEventsErrorsCounter() {
+	m.ctrl.Call(m, "IncECSEventsErrorsCounter")
 }
 
 // IncECSEventsErrorsCounter indicates an expected call of IncECSEventsErrorsCounter
-func (mr *MockUpdaterMockRecorder) IncECSEventsErrorsCounter(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IncECSEventsErrorsCounter", reflect.TypeOf((*MockUpdater)(nil).IncECSEventsErrorsCounter), arg0)
-}
-
-// IncECSEventsReceivedCounter mocks base method
-func (m *MockUpdater) IncECSEventsReceivedCounter() {
-	m.ctrl.Call(m, "IncECSEventsReceivedCounter")
-}
-
-// IncECSEventsReceivedCounter indicates an expected call of IncECSEventsReceivedCounter
-func (mr *MockUpdaterMockRecorder) IncECSEventsReceivedCounter() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IncECSEventsReceivedCounter", reflect.TypeOf((*MockUpdater)(nil).IncECSEventsReceivedCounter))
+func (mr *MockUpdaterMockRecorder) IncECSEventsErrorsCounter() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IncECSEventsErrorsCounter", reflect.TypeOf((*MockUpdater)(nil).IncECSEventsErrorsCounter))
 }
 
 // IncExecutionActivatedCounter mocks base method

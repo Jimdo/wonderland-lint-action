@@ -10,16 +10,14 @@ type Updater interface {
 	IncExecutionActivatedCounter(cron *cron.Cron)
 	IncExecutionFinishedCounter(cron *cron.Cron, status string)
 
-	IncECSEventsReceivedCounter()
-	IncECSEventsErrorsCounter(cronName string)
+	IncECSEventsErrorsCounter()
 }
 
 type prometheusUpdater struct {
 	executionTriggeredCounter *prometheus.CounterVec
 	executionActivatedCounter *prometheus.CounterVec
 	executionFinishedCounter  *prometheus.CounterVec
-	ecsEventsReceivedCounter  prometheus.Counter
-	ecsEventsErrorsCounter    *prometheus.CounterVec
+	ecsEventsErrorsCounter    prometheus.Counter
 }
 
 func NewPrometheus() Updater {
@@ -59,23 +57,12 @@ func NewPrometheus() Updater {
 				"type", // success, failed, timeout
 			},
 		),
-		ecsEventsReceivedCounter: prometheus.NewCounter(
-			prometheus.CounterOpts{
-				Namespace: "wonderland",
-				Subsystem: "crons",
-				Name:      "ecs_events_received_total",
-				Help:      "Nummber of received ECS events.",
-			},
-		),
-		ecsEventsErrorsCounter: prometheus.NewCounterVec(
+		ecsEventsErrorsCounter: prometheus.NewCounter(
 			prometheus.CounterOpts{
 				Namespace: "wonderland",
 				Subsystem: "crons",
 				Name:      "ecs_events_errors_total",
 				Help:      "Nummber of errors when handling ECS events.",
-			},
-			[]string{
-				"cron_name",
 			},
 		),
 	}
@@ -83,7 +70,6 @@ func NewPrometheus() Updater {
 	prometheus.MustRegister(u.executionTriggeredCounter)
 	prometheus.MustRegister(u.executionActivatedCounter)
 	prometheus.MustRegister(u.executionFinishedCounter)
-	prometheus.MustRegister(u.ecsEventsReceivedCounter)
 	prometheus.MustRegister(u.ecsEventsErrorsCounter)
 
 	return u
@@ -101,10 +87,6 @@ func (p *prometheusUpdater) IncExecutionFinishedCounter(cron *cron.Cron, status 
 	p.executionFinishedCounter.WithLabelValues(cron.Name, status).Inc()
 }
 
-func (p *prometheusUpdater) IncECSEventsReceivedCounter() {
-	p.ecsEventsReceivedCounter.Inc()
-}
-
-func (p *prometheusUpdater) IncECSEventsErrorsCounter(cronName string) {
-	p.ecsEventsErrorsCounter.WithLabelValues(cronName).Inc()
+func (p *prometheusUpdater) IncECSEventsErrorsCounter() {
+	p.ecsEventsErrorsCounter.Inc()
 }

@@ -235,7 +235,7 @@ func main() {
 	))
 
 	lm := locking.NewDynamoDBLockManager(dynamoDBClient, config.WorkerLeaderLockTableName)
-	w := events.NewWorker(lm, sqsClient, config.ECSEventsQueueURL, eventDispatcher,
+	w := events.NewWorker(lm, sqsClient, config.ECSEventsQueueURL, eventDispatcher, metricsUpdater,
 		events.WithPollInterval(config.ECSEventQueuePollInterval),
 		events.WithLockRefreshInterval(config.WorkerLeaderLockRefreshInterval))
 

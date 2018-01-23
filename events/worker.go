@@ -13,6 +13,7 @@ import (
 
 	"github.com/Jimdo/wonderland-crons/cron"
 	"github.com/Jimdo/wonderland-crons/locking"
+	"github.com/Jimdo/wonderland-crons/metrics"
 )
 
 const (
@@ -33,9 +34,10 @@ type Worker struct {
 	queueURL            string
 	sqs                 sqsiface.SQSAPI
 	eventDispatcher     *EventDispatcher
+	metricUpdater       metrics.Updater
 }
 
-func NewWorker(lm locking.LockManager, sqs sqsiface.SQSAPI, qURL string, ed *EventDispatcher, options ...func(*Worker)) *Worker {
+func NewWorker(lm locking.LockManager, sqs sqsiface.SQSAPI, qURL string, ed *EventDispatcher, mu metrics.Updater, options ...func(*Worker)) *Worker {
 	w := &Worker{
 		lockManager:         lm,
 		lockRefreshInterval: DefaultLockRefreshInterval,
@@ -43,6 +45,7 @@ func NewWorker(lm locking.LockManager, sqs sqsiface.SQSAPI, qURL string, ed *Eve
 		queueURL:            qURL,
 		sqs:                 sqs,
 		eventDispatcher:     ed,
+		metricUpdater:       mu,
 	}
 
 	for _, option := range options {
@@ -144,6 +147,7 @@ func (w *Worker) pollQueue() error {
 	for _, m := range out.Messages {
 		if err := w.handleMessage(m); err != nil {
 			log.WithField("sqs_message_id", m.MessageId).WithError(err).Error("Could not handle SQS message")
+			w.metricUpdater.IncECSEventsErrorsCounter()
 		}
 	}
 	return nil
