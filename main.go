@@ -327,7 +327,7 @@ func getAWSSession() *session.Session {
 
 func ecsMetadata() ecsmetadata.Metadata {
 	return &ecsmetadata.Fallback{
-		Primary: ecsmetadata.NewECSMetadataService(ecsmetadata.ECSMetadataServiceConfig{
+		Primary: ecsmetadata.NewECSMetadataService(ecsmetadata.Config{
 			BaseURI:   config.ECSMetadataAPIAddress,
 			Username:  config.ECSMetadataAPIUser,
 			Password:  config.ECSMetadataAPIPass,

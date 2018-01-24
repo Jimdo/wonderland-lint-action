@@ -8,6 +8,12 @@
   revision = "dda194b7c49fd86c09bfb1c825123f8de798d60d"
 
 [[projects]]
+  name = "github.com/Jimdo/wonderland-ecs-metadata"
+  packages = ["ecsmetadata","logger"]
+  revision = "ecced093f3e96e612fa909f0304a57c56d0a31c1"
+  version = "v1.2.0"
+
+[[projects]]
   name = "github.com/Jimdo/wonderland-validator"
   packages = ["docker/registry","validator"]
   revision = "6e2b32e54f6831f3f039bc74c0c7e5e0ad63b7bd"
@@ -51,14 +57,20 @@
 [[projects]]
   name = "github.com/aws/aws-sdk-go"
   packages = ["aws","aws/arn","aws/awserr","aws/awsutil","aws/client","aws/client/metadata","aws/corehandlers","aws/credentials","aws/credentials/ec2rolecreds","aws/credentials/endpointcreds","aws/credentials/stscreds","aws/defaults","aws/ec2metadata","aws/endpoints","aws/request","aws/session","aws/signer/v4","internal/shareddefaults","private/protocol","private/protocol/json/jsonutil","private/protocol/jsonrpc","private/protocol/query","private/protocol/query/queryutil","private/protocol/rest","private/protocol/xml/xmlutil","service/cloudwatchevents","service/cloudwatchevents/cloudwatcheventsiface","service/dynamodb","service/dynamodb/dynamodbattribute","service/dynamodb/dynamodbiface","service/ecs","service/ecs/ecsiface","service/sqs","service/sqs/sqsiface","service/sts"]
-  revision = "960dd6034cbdac0e9716bfa66d91de88b286889f"
-  version = "v1.10.38"
+  revision = "094c4e4e03d9f1c2c7d25a17b5df5f2685ae922a"
+  version = "v1.12.69"
 
 [[projects]]
   branch = "master"
   name = "github.com/beorn7/perks"
   packages = ["quantile"]
   revision = "4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9"
+
+[[projects]]
+  name = "github.com/cenkalti/backoff"
+  packages = ["."]
+  revision = "61153c768f31ee5f130071d08fc82b85208528de"
+  version = "v1.1.0"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -77,9 +89,16 @@
   revision = "dc3312cb1a4513a366c4c9e622ad55c32df12ed3"
 
 [[projects]]
+  name = "github.com/garyburd/redigo"
+  packages = ["internal","redis"]
+  revision = "d1ed5c67e5794de818ea85e6b522fda02623a484"
+  version = "v1.4.0"
+
+[[projects]]
   name = "github.com/go-ini/ini"
   packages = ["."]
-  revision = "9f4d2712cf687b68fad24366f81eaee163079090"
+  revision = "32e4c1e6bc4e7d0d8451aa6b75200d19e37a536a"
+  version = "v1.32.0"
 
 [[projects]]
   branch = "master"
@@ -197,10 +216,9 @@
   version = "v0.7.3"
 
 [[projects]]
-  branch = "master"
   name = "github.com/jmespath/go-jmespath"
   packages = ["."]
-  revision = "bd40a432e4c76585ef6b72d3fd96fb9b6dc7b68d"
+  revision = "0b12d6b5"
 
 [[projects]]
   branch = "master"
@@ -317,6 +335,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8bba88498f360d38e95b30b94db0f3255509b023b05510fc28d9db9274619c4a"
+  inputs-digest = "cb377e2d80f1faf9c8e4181242cb2a4b8c027842737d2f9f010da41816e7d10c"
   solver-name = "gps-cdcl"
   solver-version = 1
