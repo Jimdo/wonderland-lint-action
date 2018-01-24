@@ -16,6 +16,7 @@ type TaskDefinitionStore interface {
 	AddRevisionFromCronDescription(string, *cron.CronDescription) (string, string, error)
 	DeleteByFamily(string) error
 	RunTaskDefinition(string) (*ecs.Task, error)
+	GetRunningTasksByFamily(string) ([]string, error)
 }
 
 type ECSTaskDefinitionStore struct {
@@ -130,4 +131,23 @@ func (tds *ECSTaskDefinitionStore) RunTaskDefinition(arn string) (*ecs.Task, err
 		return nil, fmt.Errorf("error: task status unknown")
 	}
 	return out.Tasks[0], nil
+}
+
+func (tds *ECSTaskDefinitionStore) GetRunningTasksByFamily(taskDefinitionFamily string) ([]string, error) {
+	taskARNs := []string{}
+
+	out, err := tds.ecs.ListTasks(&ecs.ListTasksInput{
+		Cluster:       awssdk.String(tds.clusterARN),
+		DesiredStatus: awssdk.String(ecs.DesiredStatusRunning),
+		Family:        awssdk.String(taskDefinitionFamily),
+	})
+	if err != nil {
+		return taskARNs, err
+	}
+
+	for _, arn := range out.TaskArns {
+		taskARNs = append(taskARNs, *arn)
+	}
+
+	return taskARNs, nil
 }

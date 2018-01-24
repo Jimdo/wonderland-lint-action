@@ -61,6 +61,19 @@ func (mr *MockTaskDefinitionStoreMockRecorder) DeleteByFamily(arg0 interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteByFamily", reflect.TypeOf((*MockTaskDefinitionStore)(nil).DeleteByFamily), arg0)
 }
 
+// GetRunningTasksByFamily mocks base method
+func (m *MockTaskDefinitionStore) GetRunningTasksByFamily(arg0 string) ([]string, error) {
+	ret := m.ctrl.Call(m, "GetRunningTasksByFamily", arg0)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRunningTasksByFamily indicates an expected call of GetRunningTasksByFamily
+func (mr *MockTaskDefinitionStoreMockRecorder) GetRunningTasksByFamily(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRunningTasksByFamily", reflect.TypeOf((*MockTaskDefinitionStore)(nil).GetRunningTasksByFamily), arg0)
+}
+
 // RunTaskDefinition mocks base method
 func (m *MockTaskDefinitionStore) RunTaskDefinition(arg0 string) (*ecs.Task, error) {
 	ret := m.ctrl.Call(m, "RunTaskDefinition", arg0)
