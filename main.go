@@ -19,6 +19,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	graceful "gopkg.in/tylerb/graceful.v1"
 
+	"github.com/Jimdo/wonderland-ecs-metadata/ecsmetadata"
 	"github.com/Jimdo/wonderland-validator/docker/registry"
 	wonderlandValidator "github.com/Jimdo/wonderland-validator/validator"
 	"github.com/Jimdo/wonderland-vault/lib/role-credential-manager"
@@ -71,6 +72,11 @@ var (
 		WorkerLeaderLockTableName       string        `flag:"worker-leader-lock-table-name" env:"WORKER_LEADER_LOCK_TABLE_NAME" description:"Name of the DynamoDB Table used for worker leadership locking"`
 		ExecutionTriggerTopicARN        string        `flag:"exec-trigger-topic-arn" env:"EXEC_TRIGGER_TOPIC_ARN" description:"ARN of the SNS topic that triggers cron executions"`
 		ECSNoScheduleMarkerAttribute    string        `flag:"no-schedule-attribute" env:"NO_SCHEDULE_ATTRIBUTE" description:"The name of an ECS attribute that marks an ECS instance as 'not available' for scheduling"`
+
+		// ECS Metadata
+		ECSMetadataAPIAddress string `flag:"ecs-metadata-api" env:"ECS_METADATA_API" default:"" description:"The address of the ECS API"`
+		ECSMetadataAPIUser    string `flag:"ecs-metadata-user" env:"ECS_METADATA_USER" default:"" description:"The username to use for the ECS API"`
+		ECSMetadataAPIPass    string `flag:"ecs-metadata-pass" env:"ECS_METADATA_PASS" default:"" description:"The password to use for the ECS API"`
 
 		// Logz.io
 		LogzioURL       string `flag:"logzio-url" env:"LOGZIO_URL" default:"https://app-eu.logz.io" description:"The URL of the Logz.io endpoint to use for Kibana and other services"`
@@ -203,6 +209,7 @@ func main() {
 	ecstds := aws.NewECSTaskDefinitionStore(
 		ecsClient,
 		ecstdm,
+		ecsMetadata(),
 		config.ECSClusterARN,
 		fmt.Sprintf("%s/%s", programIdentifier, programVersion),
 		config.ECSNoScheduleMarkerAttribute,
@@ -316,4 +323,18 @@ func getAWSSession() *session.Session {
 		awsSession = session.Must(session.NewSession(awssdk.NewConfig().WithHTTPClient(httpClient)))
 	}
 	return awsSession
+}
+
+func ecsMetadata() ecsmetadata.Metadata {
+	return &ecsmetadata.Fallback{
+		Primary: ecsmetadata.NewECSMetadataService(ecsmetadata.ECSMetadataServiceConfig{
+			BaseURI:   config.ECSMetadataAPIAddress,
+			Username:  config.ECSMetadataAPIUser,
+			Password:  config.ECSMetadataAPIPass,
+			UserAgent: fmt.Sprintf("%s/%s", programIdentifier, programVersion),
+		}),
+		Secondary: &ecsmetadata.ECSAPI{
+			ECS: ecsClient(),
+		},
+	}
 }

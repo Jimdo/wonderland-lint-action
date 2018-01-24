@@ -10,6 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/Jimdo/wonderland-crons/cron"
+	"github.com/Jimdo/wonderland-ecs-metadata/ecsmetadata"
 )
 
 type TaskDefinitionStore interface {
@@ -20,8 +21,9 @@ type TaskDefinitionStore interface {
 }
 
 type ECSTaskDefinitionStore struct {
-	ecs ecsiface.ECSAPI
-	tdm *ECSTaskDefinitionMapper
+	ecs         ecsiface.ECSAPI
+	tdm         *ECSTaskDefinitionMapper
+	ecsMetadata ecsmetadata.Metadata
 
 	clusterARN                string
 	ecsRunnerIdentifier       string
@@ -29,10 +31,11 @@ type ECSTaskDefinitionStore struct {
 	timeoutImage              string
 }
 
-func NewECSTaskDefinitionStore(e ecsiface.ECSAPI, tdm *ECSTaskDefinitionMapper, clusterARN, ecsRunnerIdentifier, noScheduleMarkerAttribute, timeoutImage string) *ECSTaskDefinitionStore {
+func NewECSTaskDefinitionStore(e ecsiface.ECSAPI, tdm *ECSTaskDefinitionMapper, ecsm ecsmetadata.Metadata, clusterARN, ecsRunnerIdentifier, noScheduleMarkerAttribute, timeoutImage string) *ECSTaskDefinitionStore {
 	return &ECSTaskDefinitionStore{
 		ecs:                       e,
 		tdm:                       tdm,
+		ecsMetadata:               ecsm,
 		clusterARN:                clusterARN,
 		ecsRunnerIdentifier:       ecsRunnerIdentifier,
 		noScheduleMarkerAttribute: noScheduleMarkerAttribute,
@@ -136,17 +139,13 @@ func (tds *ECSTaskDefinitionStore) RunTaskDefinition(arn string) (*ecs.Task, err
 func (tds *ECSTaskDefinitionStore) GetRunningTasksByFamily(taskDefinitionFamily string) ([]string, error) {
 	taskARNs := []string{}
 
-	out, err := tds.ecs.ListTasks(&ecs.ListTasksInput{
-		Cluster:       awssdk.String(tds.clusterARN),
-		DesiredStatus: awssdk.String(ecs.DesiredStatusRunning),
-		Family:        awssdk.String(taskDefinitionFamily),
-	})
+	tasks, err := tds.ecsMetadata.GetTasks("marmoreal", taskDefinitionFamily, ecs.DesiredStatusRunning)
 	if err != nil {
 		return taskARNs, err
 	}
 
-	for _, arn := range out.TaskArns {
-		taskARNs = append(taskARNs, *arn)
+	for _, task := range tasks {
+		taskARNs = append(taskARNs, awssdk.StringValue(task.TaskArn))
 	}
 
 	return taskARNs, nil
