@@ -327,14 +327,14 @@ func getAWSSession() *session.Session {
 
 func ecsMetadata() ecsmetadata.Metadata {
 	return &ecsmetadata.Fallback{
-		Primary: ecsmetadata.NewECSMetadataService(ecsmetadata.Config{
+		Primary: ecsmetadata.AddMetrics("ecs-metadata-service", ecsmetadata.NewECSMetadataService(ecsmetadata.Config{
 			BaseURI:   config.ECSMetadataAPIAddress,
 			Username:  config.ECSMetadataAPIUser,
 			Password:  config.ECSMetadataAPIPass,
 			UserAgent: fmt.Sprintf("%s/%s", programIdentifier, programVersion),
-		}),
-		Secondary: &ecsmetadata.ECSAPI{
+		})),
+		Secondary: ecsmetadata.AddMetrics("ecsapi", &ecsmetadata.ECSAPI{
 			ECS: ecsClient(),
-		},
+		}),
 	}
 }
