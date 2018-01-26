@@ -26,6 +26,22 @@ func parseRuleNameFromARN(ruleARN string) (string, error) {
 	return resourceParts[1], nil
 }
 
+func parseClusterNameFromARN(clusterARN string) (string, error) {
+	arnParts, err := arn.Parse(clusterARN)
+	if err != nil {
+		return "", err
+	}
+	resourceParts := strings.Split(arnParts.Resource, "/")
+	if len(resourceParts) != 2 {
+		return "", fmt.Errorf("Could not parse cluster name from ARN %q", arnParts)
+	}
+	if resourceParts[0] != "cluster" {
+		return "", fmt.Errorf("Could not parse cluster name from ARN %q", arnParts)
+	}
+
+	return resourceParts[1], nil
+}
+
 // getHashedRuleName returns a short version for a crons name
 func getHashedRuleName(cronName string) string {
 	const (

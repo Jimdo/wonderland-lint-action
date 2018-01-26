@@ -138,8 +138,12 @@ func (tds *ECSTaskDefinitionStore) RunTaskDefinition(arn string) (*ecs.Task, err
 
 func (tds *ECSTaskDefinitionStore) GetRunningTasksByFamily(taskDefinitionFamily string) ([]string, error) {
 	taskARNs := []string{}
+	clusterName, err := parseClusterNameFromARN(tds.clusterARN)
+	if err != nil {
+		return taskARNs, err
+	}
 
-	tasks, err := tds.ecsMetadata.GetTasks("marmoreal", taskDefinitionFamily, ecs.DesiredStatusRunning)
+	tasks, err := tds.ecsMetadata.GetTasks(clusterName, taskDefinitionFamily, ecs.DesiredStatusRunning)
 	if err != nil {
 		return taskARNs, err
 	}
