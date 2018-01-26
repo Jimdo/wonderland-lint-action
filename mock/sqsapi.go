@@ -5,11 +5,12 @@
 package mock
 
 import (
+	reflect "reflect"
+
 	aws "github.com/aws/aws-sdk-go/aws"
 	request "github.com/aws/aws-sdk-go/aws/request"
 	sqs "github.com/aws/aws-sdk-go/service/sqs"
 	gomock "github.com/golang/mock/gomock"
-	reflect "reflect"
 )
 
 // MockSQSAPI is a mock of SQSAPI interface
@@ -475,6 +476,50 @@ func (mr *MockSQSAPIMockRecorder) ListDeadLetterSourceQueuesWithContext(arg0, ar
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDeadLetterSourceQueuesWithContext", reflect.TypeOf((*MockSQSAPI)(nil).ListDeadLetterSourceQueuesWithContext), varargs...)
 }
 
+// ListQueueTags mocks base method
+func (m *MockSQSAPI) ListQueueTags(arg0 *sqs.ListQueueTagsInput) (*sqs.ListQueueTagsOutput, error) {
+	ret := m.ctrl.Call(m, "ListQueueTags", arg0)
+	ret0, _ := ret[0].(*sqs.ListQueueTagsOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListQueueTags indicates an expected call of ListQueueTags
+func (mr *MockSQSAPIMockRecorder) ListQueueTags(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListQueueTags", reflect.TypeOf((*MockSQSAPI)(nil).ListQueueTags), arg0)
+}
+
+// ListQueueTagsRequest mocks base method
+func (m *MockSQSAPI) ListQueueTagsRequest(arg0 *sqs.ListQueueTagsInput) (*request.Request, *sqs.ListQueueTagsOutput) {
+	ret := m.ctrl.Call(m, "ListQueueTagsRequest", arg0)
+	ret0, _ := ret[0].(*request.Request)
+	ret1, _ := ret[1].(*sqs.ListQueueTagsOutput)
+	return ret0, ret1
+}
+
+// ListQueueTagsRequest indicates an expected call of ListQueueTagsRequest
+func (mr *MockSQSAPIMockRecorder) ListQueueTagsRequest(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListQueueTagsRequest", reflect.TypeOf((*MockSQSAPI)(nil).ListQueueTagsRequest), arg0)
+}
+
+// ListQueueTagsWithContext mocks base method
+func (m *MockSQSAPI) ListQueueTagsWithContext(arg0 aws.Context, arg1 *sqs.ListQueueTagsInput, arg2 ...request.Option) (*sqs.ListQueueTagsOutput, error) {
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListQueueTagsWithContext", varargs...)
+	ret0, _ := ret[0].(*sqs.ListQueueTagsOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListQueueTagsWithContext indicates an expected call of ListQueueTagsWithContext
+func (mr *MockSQSAPIMockRecorder) ListQueueTagsWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListQueueTagsWithContext", reflect.TypeOf((*MockSQSAPI)(nil).ListQueueTagsWithContext), varargs...)
+}
+
 // ListQueues mocks base method
 func (m *MockSQSAPI) ListQueues(arg0 *sqs.ListQueuesInput) (*sqs.ListQueuesOutput, error) {
 	ret := m.ctrl.Call(m, "ListQueues", arg0)
@@ -781,4 +826,92 @@ func (m *MockSQSAPI) SetQueueAttributesWithContext(arg0 aws.Context, arg1 *sqs.S
 func (mr *MockSQSAPIMockRecorder) SetQueueAttributesWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetQueueAttributesWithContext", reflect.TypeOf((*MockSQSAPI)(nil).SetQueueAttributesWithContext), varargs...)
+}
+
+// TagQueue mocks base method
+func (m *MockSQSAPI) TagQueue(arg0 *sqs.TagQueueInput) (*sqs.TagQueueOutput, error) {
+	ret := m.ctrl.Call(m, "TagQueue", arg0)
+	ret0, _ := ret[0].(*sqs.TagQueueOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TagQueue indicates an expected call of TagQueue
+func (mr *MockSQSAPIMockRecorder) TagQueue(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TagQueue", reflect.TypeOf((*MockSQSAPI)(nil).TagQueue), arg0)
+}
+
+// TagQueueRequest mocks base method
+func (m *MockSQSAPI) TagQueueRequest(arg0 *sqs.TagQueueInput) (*request.Request, *sqs.TagQueueOutput) {
+	ret := m.ctrl.Call(m, "TagQueueRequest", arg0)
+	ret0, _ := ret[0].(*request.Request)
+	ret1, _ := ret[1].(*sqs.TagQueueOutput)
+	return ret0, ret1
+}
+
+// TagQueueRequest indicates an expected call of TagQueueRequest
+func (mr *MockSQSAPIMockRecorder) TagQueueRequest(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TagQueueRequest", reflect.TypeOf((*MockSQSAPI)(nil).TagQueueRequest), arg0)
+}
+
+// TagQueueWithContext mocks base method
+func (m *MockSQSAPI) TagQueueWithContext(arg0 aws.Context, arg1 *sqs.TagQueueInput, arg2 ...request.Option) (*sqs.TagQueueOutput, error) {
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "TagQueueWithContext", varargs...)
+	ret0, _ := ret[0].(*sqs.TagQueueOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TagQueueWithContext indicates an expected call of TagQueueWithContext
+func (mr *MockSQSAPIMockRecorder) TagQueueWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TagQueueWithContext", reflect.TypeOf((*MockSQSAPI)(nil).TagQueueWithContext), varargs...)
+}
+
+// UntagQueue mocks base method
+func (m *MockSQSAPI) UntagQueue(arg0 *sqs.UntagQueueInput) (*sqs.UntagQueueOutput, error) {
+	ret := m.ctrl.Call(m, "UntagQueue", arg0)
+	ret0, _ := ret[0].(*sqs.UntagQueueOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UntagQueue indicates an expected call of UntagQueue
+func (mr *MockSQSAPIMockRecorder) UntagQueue(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UntagQueue", reflect.TypeOf((*MockSQSAPI)(nil).UntagQueue), arg0)
+}
+
+// UntagQueueRequest mocks base method
+func (m *MockSQSAPI) UntagQueueRequest(arg0 *sqs.UntagQueueInput) (*request.Request, *sqs.UntagQueueOutput) {
+	ret := m.ctrl.Call(m, "UntagQueueRequest", arg0)
+	ret0, _ := ret[0].(*request.Request)
+	ret1, _ := ret[1].(*sqs.UntagQueueOutput)
+	return ret0, ret1
+}
+
+// UntagQueueRequest indicates an expected call of UntagQueueRequest
+func (mr *MockSQSAPIMockRecorder) UntagQueueRequest(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UntagQueueRequest", reflect.TypeOf((*MockSQSAPI)(nil).UntagQueueRequest), arg0)
+}
+
+// UntagQueueWithContext mocks base method
+func (m *MockSQSAPI) UntagQueueWithContext(arg0 aws.Context, arg1 *sqs.UntagQueueInput, arg2 ...request.Option) (*sqs.UntagQueueOutput, error) {
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "UntagQueueWithContext", varargs...)
+	ret0, _ := ret[0].(*sqs.UntagQueueOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UntagQueueWithContext indicates an expected call of UntagQueueWithContext
+func (mr *MockSQSAPIMockRecorder) UntagQueueWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UntagQueueWithContext", reflect.TypeOf((*MockSQSAPI)(nil).UntagQueueWithContext), varargs...)
 }

@@ -250,20 +250,19 @@ func (s *Service) TriggerExecution(cronRuleARN string) error {
 		return err
 	}
 
-	executions, err := s.executionStore.GetLastNExecutions(c.Name, 10)
+	taskARNs, err := s.tds.GetRunningTasksByFamily(c.TaskDefinitionFamily)
 	if err != nil {
 		return err
 	}
 
-	runningExecution := getRunningExecution(executions)
 	fields := log.Fields{
 		"cron_name": c.Name,
 		"rule_arn":  c.RuleARN,
 	}
 
-	if runningExecution != nil {
+	if len(taskARNs) > 0 {
 		log.WithFields(fields).
-			WithField("currentExecutionArn", runningExecution.TaskArn).
+			WithField("currentExecutionArn", taskARNs[0]).
 			Warn("Cron execution skipped because previous execution is still running")
 		if err := s.executionStore.CreateSkippedExecution(c.Name); err != nil {
 			return fmt.Errorf("storing skipped cron execution in DynamoDB failed: %s", err)

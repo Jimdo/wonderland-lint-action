@@ -17,6 +17,7 @@ components:
       NO_SCHEDULE_ATTRIBUTE: '{{env `NO_SCHEDULE_ATTRIBUTE`}}'
       TIMEOUT_IMAGE: '{{ env `TIMEOUT_IMAGE` }}'
       NOTIFICATIONS_API: '{{env `NOTIFICATIONS_API`}}'
+      ECS_METADATA_API: https://ecs-metadata.{{env `ZONE`}}
       $ref_secrets: vault+secret://vault.{{env `ZONE`}}/wonderland/crons
     capacity:
       memory: M

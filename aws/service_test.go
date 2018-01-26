@@ -390,14 +390,14 @@ func TestService_TriggerExecution_FirstExecution(t *testing.T) {
 		},
 		CronitorMonitorID: cronitorMonitorID,
 	}
-	testExecutions := []*cron.Execution{}
+	runningTasks := []string{}
 	testTask := &ecs.Task{}
 
 	service, mocks := createServiceWithMocks(ctrl)
 
 	mocks.cs.EXPECT().GetByRuleARN(gomock.Any()).Return(testCron, nil)
-	mocks.ces.EXPECT().GetLastNExecutions(gomock.Any(), gomock.Any()).Return(testExecutions, nil)
 	mocks.tds.EXPECT().RunTaskDefinition(gomock.Any()).Return(testTask, nil)
+	mocks.tds.EXPECT().GetRunningTasksByFamily(gomock.Any()).Return(runningTasks, nil)
 	mocks.mn.EXPECT().ReportRun(context.Background(), cronitorMonitorID)
 	mocks.mu.EXPECT().IncExecutionTriggeredCounter(gomock.Any(), gomock.Any())
 	mocks.ces.EXPECT().Update(gomock.Any(), testTask)
@@ -415,13 +415,13 @@ func TestService_TriggerExecution_FirstExecutionWithoutNotifications(t *testing.
 	testCron := &cron.Cron{
 		Description: &cron.CronDescription{},
 	}
-	testExecutions := []*cron.Execution{}
+	runningTasks := []string{}
 	testTask := &ecs.Task{}
 
 	service, mocks := createServiceWithMocks(ctrl)
 
 	mocks.cs.EXPECT().GetByRuleARN(gomock.Any()).Return(testCron, nil)
-	mocks.ces.EXPECT().GetLastNExecutions(gomock.Any(), gomock.Any()).Return(testExecutions, nil)
+	mocks.tds.EXPECT().GetRunningTasksByFamily(gomock.Any()).Return(runningTasks, nil)
 	mocks.tds.EXPECT().RunTaskDefinition(gomock.Any()).Return(testTask, nil)
 	mocks.mu.EXPECT().IncExecutionTriggeredCounter(gomock.Any(), gomock.Any())
 	mocks.ces.EXPECT().Update(gomock.Any(), testTask)
@@ -444,17 +444,13 @@ func TestService_TriggerExecution_SecondExecution(t *testing.T) {
 		},
 		CronitorMonitorID: cronitorMonitorID,
 	}
-	testExecutions := []*cron.Execution{
-		&cron.Execution{
-			AWSStatus: cron.ExecutionStatusSuccess,
-		},
-	}
+	runningTasks := []string{}
 	testTask := &ecs.Task{}
 
 	service, mocks := createServiceWithMocks(ctrl)
 
 	mocks.cs.EXPECT().GetByRuleARN(gomock.Any()).Return(testCron, nil)
-	mocks.ces.EXPECT().GetLastNExecutions(gomock.Any(), gomock.Any()).Return(testExecutions, nil)
+	mocks.tds.EXPECT().GetRunningTasksByFamily(gomock.Any()).Return(runningTasks, nil)
 	mocks.tds.EXPECT().RunTaskDefinition(gomock.Any()).Return(testTask, nil)
 	mocks.mn.EXPECT().ReportRun(context.Background(), cronitorMonitorID)
 	mocks.mu.EXPECT().IncExecutionTriggeredCounter(gomock.Any(), gomock.Any())
@@ -471,16 +467,12 @@ func TestService_TriggerExecution_ExecutionRunning(t *testing.T) {
 
 	ruleARN := "test-rule-arn"
 	testCron := &cron.Cron{}
-	testExecutions := []*cron.Execution{
-		&cron.Execution{
-			AWSStatus: cron.ExecutionStatusRunning,
-		},
-	}
+	runningTasks := []string{"ARN-1"}
 
 	service, mocks := createServiceWithMocks(ctrl)
 
 	mocks.cs.EXPECT().GetByRuleARN(gomock.Any()).Return(testCron, nil)
-	mocks.ces.EXPECT().GetLastNExecutions(gomock.Any(), gomock.Any()).Return(testExecutions, nil)
+	mocks.tds.EXPECT().GetRunningTasksByFamily(gomock.Any()).Return(runningTasks, nil)
 	mocks.ces.EXPECT().CreateSkippedExecution(gomock.Any())
 	mocks.mu.EXPECT().IncExecutionTriggeredCounter(gomock.Any(), gomock.Any())
 
