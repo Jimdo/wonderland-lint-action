@@ -22,13 +22,7 @@ type CronV2Status struct {
 // https://github.com/Jimdo/wonderland-cli/blob/master/cmd/wl/command_cron_v2.go#L234
 type CronV2 struct {
 	Name        string
-	Description *CronV2Description
-}
-
-// CronV2Description was copied straight from the client:
-// https://github.com/Jimdo/wonderland-cli/blob/master/cmd/wl/command_cron_v2.go#L234
-type CronV2Description struct {
-	Schedule string `json:"schedule"`
+	Description *cron.CronDescription
 }
 
 // CronV2Execution was copied straight from the client:
@@ -78,10 +72,8 @@ func MapToCronApiCronStatus(internal *cron.CronStatus) *CronV2Status {
 	s := CronV2Status{
 		Status: internal.Status,
 		Cron: &CronV2{
-			Name: internal.Cron.Name,
-			Description: &CronV2Description{
-				Schedule: internal.Cron.Description.Schedule,
-			},
+			Name:        internal.Cron.Name,
+			Description: internal.Cron.Description,
 		},
 	}
 	for _, e := range internal.Executions {
