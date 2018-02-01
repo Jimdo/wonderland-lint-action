@@ -295,7 +295,7 @@ func (s *Service) TriggerExecution(cronRuleARN string) error {
 		return err
 	}
 	if len(errors) > 1 {
-		return fmt.Errorf("Multiple errors occured: %q", errors)
+		return fmt.Errorf("Multiple errors occurred: %q", errors)
 	}
 	return nil
 }

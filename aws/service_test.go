@@ -53,7 +53,7 @@ func TestService_Apply_Creation(t *testing.T) {
 	}
 
 	taskDefARN := "task-definition-arn"
-	taskDefFamily := "task-defintion-family"
+	taskDefFamily := "task-definition-family"
 	ruleARN := "rule-arn"
 	cronitorMonitorID := "someid"
 	notificationUri := fmt.Sprintf("/v1/teams/werkzeugschmiede/channels/%s", cronName)
@@ -107,7 +107,7 @@ func TestService_Apply_NoNotifications(t *testing.T) {
 	}
 
 	taskDefARN := "task-definition-arn"
-	taskDefFamily := "task-defintion-family"
+	taskDefFamily := "task-definition-family"
 	ruleARN := "rule-arn"
 
 	service, mocks := createServiceWithMocks(ctrl)
