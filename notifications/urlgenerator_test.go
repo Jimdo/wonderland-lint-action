@@ -13,7 +13,7 @@ func TestGenerateWebhookUrl(t *testing.T) {
 	pass := "some_pass"
 	notificationURI := "/v1/teams/werkzeugschmiede/channels/my-cron"
 
-	expected_url := fmt.Sprintf("https://%s:%s@example.net%s/webhook/cronitor", user, pass, notificationURI)
+	expectedURL := fmt.Sprintf("https://%s:%s@example.net%s/webhook/cronitor", user, pass, notificationURI)
 
 	ug := NewURLGenerator(user, pass, apiAddress)
 
@@ -21,5 +21,5 @@ func TestGenerateWebhookUrl(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	assert.Equal(t, expected_url, u)
+	assert.Equal(t, expectedURL, u)
 }

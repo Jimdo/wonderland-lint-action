@@ -111,7 +111,7 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 			return err
 		}
 
-		webhookUrl, err := s.ug.GenerateWebhookURL(notificationURI)
+		webhookURL, err := s.ug.GenerateWebhookURL(notificationURI)
 		if err != nil {
 			log.WithError(err).WithField("cron", name).Error("Could not generate Webhool URL")
 			return err
@@ -121,7 +121,7 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 			Name:                   name,
 			NoRunThreshold:         cronDescription.Notifications.NoRunThreshold,
 			RanLongerThanThreshold: cronDescription.Notifications.RanLongerThanThreshold,
-			Webhook:                webhookUrl,
+			Webhook:                webhookURL,
 		})
 		if err != nil {
 			log.WithError(err).WithField("cron", name).Error("Could not create monitor at cronitor")

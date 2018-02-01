@@ -200,7 +200,7 @@ func (a *API) CronStatus(ctx context.Context, w http.ResponseWriter, req *http.R
 		return
 	}
 
-	sendJSON(w, MapToCronApiCronStatus(status), http.StatusOK)
+	sendJSON(w, MapToCronAPICronStatus(status), http.StatusOK)
 }
 
 func (a *API) CronLogs(ctx context.Context, w http.ResponseWriter, req *http.Request) {

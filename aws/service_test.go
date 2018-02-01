@@ -56,18 +56,18 @@ func TestService_Apply_Creation(t *testing.T) {
 	taskDefFamily := "task-definition-family"
 	ruleARN := "rule-arn"
 	cronitorMonitorID := "someid"
-	notificationUri := fmt.Sprintf("/v1/teams/werkzeugschmiede/channels/%s", cronName)
+	notificationURI := fmt.Sprintf("/v1/teams/werkzeugschmiede/channels/%s", cronName)
 	notificationUser := "some-notification-user"
 	notificationPass := "some-notification-pass"
-	webhookURL := fmt.Sprintf("https://%s:%s@foo.bar%s/webhook/cronitor", notificationUser, notificationPass, notificationUri)
+	webhookURL := fmt.Sprintf("https://%s:%s@foo.bar%s/webhook/cronitor", notificationUser, notificationPass, notificationURI)
 
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.v.EXPECT().ValidateCronDescription(cronDesc)
 	mocks.v.EXPECT().ValidateCronName(cronName)
 	mocks.tds.EXPECT().AddRevisionFromCronDescription(cronName, cronDesc).Return(taskDefARN, taskDefFamily, nil)
 	mocks.cm.EXPECT().CreateRule(cronName, testTopicName, cronDesc.Schedule).Return(ruleARN, nil)
-	mocks.nc.EXPECT().CreateOrUpdateNotificationChannel(cronName, cronDesc.Notifications).Return(notificationUri, "", nil)
-	mocks.ug.EXPECT().GenerateWebhookURL(notificationUri).Return(webhookURL, nil)
+	mocks.nc.EXPECT().CreateOrUpdateNotificationChannel(cronName, cronDesc.Notifications).Return(notificationURI, "", nil)
+	mocks.ug.EXPECT().GenerateWebhookURL(notificationURI).Return(webhookURL, nil)
 	mocks.mn.EXPECT().CreateOrUpdate(context.Background(), cronitor.CreateOrUpdateParams{
 		Name:                   cronName,
 		NoRunThreshold:         cronDesc.Notifications.NoRunThreshold,
