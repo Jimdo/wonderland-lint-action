@@ -235,15 +235,6 @@ func (s *Service) Exists(cronName string) (bool, error) {
 	return true, nil
 }
 
-func getRunningExecution(executions []*cron.Execution) *cron.Execution {
-	for _, e := range executions {
-		if e.IsRunning() {
-			return e
-		}
-	}
-	return nil
-}
-
 func (s *Service) TriggerExecution(cronRuleARN string) error {
 	c, err := s.cronStore.GetByRuleARN(cronRuleARN)
 	if err != nil {
