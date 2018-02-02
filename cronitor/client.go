@@ -16,11 +16,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type CronitorAPI interface {
-	CreateOrUpdate(ctx context.Context, params CreateOrUpdateParams) error
-	Delete(ctx context.Context, name string) error
-}
-
 type Client struct {
 	authInfo runtime.ClientAuthInfoWriter
 	authKey  string
