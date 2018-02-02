@@ -40,7 +40,7 @@ type MonitorManager interface {
 }
 
 type NotificationClient interface {
-	CreateOrUpdateNotificationChannel(name string, notifications *cron.CronNotification) (string, string, error)
+	CreateOrUpdateNotificationChannel(name string, notifications *cron.Notification) (string, string, error)
 	DeleteNotificationChannel(uri string) error
 }
 

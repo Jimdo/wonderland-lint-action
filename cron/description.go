@@ -64,7 +64,7 @@ type Description struct {
 	Schedule      string                `json:"schedule"`
 	Description   *ContainerDescription `json:"description"`
 	Timeout       *int64                `json:"timeout"`
-	Notifications *CronNotification     `json:"notifications,omitempty"`
+	Notifications *Notification         `json:"notifications,omitempty"`
 }
 
 type ContainerDescription struct {
@@ -75,7 +75,7 @@ type ContainerDescription struct {
 	Logging     *LogDescription      `json:"logging,omitempty"`
 }
 
-type CronNotification struct {
+type Notification struct {
 	NoRunThreshold         *int64 `json:"no-run-threshold,omitempty"`
 	RanLongerThanThreshold *int64 `json:"ran-longer-than-threshold,omitempty"`
 	PagerdutyURI           string `json:"pagerduty,omitempty"`

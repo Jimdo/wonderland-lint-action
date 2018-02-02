@@ -10,7 +10,7 @@ import (
 )
 
 func TestValidateCronNotification_Valid(t *testing.T) {
-	valid := []cron.CronNotification{
+	valid := []cron.Notification{
 		{
 			PagerdutyURI: "http://foo.bar",
 		},
@@ -47,7 +47,7 @@ func TestValidateCronNotification_Valid(t *testing.T) {
 }
 
 func TestValidateCronNotification_Invalid(t *testing.T) {
-	invalid := []cron.CronNotification{
+	invalid := []cron.Notification{
 		{
 			NoRunThreshold:         cronitor.Int64Ptr(2),
 			RanLongerThanThreshold: cronitor.Int64Ptr(4),

@@ -22,7 +22,7 @@ func TestValidateCronDescription_Valid(t *testing.T) {
 				Memory: "XL",
 			},
 		},
-		Notifications: &cron.CronNotification{
+		Notifications: &cron.Notification{
 			NoRunThreshold:         cronitor.Int64Ptr(60),
 			RanLongerThanThreshold: cronitor.Int64Ptr(300),
 			SlackChannel:           "#test",

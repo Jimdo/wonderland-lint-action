@@ -46,7 +46,7 @@ func TestService_Apply_Creation(t *testing.T) {
 				CPU:    "m",
 			},
 		},
-		Notifications: &cron.CronNotification{
+		Notifications: &cron.Notification{
 			NoRunThreshold:         cronitorclient.Int64Ptr(10),
 			RanLongerThanThreshold: cronitorclient.Int64Ptr(15),
 		},
@@ -384,7 +384,7 @@ func TestService_TriggerExecution_FirstExecution(t *testing.T) {
 	cronitorMonitorID := "some-id"
 	testCron := &cron.Cron{
 		Description: &cron.Description{
-			Notifications: &cron.CronNotification{
+			Notifications: &cron.Notification{
 				RanLongerThanThreshold: cronitorclient.Int64Ptr(1),
 			},
 		},
@@ -438,7 +438,7 @@ func TestService_TriggerExecution_SecondExecution(t *testing.T) {
 	cronitorMonitorID := "some-id"
 	testCron := &cron.Cron{
 		Description: &cron.Description{
-			Notifications: &cron.CronNotification{
+			Notifications: &cron.Notification{
 				RanLongerThanThreshold: cronitorclient.Int64Ptr(1),
 			},
 		},

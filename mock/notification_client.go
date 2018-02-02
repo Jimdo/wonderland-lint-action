@@ -34,7 +34,7 @@ func (m *MockNotificationClient) EXPECT() *MockNotificationClientMockRecorder {
 }
 
 // CreateOrUpdateNotificationChannel mocks base method
-func (m *MockNotificationClient) CreateOrUpdateNotificationChannel(arg0 string, arg1 *cron.CronNotification) (string, string, error) {
+func (m *MockNotificationClient) CreateOrUpdateNotificationChannel(arg0 string, arg1 *cron.Notification) (string, string, error) {
 	ret := m.ctrl.Call(m, "CreateOrUpdateNotificationChannel", arg0, arg1)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(string)
