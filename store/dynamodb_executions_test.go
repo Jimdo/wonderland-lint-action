@@ -83,8 +83,8 @@ func TestStore_DeleteMoreThanOneBatch(t *testing.T) {
 		store.Update(cronName, &ecs.Task{
 			TaskArn: aws.String("arn:...:task/123"),
 			Containers: []*ecs.Container{
-				&ecs.Container{},
-				&ecs.Container{Name: aws.String(cron.TimeoutContainerName)},
+				{},
+				{Name: aws.String(cron.TimeoutContainerName)},
 			},
 		})
 	}

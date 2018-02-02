@@ -560,7 +560,7 @@ func TestService_StatusWithExecution(t *testing.T) {
 	ruleARN := "test-rule-arn"
 	testCron := &cron.Cron{}
 	testExecutions := []*cron.Execution{
-		&cron.Execution{
+		{
 			AWSStatus: "RUNNING",
 		},
 	}
