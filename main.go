@@ -89,7 +89,7 @@ var (
 		CronitorWlNotificationsAPIPass string `flag:"cronitor-wl-notifications-pass" env:"CRONITOR_WL_NOTIFICATIONS_PASS" default:"" description:"The pawssword that cronitor should use for the notifications API"`
 
 		// Timeout
-		TimeoutImage string `flag:"timeout-image" env:"TIMEOUT_IMAGE" descriptions "Docker image that should be used as timeout container"`
+		TimeoutImage string `flag:"timeout-image" env:"TIMEOUT_IMAGE" description:"Docker image that should be used as timeout container"`
 
 		// Notifications
 		NotificationsAPIAddress string `flag:"notifications-api" env:"NOTIFICATIONS_API" description:"The address of the notifications API"`
