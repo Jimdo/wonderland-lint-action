@@ -86,10 +86,9 @@ func (w *Worker) Run(stop chan interface{}) error {
 			if err := w.lockManager.Acquire(LeaderLockName, lockTTL); err != nil {
 				if err != locking.ErrLockAlreadyTaken {
 					return err
-				} else {
-					log.Debugf("Leadership already taken. Going into follower mode for %s", w.lockRefreshInterval)
-					continue
 				}
+				log.Debugf("Leadership already taken. Going into follower mode for %s", w.lockRefreshInterval)
+				continue
 			}
 
 			log.Debug("Got leadership. Entering leader mode.")
