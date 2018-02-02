@@ -29,7 +29,7 @@ func TestService_Apply_Creation(t *testing.T) {
 	defer ctrl.Finish()
 
 	cronName := "test-cron"
-	cronDesc := &cron.CronDescription{
+	cronDesc := &cron.Description{
 		Schedule: "* * * * *",
 		Description: &cron.ContainerDescription{
 			Image: "python",
@@ -87,7 +87,7 @@ func TestService_Apply_NoNotifications(t *testing.T) {
 	defer ctrl.Finish()
 
 	cronName := "test-cron"
-	cronDesc := &cron.CronDescription{
+	cronDesc := &cron.Description{
 		Schedule: "* * * * *",
 		Description: &cron.ContainerDescription{
 			Image: "python",
@@ -134,7 +134,7 @@ func TestService_Apply_Error_InvalidCronName(t *testing.T) {
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.v.EXPECT().ValidateCronName(cronName).Return(errors.New("foo"))
 
-	err := service.Apply(cronName, &cron.CronDescription{})
+	err := service.Apply(cronName, &cron.Description{})
 	if err == nil {
 		t.Fatal("expected invalid cron description to result in an error, but got none")
 	}
@@ -145,7 +145,7 @@ func TestService_Apply_Error_InvalidCronDescription(t *testing.T) {
 	defer ctrl.Finish()
 
 	cronName := "test-cron"
-	cronDesc := &cron.CronDescription{}
+	cronDesc := &cron.Description{}
 
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.v.EXPECT().ValidateCronName(cronName)
@@ -162,7 +162,7 @@ func TestService_Apply_Error_AddTaskDefinitionRevision(t *testing.T) {
 	defer ctrl.Finish()
 
 	cronName := "test-cron"
-	cronDesc := &cron.CronDescription{}
+	cronDesc := &cron.Description{}
 
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.v.EXPECT().ValidateCronName(cronName)
@@ -180,7 +180,7 @@ func TestService_Apply_Error_CreateRule(t *testing.T) {
 	defer ctrl.Finish()
 
 	cronName := "test-cron"
-	cronDesc := &cron.CronDescription{}
+	cronDesc := &cron.Description{}
 
 	taskDefARN := "task-definition-arn"
 	taskDefFamily := "task-definition-family"
@@ -383,7 +383,7 @@ func TestService_TriggerExecution_FirstExecution(t *testing.T) {
 	ruleARN := "test-rule-arn"
 	cronitorMonitorID := "some-id"
 	testCron := &cron.Cron{
-		Description: &cron.CronDescription{
+		Description: &cron.Description{
 			Notifications: &cron.CronNotification{
 				RanLongerThanThreshold: cronitorclient.Int64Ptr(1),
 			},
@@ -413,7 +413,7 @@ func TestService_TriggerExecution_FirstExecutionWithoutNotifications(t *testing.
 
 	ruleARN := "test-rule-arn"
 	testCron := &cron.Cron{
-		Description: &cron.CronDescription{},
+		Description: &cron.Description{},
 	}
 	runningTasks := []string{}
 	testTask := &ecs.Task{}
@@ -437,7 +437,7 @@ func TestService_TriggerExecution_SecondExecution(t *testing.T) {
 	ruleARN := "test-rule-arn"
 	cronitorMonitorID := "some-id"
 	testCron := &cron.Cron{
-		Description: &cron.CronDescription{
+		Description: &cron.Description{
 			Notifications: &cron.CronNotification{
 				RanLongerThanThreshold: cronitorclient.Int64Ptr(1),
 			},

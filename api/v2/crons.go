@@ -26,7 +26,7 @@ func New(c *Config) *API {
 }
 
 type CronService interface {
-	Apply(cronName string, desc *cron.CronDescription) error
+	Apply(cronName string, desc *cron.Description) error
 	Delete(cronName string) error
 	Exists(cronName string) (bool, error)
 	List() ([]string, error)

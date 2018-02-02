@@ -22,7 +22,7 @@ type CronV2Status struct {
 // https://github.com/Jimdo/wonderland-cli/blob/master/cmd/wl/command_cron_v2.go#L234
 type CronV2 struct {
 	Name        string
-	Description *cron.CronDescription
+	Description *cron.Description
 }
 
 // CronV2Execution was copied straight from the client:

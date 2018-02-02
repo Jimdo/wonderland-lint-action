@@ -34,7 +34,7 @@ func (m *MockCronService) EXPECT() *MockCronServiceMockRecorder {
 }
 
 // Apply mocks base method
-func (m *MockCronService) Apply(arg0 string, arg1 *cron.CronDescription) error {
+func (m *MockCronService) Apply(arg0 string, arg1 *cron.Description) error {
 	ret := m.ctrl.Call(m, "Apply", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0

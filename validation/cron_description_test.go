@@ -13,7 +13,7 @@ import (
 )
 
 func TestValidateCronDescription_Valid(t *testing.T) {
-	desc := &cron.CronDescription{
+	desc := &cron.Description{
 		Schedule: "* * * * *",
 		Description: &cron.ContainerDescription{
 			Image: "perl",

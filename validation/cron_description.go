@@ -20,7 +20,7 @@ type cronDescription struct {
 
 // validate ensures that a cron description provided by a user
 // is valid and can be used to create a Cron.
-func (v *cronDescription) validate(desc *cron.CronDescription) error {
+func (v *cronDescription) validate(desc *cron.Description) error {
 	if desc.Description == nil {
 		return Error{"Crons require a description."}
 	}

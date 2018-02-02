@@ -24,7 +24,7 @@ type Cron struct {
 	RuleARN                         string
 	TaskDefinitionFamily            string
 	LatestTaskDefinitionRevisionARN string
-	Description                     *CronDescription
+	Description                     *Description
 	CronitorMonitorID               string
 }
 

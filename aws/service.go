@@ -14,12 +14,12 @@ import (
 )
 
 type CronValidator interface {
-	ValidateCronDescription(*cron.CronDescription) error
+	ValidateCronDescription(*cron.Description) error
 	ValidateCronName(string) error
 }
 
 type CronStore interface {
-	Save(string, string, string, string, *cron.CronDescription, string) error
+	Save(string, string, string, string, *cron.Description, string) error
 	Delete(string) error
 	List() ([]string, error)
 	GetByName(string) (*cron.Cron, error)
@@ -77,7 +77,7 @@ func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s 
 	}
 }
 
-func (s *Service) Apply(name string, cronDescription *cron.CronDescription) error {
+func (s *Service) Apply(name string, cronDescription *cron.Description) error {
 	if err := s.validator.ValidateCronName(name); err != nil {
 		return err
 	}

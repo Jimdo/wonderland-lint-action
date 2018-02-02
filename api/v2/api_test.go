@@ -32,7 +32,7 @@ func TestMapToCronApiCronStatus_Works(t *testing.T) {
 		Status: "SomeCoolStatus",
 		Cron: &cron.Cron{
 			Name: "SomeCoolName",
-			Description: &cron.CronDescription{
+			Description: &cron.Description{
 				Schedule: "* * * * * * * * * * * *",
 			},
 		},
@@ -71,7 +71,7 @@ func TestMapToCronApiCronStatus_WorksForEmptyTaskArn(t *testing.T) {
 		Status: "SomeCoolStatus",
 		Cron: &cron.Cron{
 			Name: "SomeCoolName",
-			Description: &cron.CronDescription{
+			Description: &cron.Description{
 				Schedule: "* * * * * * * * * * * *",
 			},
 		},

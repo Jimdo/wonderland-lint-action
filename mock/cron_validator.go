@@ -34,7 +34,7 @@ func (m *MockCronValidator) EXPECT() *MockCronValidatorMockRecorder {
 }
 
 // ValidateCronDescription mocks base method
-func (m *MockCronValidator) ValidateCronDescription(arg0 *cron.CronDescription) error {
+func (m *MockCronValidator) ValidateCronDescription(arg0 *cron.Description) error {
 	ret := m.ctrl.Call(m, "ValidateCronDescription", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0

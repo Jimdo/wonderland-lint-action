@@ -40,8 +40,8 @@ var (
 	defaultTimeout = int64(60 * 60 * 24) // 24h
 )
 
-func NewCronDescriptionFromJSON(data []byte) (*CronDescription, error) {
-	desc := &CronDescription{}
+func NewCronDescriptionFromJSON(data []byte) (*Description, error) {
+	desc := &Description{}
 	if err := json.Unmarshal(data, desc); err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func NewCronDescriptionFromJSON(data []byte) (*CronDescription, error) {
 	return desc, nil
 }
 
-func (d *CronDescription) Init() {
+func (d *Description) Init() {
 	if d.Description == nil {
 		return
 	}
@@ -60,7 +60,7 @@ func (d *CronDescription) Init() {
 	d.Description.init()
 }
 
-type CronDescription struct {
+type Description struct {
 	Schedule      string                `json:"schedule"`
 	Description   *ContainerDescription `json:"description"`
 	Timeout       *int64                `json:"timeout"`
