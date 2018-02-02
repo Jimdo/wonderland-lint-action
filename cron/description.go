@@ -101,6 +101,7 @@ func (cd CapacityDescription) MemoryLimit() uint {
 	if cd.memoryIsTShirtSize() {
 		return MemoryTShirtSizeToUInt(cd.Memory)
 	}
+	/* #nosec */
 	i, _ := strconv.Atoi(cd.Memory)
 	return uint(i)
 }
@@ -114,6 +115,7 @@ func (cd CapacityDescription) CPULimit() uint {
 	if cd.cpuIsTShirtSize() {
 		return CPUTShirtSizeToUInt(cd.CPU)
 	}
+	/* #nosec */
 	i, _ := strconv.Atoi(cd.CPU)
 	return uint(i)
 }
