@@ -68,7 +68,7 @@ func MapToCronAPIExecution(e *cron.Execution) *CronV2Execution {
 	}
 }
 
-func MapToCronAPICronStatus(internal *cron.CronStatus) *CronV2Status {
+func MapToCronAPICronStatus(internal *cron.Status) *CronV2Status {
 	s := CronV2Status{
 		Status: internal.Status,
 		Cron: &CronV2{

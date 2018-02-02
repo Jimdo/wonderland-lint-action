@@ -30,7 +30,7 @@ type CronService interface {
 	Delete(cronName string) error
 	Exists(cronName string) (bool, error)
 	List() ([]string, error)
-	Status(cronName string, executionCount int64) (*cron.CronStatus, error)
+	Status(cronName string, executionCount int64) (*cron.Status, error)
 	TriggerExecution(ruleARN string) error
 }
 

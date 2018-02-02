@@ -28,7 +28,7 @@ func TestMapToCronApiCronStatus_Works(t *testing.T) {
 		TaskArn:   makeTestArn("some-task-id"),
 	}
 
-	cs := cron.CronStatus{
+	cs := cron.Status{
 		Status: "SomeCoolStatus",
 		Cron: &cron.Cron{
 			Name: "SomeCoolName",
@@ -67,7 +67,7 @@ func TestMapToCronApiCronStatus_WorksForEmptyTaskArn(t *testing.T) {
 		TaskArn:   "",
 	}
 
-	cs := cron.CronStatus{
+	cs := cron.Status{
 		Status: "SomeCoolStatus",
 		Cron: &cron.Cron{
 			Name: "SomeCoolName",

@@ -28,7 +28,7 @@ type Cron struct {
 	CronitorMonitorID               string
 }
 
-type CronStatus struct {
+type Status struct {
 	Cron       *Cron
 	Status     string
 	Executions []*Execution

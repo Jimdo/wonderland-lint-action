@@ -195,7 +195,7 @@ func (s *Service) List() ([]string, error) {
 	return s.cronStore.List()
 }
 
-func (s *Service) Status(cronName string, executionCount int64) (*cron.CronStatus, error) {
+func (s *Service) Status(cronName string, executionCount int64) (*cron.Status, error) {
 	c, err := s.cronStore.GetByName(cronName)
 	if err != nil {
 		return nil, err
@@ -214,7 +214,7 @@ func (s *Service) Status(cronName string, executionCount int64) (*cron.CronStatu
 		lastStatus = executions[0].GetExecutionStatus()
 	}
 
-	status := &cron.CronStatus{
+	status := &cron.Status{
 		Cron:       c,
 		Status:     lastStatus,
 		Executions: executions,
