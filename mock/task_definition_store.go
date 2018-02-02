@@ -36,7 +36,7 @@ func (m *MockTaskDefinitionStore) EXPECT() *MockTaskDefinitionStoreMockRecorder 
 }
 
 // AddRevisionFromCronDescription mocks base method
-func (m *MockTaskDefinitionStore) AddRevisionFromCronDescription(arg0 string, arg1 *cron.CronDescription) (string, string, error) {
+func (m *MockTaskDefinitionStore) AddRevisionFromCronDescription(arg0 string, arg1 *cron.Description) (string, string, error) {
 	ret := m.ctrl.Call(m, "AddRevisionFromCronDescription", arg0, arg1)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(string)

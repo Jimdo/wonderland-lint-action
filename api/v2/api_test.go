@@ -28,11 +28,11 @@ func TestMapToCronApiCronStatus_Works(t *testing.T) {
 		TaskArn:   makeTestArn("some-task-id"),
 	}
 
-	cs := cron.CronStatus{
+	cs := cron.Status{
 		Status: "SomeCoolStatus",
 		Cron: &cron.Cron{
 			Name: "SomeCoolName",
-			Description: &cron.CronDescription{
+			Description: &cron.Description{
 				Schedule: "* * * * * * * * * * * *",
 			},
 		},
@@ -41,7 +41,7 @@ func TestMapToCronApiCronStatus_Works(t *testing.T) {
 		},
 	}
 
-	api := MapToCronApiCronStatus(&cs)
+	api := MapToCronAPICronStatus(&cs)
 
 	assert.Equal(t, cs.Cron.Name, api.Cron.Name)
 	assert.Equal(t, cs.Cron.Description.Schedule, api.Cron.Description.Schedule)
@@ -67,11 +67,11 @@ func TestMapToCronApiCronStatus_WorksForEmptyTaskArn(t *testing.T) {
 		TaskArn:   "",
 	}
 
-	cs := cron.CronStatus{
+	cs := cron.Status{
 		Status: "SomeCoolStatus",
 		Cron: &cron.Cron{
 			Name: "SomeCoolName",
-			Description: &cron.CronDescription{
+			Description: &cron.Description{
 				Schedule: "* * * * * * * * * * * *",
 			},
 		},
@@ -80,7 +80,7 @@ func TestMapToCronApiCronStatus_WorksForEmptyTaskArn(t *testing.T) {
 		},
 	}
 
-	api := MapToCronApiCronStatus(&cs)
+	api := MapToCronAPICronStatus(&cs)
 
 	assert.Equal(t, cs.Cron.Name, api.Cron.Name)
 	assert.Equal(t, cs.Cron.Description.Schedule, api.Cron.Description.Schedule)
@@ -105,7 +105,7 @@ func TestMapToCronApiCronStatus_MarshalJSON(t *testing.T) {
 		TimeoutExitCode: aws.Int64(0),
 	}
 
-	data, err := json.Marshal(MapToCronApiExecution(execution))
+	data, err := json.Marshal(MapToCronAPIExecution(execution))
 	assert.NoError(t, err)
 
 	var marshaledExecution struct {

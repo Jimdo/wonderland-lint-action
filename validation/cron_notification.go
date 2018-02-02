@@ -6,7 +6,7 @@ import (
 
 type cronNotification struct{}
 
-func (cn cronNotification) validate(notification *cron.CronNotification) error {
+func (cn cronNotification) validate(notification *cron.Notification) error {
 	noRunThreshold := notification.NoRunThreshold
 	ranLongerThanThreshold := notification.RanLongerThanThreshold
 

@@ -15,7 +15,7 @@ func Test_createTimeoutSidecarDefinition(t *testing.T) {
 	timeoutValue := int64(10)
 	timeoutImage := "quay.io/some-image"
 
-	cronDescription := &cron.CronDescription{
+	cronDescription := &cron.Description{
 		Timeout: &timeoutValue,
 	}
 

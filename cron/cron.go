@@ -24,11 +24,11 @@ type Cron struct {
 	RuleARN                         string
 	TaskDefinitionFamily            string
 	LatestTaskDefinitionRevisionARN string
-	Description                     *CronDescription
+	Description                     *Description
 	CronitorMonitorID               string
 }
 
-type CronStatus struct {
+type Status struct {
 	Cron       *Cron
 	Status     string
 	Executions []*Execution

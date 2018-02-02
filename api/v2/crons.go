@@ -26,11 +26,11 @@ func New(c *Config) *API {
 }
 
 type CronService interface {
-	Apply(cronName string, desc *cron.CronDescription) error
+	Apply(cronName string, desc *cron.Description) error
 	Delete(cronName string) error
 	Exists(cronName string) (bool, error)
 	List() ([]string, error)
-	Status(cronName string, executionCount int64) (*cron.CronStatus, error)
+	Status(cronName string, executionCount int64) (*cron.Status, error)
 	TriggerExecution(ruleARN string) error
 }
 
@@ -200,7 +200,7 @@ func (a *API) CronStatus(ctx context.Context, w http.ResponseWriter, req *http.R
 		return
 	}
 
-	sendJSON(w, MapToCronApiCronStatus(status), http.StatusOK)
+	sendJSON(w, MapToCronAPICronStatus(status), http.StatusOK)
 }
 
 func (a *API) CronLogs(ctx context.Context, w http.ResponseWriter, req *http.Request) {

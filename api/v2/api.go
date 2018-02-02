@@ -22,7 +22,7 @@ type CronV2Status struct {
 // https://github.com/Jimdo/wonderland-cli/blob/master/cmd/wl/command_cron_v2.go#L234
 type CronV2 struct {
 	Name        string
-	Description *cron.CronDescription
+	Description *cron.Description
 }
 
 // CronV2Execution was copied straight from the client:
@@ -36,7 +36,7 @@ type CronV2Execution struct {
 	Status    string
 }
 
-func getTaskIdFromArn(arn string) (string, error) {
+func getTaskIDFromArn(arn string) (string, error) {
 	re := regexp.MustCompile("^arn:aws:ecs:[a-z0-9-]+:[0-9]+:task/([a-z0-9-]+)$")
 	parts := re.FindStringSubmatch(arn)
 	if len(parts) != 2 {
@@ -46,10 +46,10 @@ func getTaskIdFromArn(arn string) (string, error) {
 	return parts[1], nil
 }
 
-func MapToCronApiExecution(e *cron.Execution) *CronV2Execution {
+func MapToCronAPIExecution(e *cron.Execution) *CronV2Execution {
 	executionID := ""
 	if e.TaskArn != "" {
-		id, err := getTaskIdFromArn(e.TaskArn)
+		id, err := getTaskIDFromArn(e.TaskArn)
 		if err != nil {
 			log.WithField("taskArn", e.TaskArn).
 				WithError(err).
@@ -68,7 +68,7 @@ func MapToCronApiExecution(e *cron.Execution) *CronV2Execution {
 	}
 }
 
-func MapToCronApiCronStatus(internal *cron.CronStatus) *CronV2Status {
+func MapToCronAPICronStatus(internal *cron.Status) *CronV2Status {
 	s := CronV2Status{
 		Status: internal.Status,
 		Cron: &CronV2{
@@ -77,7 +77,7 @@ func MapToCronApiCronStatus(internal *cron.CronStatus) *CronV2Status {
 		},
 	}
 	for _, e := range internal.Executions {
-		execution := MapToCronApiExecution(e)
+		execution := MapToCronAPIExecution(e)
 		s.Executions = append(s.Executions, execution)
 	}
 	return &s

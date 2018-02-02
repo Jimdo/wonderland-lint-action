@@ -108,9 +108,8 @@ func (cm *CloudwatchRuleCronManager) DeleteRule(ruleARN string) error {
 			}
 			// Return early, because the other resources cannot exist without a rule
 			return nil
-		} else {
-			return fmt.Errorf("could not list targets of rule %q with error: %s", ruleName, err)
 		}
+		return fmt.Errorf("could not list targets of rule %q with error: %s", ruleName, err)
 	}
 
 	var ids []*string

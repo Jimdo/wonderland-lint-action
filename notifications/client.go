@@ -57,7 +57,7 @@ type target struct {
 	Endpoint string `json:"uri"`
 }
 
-func (c *Client) CreateOrUpdateNotificationChannel(name string, notifications *cron.CronNotification) (string, string, error) {
+func (c *Client) CreateOrUpdateNotificationChannel(name string, notifications *cron.Notification) (string, string, error) {
 	if notifications == nil {
 		return "", "", nil
 	}
@@ -77,7 +77,7 @@ func (c *Client) CreateOrUpdateNotificationChannel(name string, notifications *c
 	return uri, channel.SNSTopic, nil
 }
 
-func (c *Client) enforceNotificationTargets(uri string, channel *channel, notifications *cron.CronNotification) error {
+func (c *Client) enforceNotificationTargets(uri string, channel *channel, notifications *cron.Notification) error {
 	targets := []target{}
 	_, err := c.do("get_notifications_targets", "GET", fmt.Sprintf("%s/targets", uri), nil, &targets)
 	if err != nil {

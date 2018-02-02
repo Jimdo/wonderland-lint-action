@@ -14,7 +14,7 @@ import (
 )
 
 type TaskDefinitionStore interface {
-	AddRevisionFromCronDescription(string, *cron.CronDescription) (string, string, error)
+	AddRevisionFromCronDescription(string, *cron.Description) (string, string, error)
 	DeleteByFamily(string) error
 	RunTaskDefinition(string) (*ecs.Task, error)
 	GetRunningTasksByFamily(string) ([]string, error)
@@ -43,7 +43,7 @@ func NewECSTaskDefinitionStore(e ecsiface.ECSAPI, tdm *ECSTaskDefinitionMapper, 
 	}
 }
 
-func (tds *ECSTaskDefinitionStore) AddRevisionFromCronDescription(cronName string, desc *cron.CronDescription) (string, string, error) {
+func (tds *ECSTaskDefinitionStore) AddRevisionFromCronDescription(cronName string, desc *cron.Description) (string, string, error) {
 	tdFamilyName := cron.GetResourceByName(cronName)
 
 	cd, err := tds.tdm.ContainerDefinitionFromCronDescription(tdFamilyName, desc, cronName)
@@ -75,7 +75,7 @@ func (tds *ECSTaskDefinitionStore) AddRevisionFromCronDescription(cronName strin
 	return awssdk.StringValue(out.TaskDefinition.TaskDefinitionArn), tdFamilyName, nil
 }
 
-func (tds *ECSTaskDefinitionStore) createTimeoutSidecarDefinition(cronName string, desc *cron.CronDescription) *ecs.ContainerDefinition {
+func (tds *ECSTaskDefinitionStore) createTimeoutSidecarDefinition(cronName string, desc *cron.Description) *ecs.ContainerDefinition {
 	timeoutString := strconv.FormatInt(*desc.Timeout, 10)
 	timeoutExitCodeString := strconv.FormatInt(cron.TimeoutExitCode, 10)
 	timeoutSidecarDefinition := &ecs.ContainerDefinition{

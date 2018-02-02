@@ -16,7 +16,7 @@ import (
 func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription(t *testing.T) {
 	cronName := "test-cron"
 	containerName := "python-test"
-	cronDesc := &cron.CronDescription{
+	cronDesc := &cron.Description{
 		Schedule: "* * * * *",
 		Description: &cron.ContainerDescription{
 			Image: "python",
@@ -114,7 +114,7 @@ func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription_WithVaul
 
 	cronName := "test-cron"
 	containerName := "python-test"
-	cronDesc := &cron.CronDescription{
+	cronDesc := &cron.Description{
 		Schedule: "* * * * *",
 		Description: &cron.ContainerDescription{
 			Image: "python",
@@ -163,7 +163,7 @@ func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription_ErrorInv
 	invalidVaultPath := "vault+secret://foo%32.com/some-value"
 
 	containerName := "python-test"
-	cronDesc := &cron.CronDescription{
+	cronDesc := &cron.Description{
 		Schedule: "* * * * *",
 		Description: &cron.ContainerDescription{
 			Image: "python",
@@ -197,7 +197,7 @@ func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription_WithVaul
 
 	cronName := "test-cron"
 	containerName := "python-test"
-	cronDesc := &cron.CronDescription{
+	cronDesc := &cron.Description{
 		Schedule: "* * * * *",
 		Description: &cron.ContainerDescription{
 			Image: "python",
@@ -238,7 +238,7 @@ func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription_WithVaul
 
 func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription_ErrorGettingVaultApproleID(t *testing.T) {
 	containerName := "python-test"
-	cronDesc := &cron.CronDescription{
+	cronDesc := &cron.Description{
 		Schedule: "* * * * *",
 		Description: &cron.ContainerDescription{
 			Image: "python",
@@ -268,7 +268,7 @@ func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription_ErrorGet
 	vaultPath := "vault+secret://some.vault-instance.com/test-path"
 
 	containerName := "python-test"
-	cronDesc := &cron.CronDescription{
+	cronDesc := &cron.Description{
 		Schedule: "* * * * *",
 		Description: &cron.ContainerDescription{
 			Image: "python",

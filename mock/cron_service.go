@@ -34,7 +34,7 @@ func (m *MockCronService) EXPECT() *MockCronServiceMockRecorder {
 }
 
 // Apply mocks base method
-func (m *MockCronService) Apply(arg0 string, arg1 *cron.CronDescription) error {
+func (m *MockCronService) Apply(arg0 string, arg1 *cron.Description) error {
 	ret := m.ctrl.Call(m, "Apply", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -84,9 +84,9 @@ func (mr *MockCronServiceMockRecorder) List() *gomock.Call {
 }
 
 // Status mocks base method
-func (m *MockCronService) Status(arg0 string, arg1 int64) (*cron.CronStatus, error) {
+func (m *MockCronService) Status(arg0 string, arg1 int64) (*cron.Status, error) {
 	ret := m.ctrl.Call(m, "Status", arg0, arg1)
-	ret0, _ := ret[0].(*cron.CronStatus)
+	ret0, _ := ret[0].(*cron.Status)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

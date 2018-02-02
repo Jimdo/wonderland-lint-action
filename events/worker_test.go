@@ -15,11 +15,9 @@ import (
 )
 
 var (
-	clusterName          = "test-cluster"
 	clusterArn           = "arn:aws:ecs:eu-west-1:1234:cluster/test-cluster"
 	containerInstanceArn = "arn:aws:ecs:eu-west-1:1234:container-instance/654684"
 	taskArn              = "arn:aws:ecs:eu-west-1:1234:task/c5cba4eb-5dad-405e-96db-71ef8eefe6a8"
-	taskDefinitionArn    = "arn:aws:ecs:eu-west-1:062052581233:task-definition/wonderland-docs:241"
 )
 
 func init() {

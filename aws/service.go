@@ -14,12 +14,12 @@ import (
 )
 
 type CronValidator interface {
-	ValidateCronDescription(*cron.CronDescription) error
+	ValidateCronDescription(*cron.Description) error
 	ValidateCronName(string) error
 }
 
 type CronStore interface {
-	Save(string, string, string, string, *cron.CronDescription, string) error
+	Save(string, string, string, string, *cron.Description, string) error
 	Delete(string) error
 	List() ([]string, error)
 	GetByName(string) (*cron.Cron, error)
@@ -40,7 +40,7 @@ type MonitorManager interface {
 }
 
 type NotificationClient interface {
-	CreateOrUpdateNotificationChannel(name string, notifications *cron.CronNotification) (string, string, error)
+	CreateOrUpdateNotificationChannel(name string, notifications *cron.Notification) (string, string, error)
 	DeleteNotificationChannel(uri string) error
 }
 
@@ -77,7 +77,7 @@ func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s 
 	}
 }
 
-func (s *Service) Apply(name string, cronDescription *cron.CronDescription) error {
+func (s *Service) Apply(name string, cronDescription *cron.Description) error {
 	if err := s.validator.ValidateCronName(name); err != nil {
 		return err
 	}
@@ -111,7 +111,7 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 			return err
 		}
 
-		webhookUrl, err := s.ug.GenerateWebhookURL(notificationURI)
+		webhookURL, err := s.ug.GenerateWebhookURL(notificationURI)
 		if err != nil {
 			log.WithError(err).WithField("cron", name).Error("Could not generate Webhool URL")
 			return err
@@ -121,7 +121,7 @@ func (s *Service) Apply(name string, cronDescription *cron.CronDescription) erro
 			Name:                   name,
 			NoRunThreshold:         cronDescription.Notifications.NoRunThreshold,
 			RanLongerThanThreshold: cronDescription.Notifications.RanLongerThanThreshold,
-			Webhook:                webhookUrl,
+			Webhook:                webhookURL,
 		})
 		if err != nil {
 			log.WithError(err).WithField("cron", name).Error("Could not create monitor at cronitor")
@@ -195,7 +195,7 @@ func (s *Service) List() ([]string, error) {
 	return s.cronStore.List()
 }
 
-func (s *Service) Status(cronName string, executionCount int64) (*cron.CronStatus, error) {
+func (s *Service) Status(cronName string, executionCount int64) (*cron.Status, error) {
 	c, err := s.cronStore.GetByName(cronName)
 	if err != nil {
 		return nil, err
@@ -214,7 +214,7 @@ func (s *Service) Status(cronName string, executionCount int64) (*cron.CronStatu
 		lastStatus = executions[0].GetExecutionStatus()
 	}
 
-	status := &cron.CronStatus{
+	status := &cron.Status{
 		Cron:       c,
 		Status:     lastStatus,
 		Executions: executions,
@@ -233,15 +233,6 @@ func (s *Service) Exists(cronName string) (bool, error) {
 	}
 
 	return true, nil
-}
-
-func getRunningExecution(executions []*cron.Execution) *cron.Execution {
-	for _, e := range executions {
-		if e.IsRunning() {
-			return e
-		}
-	}
-	return nil
 }
 
 func (s *Service) TriggerExecution(cronRuleARN string) error {
@@ -295,7 +286,7 @@ func (s *Service) TriggerExecution(cronRuleARN string) error {
 		return err
 	}
 	if len(errors) > 1 {
-		return fmt.Errorf("Multiple errors occured: %q", errors)
+		return fmt.Errorf("Multiple errors occurred: %q", errors)
 	}
 	return nil
 }

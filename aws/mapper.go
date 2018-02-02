@@ -40,7 +40,7 @@ func NewECSTaskDefinitionMapper(vsp VaultSecretProvider, varp VaultAppRoleProvid
 	}
 }
 
-func (tds *ECSTaskDefinitionMapper) ContainerDefinitionFromCronDescription(containerName string, cron *cron.CronDescription, cronName string) (*ecs.ContainerDefinition, error) {
+func (tds *ECSTaskDefinitionMapper) ContainerDefinitionFromCronDescription(containerName string, cron *cron.Description, cronName string) (*ecs.ContainerDefinition, error) {
 	envVars := map[string]string{}
 	for key, value := range cron.Description.Environment {
 		if !strings.HasPrefix(key, vaultReferenceKeyPrefix) {

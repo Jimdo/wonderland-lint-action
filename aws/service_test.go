@@ -29,7 +29,7 @@ func TestService_Apply_Creation(t *testing.T) {
 	defer ctrl.Finish()
 
 	cronName := "test-cron"
-	cronDesc := &cron.CronDescription{
+	cronDesc := &cron.Description{
 		Schedule: "* * * * *",
 		Description: &cron.ContainerDescription{
 			Image: "python",
@@ -46,28 +46,28 @@ func TestService_Apply_Creation(t *testing.T) {
 				CPU:    "m",
 			},
 		},
-		Notifications: &cron.CronNotification{
+		Notifications: &cron.Notification{
 			NoRunThreshold:         cronitorclient.Int64Ptr(10),
 			RanLongerThanThreshold: cronitorclient.Int64Ptr(15),
 		},
 	}
 
 	taskDefARN := "task-definition-arn"
-	taskDefFamily := "task-defintion-family"
+	taskDefFamily := "task-definition-family"
 	ruleARN := "rule-arn"
 	cronitorMonitorID := "someid"
-	notificationUri := fmt.Sprintf("/v1/teams/werkzeugschmiede/channels/%s", cronName)
+	notificationURI := fmt.Sprintf("/v1/teams/werkzeugschmiede/channels/%s", cronName)
 	notificationUser := "some-notification-user"
 	notificationPass := "some-notification-pass"
-	webhookURL := fmt.Sprintf("https://%s:%s@foo.bar%s/webhook/cronitor", notificationUser, notificationPass, notificationUri)
+	webhookURL := fmt.Sprintf("https://%s:%s@foo.bar%s/webhook/cronitor", notificationUser, notificationPass, notificationURI)
 
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.v.EXPECT().ValidateCronDescription(cronDesc)
 	mocks.v.EXPECT().ValidateCronName(cronName)
 	mocks.tds.EXPECT().AddRevisionFromCronDescription(cronName, cronDesc).Return(taskDefARN, taskDefFamily, nil)
 	mocks.cm.EXPECT().CreateRule(cronName, testTopicName, cronDesc.Schedule).Return(ruleARN, nil)
-	mocks.nc.EXPECT().CreateOrUpdateNotificationChannel(cronName, cronDesc.Notifications).Return(notificationUri, "", nil)
-	mocks.ug.EXPECT().GenerateWebhookURL(notificationUri).Return(webhookURL, nil)
+	mocks.nc.EXPECT().CreateOrUpdateNotificationChannel(cronName, cronDesc.Notifications).Return(notificationURI, "", nil)
+	mocks.ug.EXPECT().GenerateWebhookURL(notificationURI).Return(webhookURL, nil)
 	mocks.mn.EXPECT().CreateOrUpdate(context.Background(), cronitor.CreateOrUpdateParams{
 		Name:                   cronName,
 		NoRunThreshold:         cronDesc.Notifications.NoRunThreshold,
@@ -87,7 +87,7 @@ func TestService_Apply_NoNotifications(t *testing.T) {
 	defer ctrl.Finish()
 
 	cronName := "test-cron"
-	cronDesc := &cron.CronDescription{
+	cronDesc := &cron.Description{
 		Schedule: "* * * * *",
 		Description: &cron.ContainerDescription{
 			Image: "python",
@@ -107,7 +107,7 @@ func TestService_Apply_NoNotifications(t *testing.T) {
 	}
 
 	taskDefARN := "task-definition-arn"
-	taskDefFamily := "task-defintion-family"
+	taskDefFamily := "task-definition-family"
 	ruleARN := "rule-arn"
 
 	service, mocks := createServiceWithMocks(ctrl)
@@ -134,7 +134,7 @@ func TestService_Apply_Error_InvalidCronName(t *testing.T) {
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.v.EXPECT().ValidateCronName(cronName).Return(errors.New("foo"))
 
-	err := service.Apply(cronName, &cron.CronDescription{})
+	err := service.Apply(cronName, &cron.Description{})
 	if err == nil {
 		t.Fatal("expected invalid cron description to result in an error, but got none")
 	}
@@ -145,7 +145,7 @@ func TestService_Apply_Error_InvalidCronDescription(t *testing.T) {
 	defer ctrl.Finish()
 
 	cronName := "test-cron"
-	cronDesc := &cron.CronDescription{}
+	cronDesc := &cron.Description{}
 
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.v.EXPECT().ValidateCronName(cronName)
@@ -162,7 +162,7 @@ func TestService_Apply_Error_AddTaskDefinitionRevision(t *testing.T) {
 	defer ctrl.Finish()
 
 	cronName := "test-cron"
-	cronDesc := &cron.CronDescription{}
+	cronDesc := &cron.Description{}
 
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.v.EXPECT().ValidateCronName(cronName)
@@ -180,7 +180,7 @@ func TestService_Apply_Error_CreateRule(t *testing.T) {
 	defer ctrl.Finish()
 
 	cronName := "test-cron"
-	cronDesc := &cron.CronDescription{}
+	cronDesc := &cron.Description{}
 
 	taskDefARN := "task-definition-arn"
 	taskDefFamily := "task-definition-family"
@@ -383,8 +383,8 @@ func TestService_TriggerExecution_FirstExecution(t *testing.T) {
 	ruleARN := "test-rule-arn"
 	cronitorMonitorID := "some-id"
 	testCron := &cron.Cron{
-		Description: &cron.CronDescription{
-			Notifications: &cron.CronNotification{
+		Description: &cron.Description{
+			Notifications: &cron.Notification{
 				RanLongerThanThreshold: cronitorclient.Int64Ptr(1),
 			},
 		},
@@ -413,7 +413,7 @@ func TestService_TriggerExecution_FirstExecutionWithoutNotifications(t *testing.
 
 	ruleARN := "test-rule-arn"
 	testCron := &cron.Cron{
-		Description: &cron.CronDescription{},
+		Description: &cron.Description{},
 	}
 	runningTasks := []string{}
 	testTask := &ecs.Task{}
@@ -437,8 +437,8 @@ func TestService_TriggerExecution_SecondExecution(t *testing.T) {
 	ruleARN := "test-rule-arn"
 	cronitorMonitorID := "some-id"
 	testCron := &cron.Cron{
-		Description: &cron.CronDescription{
-			Notifications: &cron.CronNotification{
+		Description: &cron.Description{
+			Notifications: &cron.Notification{
 				RanLongerThanThreshold: cronitorclient.Int64Ptr(1),
 			},
 		},
@@ -560,7 +560,7 @@ func TestService_StatusWithExecution(t *testing.T) {
 	ruleARN := "test-rule-arn"
 	testCron := &cron.Cron{}
 	testExecutions := []*cron.Execution{
-		&cron.Execution{
+		{
 			AWSStatus: "RUNNING",
 		},
 	}

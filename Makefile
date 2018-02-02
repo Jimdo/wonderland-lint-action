@@ -82,6 +82,7 @@ lint:
 	docker run --rm -i \
 		-v $(PWD):/go/src/github.com/Jimdo/$(PROJECT_NAME) \
 		-w /go/src/github.com/Jimdo/$(PROJECT_NAME) \
+		-e DONT_FAIL_ON_ERROR=false \
 		quay.io/jimdo/gometalinter-container:latest
 
 container:

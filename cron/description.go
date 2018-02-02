@@ -40,8 +40,8 @@ var (
 	defaultTimeout = int64(60 * 60 * 24) // 24h
 )
 
-func NewCronDescriptionFromJSON(data []byte) (*CronDescription, error) {
-	desc := &CronDescription{}
+func NewCronDescriptionFromJSON(data []byte) (*Description, error) {
+	desc := &Description{}
 	if err := json.Unmarshal(data, desc); err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func NewCronDescriptionFromJSON(data []byte) (*CronDescription, error) {
 	return desc, nil
 }
 
-func (d *CronDescription) Init() {
+func (d *Description) Init() {
 	if d.Description == nil {
 		return
 	}
@@ -60,11 +60,11 @@ func (d *CronDescription) Init() {
 	d.Description.init()
 }
 
-type CronDescription struct {
+type Description struct {
 	Schedule      string                `json:"schedule"`
 	Description   *ContainerDescription `json:"description"`
 	Timeout       *int64                `json:"timeout"`
-	Notifications *CronNotification     `json:"notifications,omitempty"`
+	Notifications *Notification         `json:"notifications,omitempty"`
 }
 
 type ContainerDescription struct {
@@ -75,7 +75,7 @@ type ContainerDescription struct {
 	Logging     *LogDescription      `json:"logging,omitempty"`
 }
 
-type CronNotification struct {
+type Notification struct {
 	NoRunThreshold         *int64 `json:"no-run-threshold,omitempty"`
 	RanLongerThanThreshold *int64 `json:"ran-longer-than-threshold,omitempty"`
 	PagerdutyURI           string `json:"pagerduty,omitempty"`
@@ -101,6 +101,7 @@ func (cd CapacityDescription) MemoryLimit() uint {
 	if cd.memoryIsTShirtSize() {
 		return MemoryTShirtSizeToUInt(cd.Memory)
 	}
+	/* #nosec */
 	i, _ := strconv.Atoi(cd.Memory)
 	return uint(i)
 }
@@ -114,6 +115,7 @@ func (cd CapacityDescription) CPULimit() uint {
 	if cd.cpuIsTShirtSize() {
 		return CPUTShirtSizeToUInt(cd.CPU)
 	}
+	/* #nosec */
 	i, _ := strconv.Atoi(cd.CPU)
 	return uint(i)
 }
