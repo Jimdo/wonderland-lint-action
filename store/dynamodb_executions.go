@@ -198,9 +198,11 @@ func (es *DynamoDBExecutionStore) Delete(cronName string) error {
 		}
 	}
 
-	// delete last batch
-	if err := es.batchDelete(cronName, requests); err != nil {
-		return err
+	// delete remaining requests, if any
+	if len(requests) > 0 {
+		if err := es.batchDelete(cronName, requests); err != nil {
+			return err
+		}
 	}
 
 	return nil
