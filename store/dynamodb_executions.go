@@ -222,13 +222,19 @@ func (es *DynamoDBExecutionStore) batchDelete(cronName string, r []*dynamodb.Wri
 
 	returned, err := es.Client.BatchWriteItem(input)
 	if err != nil {
-		if returned != nil && returned.UnprocessedItems != nil {
-			log.WithError(err).WithFields(log.Fields{
-				"name":              cronName,
-				"unprocessed_items": returned.UnprocessedItems,
-			}).Error("Could not delete executions, BatchWriteItem returned unprocessed items")
-		}
+		log.WithError(err).WithFields(log.Fields{
+			"name": cronName,
+		}).Error("Could not delete executions")
+
 		return fmt.Errorf("Could not delete executions from DynamoDB: %s", err)
+	}
+
+	if numUnprocessed := len(returned.UnprocessedItems); numUnprocessed > 0 {
+		log.WithFields(log.Fields{
+			"name":              cronName,
+			"unprocessed_items": returned.UnprocessedItems,
+		}).Error("Could not delete executions, BatchWriteItem returned unprocessed items")
+		return fmt.Errorf("Could not delete executions, BatchWriteItem returned %d unprocessed items", numUnprocessed)
 	}
 
 	return nil
