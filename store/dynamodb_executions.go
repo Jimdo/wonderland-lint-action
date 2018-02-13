@@ -172,16 +172,21 @@ func (es *DynamoDBExecutionStore) Delete(cronName string) error {
 	var requests []*dynamodb.WriteRequest
 
 	for _, execution := range executions {
-		startTimeAWS := aws.String(execution.StartTime.Format(time.RFC3339Nano))
+		startTimeAWS, err := dynamodbattribute.Marshal(execution.StartTime)
+		if err != nil {
+			log.WithError(err).WithFields(log.Fields{
+				"name":      cronName,
+				"startTime": execution.StartTime,
+			}).Error("Marshalling StartTime failed, skipping")
+			continue
+		}
 		request := &dynamodb.WriteRequest{
 			DeleteRequest: &dynamodb.DeleteRequest{
 				Key: map[string]*dynamodb.AttributeValue{
 					"Name": {
 						S: aws.String(execution.Name),
 					},
-					"StartTime": {
-						S: startTimeAWS,
-					},
+					"StartTime": startTimeAWS,
 				},
 			},
 		}
