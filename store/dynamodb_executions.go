@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/cenkalti/backoff"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/Jimdo/wonderland-crons/cron"
@@ -18,6 +19,8 @@ import (
 
 const (
 	daysToKeepExecutions = 14
+	maxRetryTime         = 30 * time.Second
+	initialRetryInterval = 1 * time.Second
 )
 
 type DynamoDBExecutionStore struct {
@@ -214,20 +217,45 @@ func (es *DynamoDBExecutionStore) batchDelete(cronName string, r []*dynamodb.Wri
 		"name":           cronName,
 	}).Debug("Deleting Executions")
 
-	input := &dynamodb.BatchWriteItemInput{
-		RequestItems: map[string][]*dynamodb.WriteRequest{
-			es.TableName: r,
-		},
+	requestItems := map[string][]*dynamodb.WriteRequest{
+		es.TableName: r,
 	}
 
-	returned, err := es.Client.BatchWriteItem(input)
-	if err != nil {
-		if returned != nil && returned.UnprocessedItems != nil {
+	// An operation that may fail.
+	operation := func() error {
+		input := &dynamodb.BatchWriteItemInput{
+			RequestItems: requestItems,
+		}
+
+		returned, err := es.Client.BatchWriteItem(input)
+		if err != nil {
 			log.WithError(err).WithFields(log.Fields{
+				"name": cronName,
+			}).Error("Could not delete executions")
+
+			// do not retry (should already have been retried by the sdk's internal retry)
+			return backoff.Permanent(fmt.Errorf("Could not delete executions from DynamoDB: %s", err))
+		}
+
+		if numUnprocessed := len(returned.UnprocessedItems); numUnprocessed > 0 {
+			log.WithFields(log.Fields{
 				"name":              cronName,
 				"unprocessed_items": returned.UnprocessedItems,
 			}).Error("Could not delete executions, BatchWriteItem returned unprocessed items")
+
+			// update requests to only include the failed items
+			requestItems = returned.UnprocessedItems
+			return fmt.Errorf("Could not delete executions, BatchWriteItem returned %d unprocessed items", numUnprocessed)
 		}
+		return nil
+	}
+
+	b := backoff.NewExponentialBackOff()
+	b.MaxElapsedTime = maxRetryTime
+	b.InitialInterval = initialRetryInterval
+
+	err := backoff.Retry(operation, b)
+	if err != nil {
 		return fmt.Errorf("Could not delete executions from DynamoDB: %s", err)
 	}
 
