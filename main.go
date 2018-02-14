@@ -320,7 +320,7 @@ func getAWSSession() *session.Session {
 		httpClient := &http.Client{
 			Timeout: time.Duration(10) * time.Second,
 		}
-		awsSession = session.Must(session.NewSession(awssdk.NewConfig().WithHTTPClient(httpClient)))
+		awsSession = session.Must(session.NewSession(awssdk.NewConfig().WithHTTPClient(httpClient).WithMaxRetries(3)))
 	}
 	return awsSession
 }
