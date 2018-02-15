@@ -82,7 +82,7 @@ func (es *DynamoDBExecutionStore) save(execution *cron.Execution) error {
 		return fmt.Errorf("Could not marshal execution into DynamoDB value: %s", err)
 	}
 
-	versionDBA, err := dynamodbattribute.ConvertTo(execution.Version)
+	versionDBA, err := dynamodbattribute.Marshal(execution.Version)
 	if err != nil {
 		return fmt.Errorf("Could not convert version %d into DynamoDB value: %s", execution.Version, err)
 	}
