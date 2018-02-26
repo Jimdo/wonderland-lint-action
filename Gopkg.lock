@@ -4,26 +4,38 @@
 [[projects]]
   branch = "master"
   name = "github.com/Jimdo/cronitor-api-client"
-  packages = [".","client","client/heartbeat","client/monitor","models"]
+  packages = [
+    ".",
+    "client",
+    "client/heartbeat",
+    "client/monitor",
+    "models"
+  ]
   revision = "dda194b7c49fd86c09bfb1c825123f8de798d60d"
 
 [[projects]]
   name = "github.com/Jimdo/wonderland-ecs-metadata"
-  packages = ["ecsmetadata","logger"]
+  packages = [
+    "ecsmetadata",
+    "logger"
+  ]
   revision = "ecced093f3e96e612fa909f0304a57c56d0a31c1"
   version = "v1.2.0"
 
 [[projects]]
   name = "github.com/Jimdo/wonderland-validator"
-  packages = ["docker/registry","validator"]
+  packages = [
+    "docker/registry",
+    "validator"
+  ]
   revision = "6e2b32e54f6831f3f039bc74c0c7e5e0ad63b7bd"
   version = "0.11.0"
 
 [[projects]]
   name = "github.com/Jimdo/wonderland-vault"
   packages = ["lib/role-credential-manager"]
-  revision = "fc83b327f8e79005a5688fb30ac1195ddda97646"
-  version = "v0.1.1"
+  revision = "50686403723f7d8aa2a111cf5c7b5ca8c3892179"
+  version = "v0.3.0"
 
 [[projects]]
   name = "github.com/Luzifer/rconfig"
@@ -45,7 +57,11 @@
 [[projects]]
   branch = "master"
   name = "github.com/afex/hystrix-go"
-  packages = ["hystrix","hystrix/metric_collector","hystrix/rolling"]
+  packages = [
+    "hystrix",
+    "hystrix/metric_collector",
+    "hystrix/rolling"
+  ]
   revision = "f118cd938f786d24f46cc307981d8f63b7951020"
 
 [[projects]]
@@ -56,7 +72,43 @@
 
 [[projects]]
   name = "github.com/aws/aws-sdk-go"
-  packages = ["aws","aws/arn","aws/awserr","aws/awsutil","aws/client","aws/client/metadata","aws/corehandlers","aws/credentials","aws/credentials/ec2rolecreds","aws/credentials/endpointcreds","aws/credentials/stscreds","aws/defaults","aws/ec2metadata","aws/endpoints","aws/request","aws/session","aws/signer/v4","internal/shareddefaults","private/protocol","private/protocol/json/jsonutil","private/protocol/jsonrpc","private/protocol/query","private/protocol/query/queryutil","private/protocol/rest","private/protocol/xml/xmlutil","service/cloudwatchevents","service/cloudwatchevents/cloudwatcheventsiface","service/dynamodb","service/dynamodb/dynamodbattribute","service/dynamodb/dynamodbiface","service/ecs","service/ecs/ecsiface","service/sqs","service/sqs/sqsiface","service/sts"]
+  packages = [
+    "aws",
+    "aws/arn",
+    "aws/awserr",
+    "aws/awsutil",
+    "aws/client",
+    "aws/client/metadata",
+    "aws/corehandlers",
+    "aws/credentials",
+    "aws/credentials/ec2rolecreds",
+    "aws/credentials/endpointcreds",
+    "aws/credentials/stscreds",
+    "aws/defaults",
+    "aws/ec2metadata",
+    "aws/endpoints",
+    "aws/request",
+    "aws/session",
+    "aws/signer/v4",
+    "internal/shareddefaults",
+    "private/protocol",
+    "private/protocol/json/jsonutil",
+    "private/protocol/jsonrpc",
+    "private/protocol/query",
+    "private/protocol/query/queryutil",
+    "private/protocol/rest",
+    "private/protocol/xml/xmlutil",
+    "service/cloudwatchevents",
+    "service/cloudwatchevents/cloudwatcheventsiface",
+    "service/dynamodb",
+    "service/dynamodb/dynamodbattribute",
+    "service/dynamodb/dynamodbiface",
+    "service/ecs",
+    "service/ecs/ecsiface",
+    "service/sqs",
+    "service/sqs/sqsiface",
+    "service/sts"
+  ]
   revision = "094c4e4e03d9f1c2c7d25a17b5df5f2685ae922a"
   version = "v1.12.69"
 
@@ -80,7 +132,21 @@
 
 [[projects]]
   name = "github.com/docker/distribution"
-  packages = [".","context","digestset","reference","registry/api/errcode","registry/api/v2","registry/client","registry/client/auth","registry/client/auth/challenge","registry/client/transport","registry/storage/cache","registry/storage/cache/memory","uuid"]
+  packages = [
+    ".",
+    "context",
+    "digestset",
+    "reference",
+    "registry/api/errcode",
+    "registry/api/v2",
+    "registry/client",
+    "registry/client/auth",
+    "registry/client/auth/challenge",
+    "registry/client/transport",
+    "registry/storage/cache",
+    "registry/storage/cache/memory",
+    "uuid"
+  ]
   revision = "edc3ab29cdff8694dd6feb85cfeb4b5f1b38ed9c"
 
 [[projects]]
@@ -90,7 +156,10 @@
 
 [[projects]]
   name = "github.com/garyburd/redigo"
-  packages = ["internal","redis"]
+  packages = [
+    "internal",
+    "redis"
+  ]
   revision = "d1ed5c67e5794de818ea85e6b522fda02623a484"
   version = "v1.4.0"
 
@@ -133,7 +202,16 @@
 [[projects]]
   branch = "master"
   name = "github.com/go-openapi/runtime"
-  packages = [".","client","logger","middleware","middleware/denco","middleware/header","middleware/untyped","security"]
+  packages = [
+    ".",
+    "client",
+    "logger",
+    "middleware",
+    "middleware/denco",
+    "middleware/header",
+    "middleware/untyped",
+    "security"
+  ]
   revision = "55d76b2319213cf30fdb7c4ae3a01541f5404c16"
 
 [[projects]]
@@ -206,12 +284,26 @@
 
 [[projects]]
   name = "github.com/hashicorp/hcl"
-  packages = [".","hcl/ast","hcl/parser","hcl/scanner","hcl/strconv","hcl/token","json/parser","json/scanner","json/token"]
+  packages = [
+    ".",
+    "hcl/ast",
+    "hcl/parser",
+    "hcl/scanner",
+    "hcl/strconv",
+    "hcl/token",
+    "json/parser",
+    "json/scanner",
+    "json/token"
+  ]
   revision = "ef8133da8cda503718a74741312bf50821e6de79"
 
 [[projects]]
   name = "github.com/hashicorp/vault"
-  packages = ["api","helper/compressutil","helper/jsonutil"]
+  packages = [
+    "api",
+    "helper/compressutil",
+    "helper/jsonutil"
+  ]
   revision = "0b20ae0b9b7a748d607082b1add3663a28e31b68"
   version = "v0.7.3"
 
@@ -223,7 +315,11 @@
 [[projects]]
   branch = "master"
   name = "github.com/mailru/easyjson"
-  packages = ["buffer","jlexer","jwriter"]
+  packages = [
+    "buffer",
+    "jlexer",
+    "jwriter"
+  ]
   revision = "32fa128f234d041f196a9f3e0fea5ac9772c08e1"
 
 [[projects]]
@@ -269,13 +365,20 @@
 [[projects]]
   branch = "master"
   name = "github.com/prometheus/common"
-  packages = ["expfmt","internal/bitbucket.org/ww/goautoneg","model"]
+  packages = [
+    "expfmt",
+    "internal/bitbucket.org/ww/goautoneg",
+    "model"
+  ]
   revision = "89604d197083d4781071d3c65855d24ecfb0a563"
 
 [[projects]]
   branch = "master"
   name = "github.com/prometheus/procfs"
-  packages = [".","xfs"]
+  packages = [
+    ".",
+    "xfs"
+  ]
   revision = "b15cd069a83443be3154b719d0cc9fe8117f09fb"
 
 [[projects]]
@@ -302,7 +405,14 @@
 
 [[projects]]
   name = "golang.org/x/net"
-  packages = ["context","context/ctxhttp","http2","http2/hpack","idna","lex/httplex"]
+  packages = [
+    "context",
+    "context/ctxhttp",
+    "http2",
+    "http2/hpack",
+    "idna",
+    "lex/httplex"
+  ]
   revision = "513929065c19401a1c7b76ecd942f9f86a0c061b"
 
 [[projects]]
@@ -312,13 +422,27 @@
 
 [[projects]]
   name = "golang.org/x/text"
-  packages = ["internal/gen","internal/triegen","internal/ucd","secure/bidirule","transform","unicode/bidi","unicode/cldr","unicode/norm","unicode/rangetable","width"]
+  packages = [
+    "internal/gen",
+    "internal/triegen",
+    "internal/ucd",
+    "secure/bidirule",
+    "transform",
+    "unicode/bidi",
+    "unicode/cldr",
+    "unicode/norm",
+    "unicode/rangetable",
+    "width"
+  ]
   revision = "470f45bf29f4147d6fbd7dfd0a02a848e49f5bf4"
 
 [[projects]]
   branch = "v2"
   name = "gopkg.in/mgo.v2"
-  packages = ["bson","internal/json"]
+  packages = [
+    "bson",
+    "internal/json"
+  ]
   revision = "3f83fa5005286a7fe593b055f0d7771a7dce4655"
 
 [[projects]]
@@ -335,6 +459,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "cb377e2d80f1faf9c8e4181242cb2a4b8c027842737d2f9f010da41816e7d10c"
+  inputs-digest = "31c754760041e5f44687e5d21423bbc6488fd428f3433848446585bbc92046d3"
   solver-name = "gps-cdcl"
   solver-version = 1

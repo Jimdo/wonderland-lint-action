@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"math"
@@ -24,6 +25,8 @@ const (
 	vaultURIPathSTSCredentials = "aws/sts/"
 )
 
+var errVaultTokenExpired = errors.New("Vault token is expired")
+
 // New creates a new instance of the RoleCredentialManager
 func New(vaultAddress, vaultRoleID string, options ...Option) (*RoleCredentialManager, error) {
 	rcm := &RoleCredentialManager{
@@ -34,12 +37,8 @@ func New(vaultAddress, vaultRoleID string, options ...Option) (*RoleCredentialMa
 		},
 	}
 
-	for _, option := range options {
-		option(&rcm.cfg)
-	}
-
-	if err := rcm.cfg.validate(); err != nil {
-		return nil, fmt.Errorf("invalid config: %s", err)
+	if err := rcm.Configure(options...); err != nil {
+		return nil, err
 	}
 
 	return rcm, nil
@@ -59,9 +58,6 @@ func (r *RoleCredentialManager) Init() error {
 	if err := r.initializeVaultClient(); err != nil {
 		return err
 	}
-	if err := r.renewVaultToken(r.vaultClientLease); err != nil {
-		return fmt.Errorf("error getting Vault token: %s", err)
-	}
 
 	awsLeaseDuration := defaultAWSLeaseDurationSeconds
 	if r.hasAWSConfig() {
@@ -77,6 +73,18 @@ func (r *RoleCredentialManager) Init() error {
 	return nil
 }
 
+// Configure sets options on the RCM instance even after initialization.
+func (r *RoleCredentialManager) Configure(options ...Option) error {
+	for _, option := range options {
+		option(&r.cfg)
+	}
+
+	if err := r.cfg.validate(); err != nil {
+		return fmt.Errorf("invalid config: %s", err)
+	}
+	return nil
+}
+
 func (r *RoleCredentialManager) isInitialized() bool { return r.VaultClient != nil }
 
 func (r *RoleCredentialManager) hasAWSConfig() bool {
@@ -86,7 +94,9 @@ func (r *RoleCredentialManager) hasAWSConfig() bool {
 // Run executes the runloop which refreshes the RoleCredentialManager's own Vault token
 func (r *RoleCredentialManager) Run(stop <-chan interface{}) error {
 	if !r.isInitialized() {
-		r.Init()
+		if err := r.Init(); err != nil {
+			return err
+		}
 	}
 
 	defer r.awsTicker.Stop()
@@ -96,6 +106,13 @@ func (r *RoleCredentialManager) Run(stop <-chan interface{}) error {
 		select {
 		case <-r.vaultTicker.C:
 			if err := r.renewVaultToken(r.vaultClientLease); err != nil {
+				if err == errVaultTokenExpired {
+					r.debug("vault token expired, trying to get new token for app role")
+					if err = r.exchangeAppRoleForToken(); err != nil {
+						return fmt.Errorf("error exchanging app role for token: %s", err)
+					}
+					continue
+				}
 				if !r.cfg.ignoreErrors {
 					return fmt.Errorf("error renewing Vault token: %s", err)
 				}
@@ -124,8 +141,12 @@ func (r *RoleCredentialManager) initializeVaultClient() error {
 	if err != nil {
 		return err
 	}
+	r.VaultClient = vc
+	return r.exchangeAppRoleForToken()
+}
 
-	sec, err := vc.Logical().Write(vaultURIPathApproleLogin, map[string]interface{}{
+func (r *RoleCredentialManager) exchangeAppRoleForToken() error {
+	sec, err := r.VaultClient.Logical().Write(vaultURIPathApproleLogin, map[string]interface{}{
 		"role_id": r.cfg.vaultRoleID,
 	})
 	if err != nil {
@@ -136,10 +157,9 @@ func (r *RoleCredentialManager) initializeVaultClient() error {
 		return errors.New("Vault response did not contain a token")
 	}
 
-	vc.SetToken(sec.Auth.ClientToken)
+	r.VaultClient.SetToken(sec.Auth.ClientToken)
 	r.debugf("Vault token has a lease duration of %ds", sec.Auth.LeaseDuration)
 
-	r.VaultClient = vc
 	r.vaultClientLease = sec.Auth.LeaseDuration
 	return nil
 }
@@ -149,6 +169,9 @@ func (r *RoleCredentialManager) renewVaultToken(leaseDuration int) error {
 
 	sec, err := r.VaultClient.Auth().Token().RenewSelf(leaseDuration)
 	if err != nil {
+		if strings.Contains(err.Error(), "Code: 403") {
+			return errVaultTokenExpired
+		}
 		return err
 	}
 

@@ -135,9 +135,6 @@ func main() {
 		abort("Please pass notifications api address")
 	}
 
-	stop := make(chan interface{})
-	defer close(stop)
-
 	router := mux.NewRouter()
 
 	ecsClient := ecsClient()
@@ -148,7 +145,7 @@ func main() {
 	r, err := rcm.New(
 		config.VaultAddress,
 		config.VaultRoleID,
-		rcm.WithAWSClientConfigs(&ecsClient.Config, &cwClient.Config, &dynamoDBClient.Config, &sqsClient.Config),
+		rcm.AddAWSClientConfigs(&ecsClient.Config, &cwClient.Config, &dynamoDBClient.Config, &sqsClient.Config),
 		rcm.WithAWSIAMRole(programIdentifier),
 		rcm.WithIgnoreErrors(),
 		rcm.WithLogger(log.StandardLogger()),
@@ -159,6 +156,15 @@ func main() {
 	if err := r.Init(); err != nil {
 		log.Fatalf("Error initializing RCM library: %s", err)
 	}
+
+	stop := make(chan interface{})
+	defer close(stop)
+
+	go func() {
+		if err := r.Run(stop); err != nil {
+			log.Fatalf("RCM library returned error even though ignore errors option was set: %s", err)
+		}
+	}()
 
 	vaultSecretProvider := &vault.SecretProvider{
 		VaultClient: r.VaultClient,
@@ -193,12 +199,6 @@ func main() {
 			VaultSecretProvider: vaultSecretProvider,
 		},
 	})
-
-	go func() {
-		if err := r.Run(stop); err != nil {
-			log.Fatalf("RCM library returned error even though ignore errors option was set: %s", err)
-		}
-	}()
 
 	dynamoDBExecutionStore, err := store.NewDynamoDBExecutionStore(dynamoDBClient, config.ExecutionsTableName)
 	if err != nil {
