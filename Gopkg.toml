@@ -20,6 +20,10 @@
 #  name = "github.com/x/y"
 #  version = "2.4.0"
 
+[prune]
+  go-tests = true
+  unused-packages = true
+  non-go = true
 
 [[constraint]]
   name = "github.com/Jimdo/wonderland-validator"
@@ -27,6 +31,7 @@
 
 [[constraint]]
   name = "github.com/Jimdo/wonderland-vault"
+  version = "0.3.0"
 
 [[constraint]]
   name = "github.com/Luzifer/rconfig"

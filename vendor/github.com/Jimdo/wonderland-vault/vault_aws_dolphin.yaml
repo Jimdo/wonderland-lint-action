@@ -1,6 +1,0 @@
----
-keys:
-
-  - key: aws-dolphin/roles/admin
-    values:
-      arn: arn:aws:iam::397976176229:role/wonderland-vault-prod

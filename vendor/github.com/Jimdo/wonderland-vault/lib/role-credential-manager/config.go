@@ -16,10 +16,10 @@ func WithAWSIAMRole(role string) Option {
 	}
 }
 
-// WithAWSClientConfigs returns a Option that sets the AWS client configs on a config struct
-func WithAWSClientConfigs(configs ...*aws.Config) Option {
+// AddAWSClientConfigs returns an Option that adds AWS client configs to the config struct
+func AddAWSClientConfigs(configs ...*aws.Config) Option {
 	return func(cfg *config) {
-		cfg.awsClientConfigs = configs
+		cfg.awsClientConfigs = append(cfg.awsClientConfigs, configs...)
 	}
 }
 
