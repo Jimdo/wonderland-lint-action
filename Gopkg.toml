@@ -27,7 +27,7 @@
 
 [[constraint]]
   name = "github.com/Jimdo/wonderland-validator"
-  version = "0.11.0"
+  version = "0.13.0"
 
 [[constraint]]
   name = "github.com/Jimdo/wonderland-vault"
@@ -71,3 +71,7 @@
 [[constraint]]
   name = "gopkg.in/tylerb/graceful.v1"
   version = "1.2.15"
+
+[[override]]
+  name = "github.com/docker/distribution"
+  revision = "2c58ce1a7f72585aafebc3faf85582fe43280bd3"

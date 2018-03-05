@@ -13,7 +13,7 @@ const (
 )
 
 var (
-	imageNameRegexp = regexp.MustCompile(`^[-_.:/a-z0-9]+$`)
+	imageNameRegexp = regexp.MustCompile(`^[-_.:/a-zA-Z0-9]+$`)
 	imageIDRegexp   = regexp.MustCompile(`^([a-f0-9]{64})$`)
 )
 

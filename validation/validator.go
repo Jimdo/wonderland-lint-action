@@ -11,10 +11,11 @@ type Validator struct {
 }
 
 type Configuration struct {
-	CapacityValidator       *wonderlandValidator.ContainerCapacity
-	DockerImageValidator    *wonderlandValidator.DockerImage
-	WonderlandNameValidator *wonderlandValidator.WonderlandName
-	EnvironmentVariables    *wonderlandValidator.EnvironmentVariables
+	CapacityValidator        *wonderlandValidator.ContainerCapacity
+	DockerImageValidator     *wonderlandValidator.DockerImage
+	WonderlandNameValidator  *wonderlandValidator.WonderlandName
+	MetaInformationValidator *wonderlandValidator.MetaInformation
+	EnvironmentVariables     *wonderlandValidator.EnvironmentVariables
 }
 
 func New(cfg Configuration) *Validator {
@@ -25,6 +26,7 @@ func New(cfg Configuration) *Validator {
 			EnvironmentVariables: cfg.EnvironmentVariables,
 		},
 		Name:             cfg.WonderlandNameValidator,
+		MetaInformation:  cfg.MetaInformationValidator,
 		CronNotification: &cronNotification{},
 	}
 

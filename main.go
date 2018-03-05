@@ -174,7 +174,8 @@ func main() {
 	}
 
 	validator := validation.New(validation.Configuration{
-		WonderlandNameValidator: &wonderlandValidator.WonderlandName{},
+		WonderlandNameValidator:  &wonderlandValidator.WonderlandName{},
+		MetaInformationValidator: &wonderlandValidator.MetaInformation{},
 		DockerImageValidator: &wonderlandValidator.DockerImage{
 			DockerImageService: registry.NewImageService([]registry.Credential{{
 				Host:     config.QuayRegistryAddress,

@@ -75,7 +75,7 @@ func NewRepository(registryName, repoName string, credentialStore auth.Credentia
 	if err != nil {
 		return nil, err
 	}
-	repo, err := client.NewRepository(ctx, repoNameRef, endpointURL, tr)
+	repo, err := client.NewRepository(repoNameRef, endpointURL, tr)
 	if err != nil {
 		return nil, err
 	}
