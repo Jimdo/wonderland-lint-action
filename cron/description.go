@@ -65,6 +65,7 @@ type Description struct {
 	Description   *ContainerDescription `json:"description"`
 	Timeout       *int64                `json:"timeout"`
 	Notifications *Notification         `json:"notifications,omitempty"`
+	Meta          MetaInformation       `json:"meta,omitempty"`
 }
 
 type ContainerDescription struct {
@@ -80,6 +81,10 @@ type Notification struct {
 	RanLongerThanThreshold *int64 `json:"ran-longer-than-threshold,omitempty"`
 	PagerdutyURI           string `json:"pagerduty,omitempty"`
 	SlackChannel           string `json:"slack,omitempty"`
+}
+
+type MetaInformation struct {
+	Documentation string `json:"docs,omitempty"`
 }
 
 const (

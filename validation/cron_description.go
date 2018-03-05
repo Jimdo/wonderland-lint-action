@@ -16,6 +16,7 @@ type cronDescription struct {
 	Container        *containerDescription
 	CronNotification *cronNotification
 	Name             *wonderlandValidator.WonderlandName
+	MetaInformation  *wonderlandValidator.MetaInformation
 }
 
 // validate ensures that a cron description provided by a user
@@ -29,6 +30,9 @@ func (v *cronDescription) validate(desc *cron.Description) error {
 	}
 	if desc.Notifications != nil {
 		return v.CronNotification.validate(desc.Notifications)
+	}
+	if err := v.MetaInformation.ValidateDocumentationURI(desc.Meta.Documentation); err != nil {
+		return Error{err.Error()}
 	}
 	return nil
 }
