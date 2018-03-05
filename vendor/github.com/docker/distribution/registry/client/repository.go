@@ -75,8 +75,8 @@ func NewRegistry(baseURL string, transport http.RoundTripper) (Registry, error) 
 	}
 
 	return &registry{
-		client:  client,
-		ub:      ub,
+		client: client,
+		ub:     ub,
 	}, nil
 }
 
@@ -145,9 +145,9 @@ func NewRepository(name reference.Named, baseURL string, transport http.RoundTri
 	}
 
 	return &repository{
-		client:  client,
-		ub:      ub,
-		name:    name,
+		client: client,
+		ub:     ub,
+		name:   name,
 	}, nil
 }
 
@@ -188,30 +188,35 @@ func (r *repository) Manifests(ctx context.Context, options ...distribution.Mani
 
 func (r *repository) Tags(ctx context.Context) distribution.TagService {
 	return &tags{
-		client:  r.client,
-		ub:      r.ub,
-		name:    r.Named(),
+		client: r.client,
+		ub:     r.ub,
+		name:   r.Named(),
 	}
 }
 
 // tags implements remote tagging operations.
 type tags struct {
-	client  *http.Client
-	ub      *v2.URLBuilder
-	name    reference.Named
+	client *http.Client
+	ub     *v2.URLBuilder
+	name   reference.Named
 }
 
 // All returns all tags
 func (t *tags) All(ctx context.Context) ([]string, error) {
 	var tags []string
 
-	u, err := t.ub.BuildTagsURL(t.name)
+	listURLStr, err := t.ub.BuildTagsURL(t.name)
+	if err != nil {
+		return tags, err
+	}
+
+	listURL, err := url.Parse(listURLStr)
 	if err != nil {
 		return tags, err
 	}
 
 	for {
-		resp, err := t.client.Get(u)
+		resp, err := t.client.Get(listURL.String())
 		if err != nil {
 			return tags, err
 		}
@@ -231,7 +236,13 @@ func (t *tags) All(ctx context.Context) ([]string, error) {
 			}
 			tags = append(tags, tagsResponse.Tags...)
 			if link := resp.Header.Get("Link"); link != "" {
-				u = strings.Trim(strings.Split(link, ";")[0], "<>")
+				linkURLStr := strings.Trim(strings.Split(link, ";")[0], "<>")
+				linkURL, err := url.Parse(linkURLStr)
+				if err != nil {
+					return tags, err
+				}
+
+				listURL = listURL.ResolveReference(linkURL)
 			} else {
 				return tags, nil
 			}
@@ -418,18 +429,22 @@ func (ms *manifests) Get(ctx context.Context, dgst digest.Digest, options ...dis
 		ref         reference.Named
 		err         error
 		contentDgst *digest.Digest
+		mediaTypes  []string
 	)
 
 	for _, option := range options {
-		if opt, ok := option.(distribution.WithTagOption); ok {
+		switch opt := option.(type) {
+		case distribution.WithTagOption:
 			digestOrTag = opt.Tag
 			ref, err = reference.WithTag(ms.name, opt.Tag)
 			if err != nil {
 				return nil, err
 			}
-		} else if opt, ok := option.(contentDigestOption); ok {
+		case contentDigestOption:
 			contentDgst = opt.digest
-		} else {
+		case distribution.WithManifestMediaTypesOption:
+			mediaTypes = opt.MediaTypes
+		default:
 			err := option.Apply(ms)
 			if err != nil {
 				return nil, err
@@ -445,6 +460,10 @@ func (ms *manifests) Get(ctx context.Context, dgst digest.Digest, options ...dis
 		}
 	}
 
+	if len(mediaTypes) == 0 {
+		mediaTypes = distribution.ManifestMediaTypes()
+	}
+
 	u, err := ms.ub.BuildManifestURL(ref)
 	if err != nil {
 		return nil, err
@@ -455,7 +474,7 @@ func (ms *manifests) Get(ctx context.Context, dgst digest.Digest, options ...dis
 		return nil, err
 	}
 
-	for _, t := range distribution.ManifestMediaTypes() {
+	for _, t := range mediaTypes {
 		req.Header.Add("Accept", t)
 	}
 

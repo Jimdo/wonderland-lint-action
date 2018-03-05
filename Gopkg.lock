@@ -145,7 +145,7 @@
     "registry/storage/cache",
     "registry/storage/cache/memory"
   ]
-  revision = "2c58ce1a7f72585aafebc3faf85582fe43280bd3"
+  revision = "1bfbeca7269121e55d2b7a66853563aa25973790"
 
 [[projects]]
   name = "github.com/fatih/structs"
@@ -457,6 +457,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "fd560a8b93a8c10f2cbdc6f79e8c09fa6e7cdab403911bccf5be704c5caa7811"
+  inputs-digest = "dfb82ae8fb50d6cc9de48735508519cb2679f69c7a62102f7dc61dda646143d9"
   solver-name = "gps-cdcl"
   solver-version = 1
