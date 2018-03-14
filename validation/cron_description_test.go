@@ -26,7 +26,7 @@ func TestValidateCronDescription_Valid(t *testing.T) {
 			NoRunThreshold:         cronitor.Int64Ptr(60),
 			RanLongerThanThreshold: cronitor.Int64Ptr(300),
 			SlackChannel:           "#test",
-			PagerdutyURI:           "http://foo.bar",
+			PagerdutyURI:           "ae46ed7a7fdbeca0e7e4bd3f6a",
 		},
 	}
 
