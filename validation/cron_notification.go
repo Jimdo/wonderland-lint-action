@@ -6,6 +6,8 @@ import (
 	"github.com/Jimdo/wonderland-crons/cron"
 )
 
+var isAlphaNumeric = regexp.MustCompile(`^[A-Za-z0-9]+$`)
+
 type cronNotification struct{}
 
 func (cn cronNotification) validate(notification *cron.Notification) error {
@@ -34,8 +36,8 @@ func (cn cronNotification) validate(notification *cron.Notification) error {
 }
 
 func (cn cronNotification) validatePagerdutyURI(notification *cron.Notification) error {
-	isAlphaNumeric := regexp.MustCompile(`^[A-Za-z0-9]+$`).MatchString
-	if !isAlphaNumeric(notification.PagerdutyURI) {
+
+	if !isAlphaNumeric.MatchString(notification.PagerdutyURI) {
 		return Error{"Pageruty integration keys can only consists of alphanumeric characters"}
 	}
 	return nil
