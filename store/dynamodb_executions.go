@@ -19,7 +19,7 @@ import (
 
 const (
 	daysToKeepExecutions = 14
-	maxRetryTime         = 30 * time.Second
+	maxRetryTime         = 15 * time.Second
 	initialRetryInterval = 1 * time.Second
 )
 
