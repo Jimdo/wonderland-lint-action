@@ -1,6 +1,7 @@
 package cron
 
 import (
+	"bytes"
 	"encoding/json"
 	"strconv"
 	"strings"
@@ -42,7 +43,11 @@ var (
 
 func NewCronDescriptionFromJSON(data []byte) (*Description, error) {
 	desc := &Description{}
-	if err := json.Unmarshal(data, desc); err != nil {
+
+	dec := json.NewDecoder(bytes.NewBuffer(data))
+	dec.DisallowUnknownFields()
+
+	if err := dec.Decode(desc); err != nil {
 		return nil, err
 	}
 	desc.Init()
