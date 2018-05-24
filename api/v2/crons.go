@@ -122,6 +122,8 @@ func (a *API) ExecutionTriggerHandler(w http.ResponseWriter, req *http.Request) 
 			sendServerError(req, w, newContextError(err).WithField("ruleARN", ruleARN).WithField("msg_type", msgType))
 			return
 		}
+
+		w.WriteHeader(http.StatusCreated)
 	default:
 		sendServerError(req, w, newContextError(errors.New("Unsupported message type")).WithField("msg_type", msgType))
 	}
@@ -168,12 +170,13 @@ func (a *API) CronExecutionHandler(ctx context.Context, w http.ResponseWriter, r
 
 	if err := a.config.Service.TriggerExecutionByCronName(cronName); err != nil {
 		statusCode := http.StatusInternalServerError
-		if _, ok := err.(validation.Error); ok {
-			statusCode = http.StatusBadRequest
+		if err == store.ErrCronNotFound {
+			statusCode = http.StatusNotFound
 		}
 		sendError(w, fmt.Errorf("Unable to run cron: %s", err), statusCode)
 		return
 	}
+	w.WriteHeader(http.StatusCreated)
 }
 
 func (a *API) ListCrons(ctx context.Context, w http.ResponseWriter, req *http.Request) {

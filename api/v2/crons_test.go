@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/Jimdo/wonderland-crons/mock"
+	"github.com/Jimdo/wonderland-crons/store"
 )
 
 func TestExecutionTriggerHandler_Notification(t *testing.T) {
@@ -41,7 +42,7 @@ func TestExecutionTriggerHandler_Notification(t *testing.T) {
 	req := httptest.NewRequest("POST", "/bla", bytes.NewBufferString(body))
 	req.Header.Add("x-amz-sns-message-type", "Notification")
 	api.ExecutionTriggerHandler(rr, req)
-	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Equal(t, http.StatusCreated, rr.Code)
 }
 
 func TestExecutionTriggerHandler_SubscriptionConfirmation(t *testing.T) {
@@ -65,7 +66,8 @@ func TestExecutionTriggerHandler_SubscriptionConfirmation(t *testing.T) {
 	api.ExecutionTriggerHandler(rr, req)
 	assert.Equal(t, http.StatusOK, rr.Code)
 }
-func TestCronExecutionHandler_ManuallyExecution(t *testing.T) {
+
+func TestCronExecutionHandler_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -79,8 +81,28 @@ func TestCronExecutionHandler_ManuallyExecution(t *testing.T) {
 	}
 
 	rr := httptest.NewRecorder()
-	req := httptest.NewRequest("POST", "/bla", nil)
+	req := httptest.NewRequest("POST", "/v2/cron/test-cron/executions", nil)
 	ctx := context.Background()
 	api.CronExecutionHandler(ctx, rr, req)
-	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Equal(t, http.StatusCreated, rr.Code)
+}
+
+func TestCronExecutionHandler_CronNotFound(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	service := mock.NewMockCronService(ctrl)
+	service.EXPECT().TriggerExecutionByCronName(gomock.Any()).Return(store.ErrCronNotFound)
+
+	api := &API{
+		config: &Config{
+			Service: service,
+		},
+	}
+
+	rr := httptest.NewRecorder()
+	req := httptest.NewRequest("POST", "/v2/cron/test-cron/executions", nil)
+	ctx := context.Background()
+	api.CronExecutionHandler(ctx, rr, req)
+	assert.Equal(t, http.StatusNotFound, rr.Code)
 }
