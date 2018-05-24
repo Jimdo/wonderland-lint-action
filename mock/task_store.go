@@ -5,10 +5,9 @@
 package mock
 
 import (
-	reflect "reflect"
-
 	ecs "github.com/aws/aws-sdk-go/service/ecs"
 	gomock "github.com/golang/mock/gomock"
+	reflect "reflect"
 )
 
 // MockTaskStore is a mock of TaskStore interface

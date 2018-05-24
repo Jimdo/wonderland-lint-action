@@ -5,12 +5,11 @@
 package mock
 
 import (
-	reflect "reflect"
-
 	aws "github.com/aws/aws-sdk-go/aws"
 	request "github.com/aws/aws-sdk-go/aws/request"
 	sqs "github.com/aws/aws-sdk-go/service/sqs"
 	gomock "github.com/golang/mock/gomock"
+	reflect "reflect"
 )
 
 // MockSQSAPI is a mock of SQSAPI interface
