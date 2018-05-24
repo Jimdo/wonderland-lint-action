@@ -235,12 +235,23 @@ func (s *Service) Exists(cronName string) (bool, error) {
 	return true, nil
 }
 
-func (s *Service) TriggerExecution(cronRuleARN string) error {
+func (s *Service) TriggerExecutionByRuleARN(cronRuleARN string) error {
 	c, err := s.cronStore.GetByRuleARN(cronRuleARN)
 	if err != nil {
 		return err
 	}
+	return s.triggerExecution(c)
+}
 
+func (s *Service) TriggerExecutionByCronName(cronName string) error {
+	c, err := s.cronStore.GetByName(cronName)
+	if err != nil {
+		return err
+	}
+	return s.triggerExecution(c)
+}
+
+func (s *Service) triggerExecution(c *cron.Cron) error {
 	taskARNs, err := s.tds.GetRunningTasksByFamily(c.TaskDefinitionFamily)
 	if err != nil {
 		return err

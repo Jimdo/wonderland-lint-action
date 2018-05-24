@@ -376,7 +376,7 @@ func TestService_Delete_Error_ExecutionDelete(t *testing.T) {
 	}
 }
 
-func TestService_TriggerExecution_FirstExecution(t *testing.T) {
+func TestService_TriggerExecutionByRuleARN_FirstExecution(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -402,12 +402,12 @@ func TestService_TriggerExecution_FirstExecution(t *testing.T) {
 	mocks.mu.EXPECT().IncExecutionTriggeredCounter(gomock.Any(), gomock.Any())
 	mocks.ces.EXPECT().Update(gomock.Any(), testTask)
 
-	if err := service.TriggerExecution(ruleARN); err != nil {
+	if err := service.TriggerExecutionByRuleARN(ruleARN); err != nil {
 		assert.NoError(t, err)
 	}
 }
 
-func TestService_TriggerExecution_FirstExecutionWithoutNotifications(t *testing.T) {
+func TestService_TriggerExecutionByRuleARN_FirstExecutionWithoutNotifications(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -426,11 +426,11 @@ func TestService_TriggerExecution_FirstExecutionWithoutNotifications(t *testing.
 	mocks.mu.EXPECT().IncExecutionTriggeredCounter(gomock.Any(), gomock.Any())
 	mocks.ces.EXPECT().Update(gomock.Any(), testTask)
 
-	if err := service.TriggerExecution(ruleARN); err != nil {
+	if err := service.TriggerExecutionByRuleARN(ruleARN); err != nil {
 		assert.NoError(t, err)
 	}
 }
-func TestService_TriggerExecution_SecondExecution(t *testing.T) {
+func TestService_TriggerExecutionByRuleARN_SecondExecution(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -456,12 +456,12 @@ func TestService_TriggerExecution_SecondExecution(t *testing.T) {
 	mocks.mu.EXPECT().IncExecutionTriggeredCounter(gomock.Any(), gomock.Any())
 	mocks.ces.EXPECT().Update(gomock.Any(), testTask)
 
-	if err := service.TriggerExecution(ruleARN); err != nil {
+	if err := service.TriggerExecutionByRuleARN(ruleARN); err != nil {
 		assert.NoError(t, err)
 	}
 }
 
-func TestService_TriggerExecution_ExecutionRunning(t *testing.T) {
+func TestService_TriggerExecutionByRuleARN_ExecutionRunning(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -476,7 +476,7 @@ func TestService_TriggerExecution_ExecutionRunning(t *testing.T) {
 	mocks.ces.EXPECT().CreateSkippedExecution(gomock.Any())
 	mocks.mu.EXPECT().IncExecutionTriggeredCounter(gomock.Any(), gomock.Any())
 
-	if err := service.TriggerExecution(ruleARN); err != nil {
+	if err := service.TriggerExecutionByRuleARN(ruleARN); err != nil {
 		assert.NoError(t, err)
 	}
 }
