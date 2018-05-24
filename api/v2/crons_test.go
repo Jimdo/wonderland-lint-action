@@ -18,7 +18,7 @@ func TestExecutionTriggerHandler_Notification(t *testing.T) {
 	defer ctrl.Finish()
 
 	service := mock.NewMockCronService(ctrl)
-	service.EXPECT().TriggerExecution(gomock.Any())
+	service.EXPECT().TriggerExecutionByRuleARN(gomock.Any())
 
 	body := `{
 		"Type" : "Notification",

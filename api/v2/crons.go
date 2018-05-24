@@ -31,7 +31,8 @@ type CronService interface {
 	Exists(cronName string) (bool, error)
 	List() ([]string, error)
 	Status(cronName string, executionCount int64) (*cron.Status, error)
-	TriggerExecution(ruleARN string) error
+	TriggerExecutionByRuleARN(ruleARN string) error
+	TriggerExecutionByCronName(cronName string) error
 }
 
 type HTTPClient interface {
@@ -116,7 +117,7 @@ func (a *API) ExecutionTriggerHandler(w http.ResponseWriter, req *http.Request) 
 		}
 
 		ruleARN := cwEvent.Resources[0]
-		if err := a.config.Service.TriggerExecution(ruleARN); err != nil {
+		if err := a.config.Service.TriggerExecutionByRuleARN(ruleARN); err != nil {
 			sendServerError(req, w, newContextError(err).WithField("ruleARN", ruleARN).WithField("msg_type", msgType))
 			return
 		}
