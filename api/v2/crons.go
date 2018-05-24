@@ -58,7 +58,7 @@ func (a *API) Register() {
 	a.config.Router.HandleFunc("/crons", api.HandlerWithDefaultTimeout(a.ListCrons)).Methods("GET").Name("v2_list_crons")
 	a.config.Router.HandleFunc("/crons/{name}", api.HandlerWithDefaultTimeout(a.DeleteHandler)).Methods("DELETE").Name("v2_delete_cron")
 	a.config.Router.HandleFunc("/crons/{name}", api.HandlerWithDefaultTimeout(a.PutHandler)).Methods("PUT").Name("v2_put_cron")
-	a.config.Router.HandleFunc("/crons/{name}/executions", api.HandlerWithDefaultTimeout(a.CronExecutionHandler)).Methods("POST").Name("v2_post_cron")
+	a.config.Router.HandleFunc("/crons/{name}/executions", api.HandlerWithDefaultTimeout(a.CronExecutionHandler)).Methods("POST").Name("v2_post_cron_executions")
 	a.config.Router.HandleFunc("/crons/{name}", api.HandlerWithDefaultTimeout(a.CronStatus)).Methods("GET").Name("v2_cron_status")
 	a.config.Router.HandleFunc("/crons/{name}/logs", api.HandlerWithDefaultTimeout(a.CronLogs)).Methods(http.MethodGet).Name("v2_cron_logs")
 }
