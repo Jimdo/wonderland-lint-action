@@ -2,6 +2,7 @@ package v2
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -62,5 +63,24 @@ func TestExecutionTriggerHandler_SubscriptionConfirmation(t *testing.T) {
 	req := httptest.NewRequest("POST", "/bla", bytes.NewBufferString(body))
 	req.Header.Add("x-amz-sns-message-type", "SubscriptionConfirmation")
 	api.ExecutionTriggerHandler(rr, req)
+	assert.Equal(t, http.StatusOK, rr.Code)
+}
+func TestCronExecutionHandler_ManuallyExecution(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	service := mock.NewMockCronService(ctrl)
+	service.EXPECT().TriggerExecutionByCronName(gomock.Any())
+
+	api := &API{
+		config: &Config{
+			Service: service,
+		},
+	}
+
+	rr := httptest.NewRecorder()
+	req := httptest.NewRequest("POST", "/bla", nil)
+	ctx := context.Background()
+	api.CronExecutionHandler(ctx, rr, req)
 	assert.Equal(t, http.StatusOK, rr.Code)
 }
