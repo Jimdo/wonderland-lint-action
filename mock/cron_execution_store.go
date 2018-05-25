@@ -5,11 +5,10 @@
 package mock
 
 import (
-	reflect "reflect"
-
 	cron "github.com/Jimdo/wonderland-crons/cron"
 	ecs "github.com/aws/aws-sdk-go/service/ecs"
 	gomock "github.com/golang/mock/gomock"
+	reflect "reflect"
 )
 
 // MockCronExecutionStore is a mock of CronExecutionStore interface

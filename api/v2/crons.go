@@ -31,7 +31,8 @@ type CronService interface {
 	Exists(cronName string) (bool, error)
 	List() ([]string, error)
 	Status(cronName string, executionCount int64) (*cron.Status, error)
-	TriggerExecution(ruleARN string) error
+	TriggerExecutionByRuleARN(ruleARN string) error
+	TriggerExecutionByCronName(cronName string) error
 }
 
 type HTTPClient interface {
@@ -57,6 +58,7 @@ func (a *API) Register() {
 	a.config.Router.HandleFunc("/crons", api.HandlerWithDefaultTimeout(a.ListCrons)).Methods("GET").Name("v2_list_crons")
 	a.config.Router.HandleFunc("/crons/{name}", api.HandlerWithDefaultTimeout(a.DeleteHandler)).Methods("DELETE").Name("v2_delete_cron")
 	a.config.Router.HandleFunc("/crons/{name}", api.HandlerWithDefaultTimeout(a.PutHandler)).Methods("PUT").Name("v2_put_cron")
+	a.config.Router.HandleFunc("/crons/{name}/executions", api.HandlerWithDefaultTimeout(a.CronExecutionHandler)).Methods("POST").Name("v2_post_cron_executions")
 	a.config.Router.HandleFunc("/crons/{name}", api.HandlerWithDefaultTimeout(a.CronStatus)).Methods("GET").Name("v2_cron_status")
 	a.config.Router.HandleFunc("/crons/{name}/logs", api.HandlerWithDefaultTimeout(a.CronLogs)).Methods(http.MethodGet).Name("v2_cron_logs")
 }
@@ -116,10 +118,12 @@ func (a *API) ExecutionTriggerHandler(w http.ResponseWriter, req *http.Request) 
 		}
 
 		ruleARN := cwEvent.Resources[0]
-		if err := a.config.Service.TriggerExecution(ruleARN); err != nil {
+		if err := a.config.Service.TriggerExecutionByRuleARN(ruleARN); err != nil {
 			sendServerError(req, w, newContextError(err).WithField("ruleARN", ruleARN).WithField("msg_type", msgType))
 			return
 		}
+
+		w.WriteHeader(http.StatusCreated)
 	default:
 		sendServerError(req, w, newContextError(errors.New("Unsupported message type")).WithField("msg_type", msgType))
 	}
@@ -158,6 +162,21 @@ func (a *API) DeleteHandler(ctx context.Context, w http.ResponseWriter, req *htt
 		sendServerError(req, w, newContextError(errors.New("Unable to delete cron")).WithField("cron", cronName))
 		return
 	}
+}
+
+func (a *API) CronExecutionHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	cronName := vars["name"]
+
+	if err := a.config.Service.TriggerExecutionByCronName(cronName); err != nil {
+		statusCode := http.StatusInternalServerError
+		if err == store.ErrCronNotFound {
+			statusCode = http.StatusNotFound
+		}
+		sendError(w, fmt.Errorf("Unable to run cron: %s", err), statusCode)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
 }
 
 func (a *API) ListCrons(ctx context.Context, w http.ResponseWriter, req *http.Request) {

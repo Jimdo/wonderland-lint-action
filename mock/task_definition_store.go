@@ -5,11 +5,10 @@
 package mock
 
 import (
-	reflect "reflect"
-
 	cron "github.com/Jimdo/wonderland-crons/cron"
 	ecs "github.com/aws/aws-sdk-go/service/ecs"
 	gomock "github.com/golang/mock/gomock"
+	reflect "reflect"
 )
 
 // MockTaskDefinitionStore is a mock of TaskDefinitionStore interface

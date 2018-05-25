@@ -96,14 +96,26 @@ func (mr *MockCronServiceMockRecorder) Status(arg0, arg1 interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Status", reflect.TypeOf((*MockCronService)(nil).Status), arg0, arg1)
 }
 
-// TriggerExecution mocks base method
-func (m *MockCronService) TriggerExecution(arg0 string) error {
-	ret := m.ctrl.Call(m, "TriggerExecution", arg0)
+// TriggerExecutionByCronName mocks base method
+func (m *MockCronService) TriggerExecutionByCronName(arg0 string) error {
+	ret := m.ctrl.Call(m, "TriggerExecutionByCronName", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// TriggerExecution indicates an expected call of TriggerExecution
-func (mr *MockCronServiceMockRecorder) TriggerExecution(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TriggerExecution", reflect.TypeOf((*MockCronService)(nil).TriggerExecution), arg0)
+// TriggerExecutionByCronName indicates an expected call of TriggerExecutionByCronName
+func (mr *MockCronServiceMockRecorder) TriggerExecutionByCronName(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TriggerExecutionByCronName", reflect.TypeOf((*MockCronService)(nil).TriggerExecutionByCronName), arg0)
+}
+
+// TriggerExecutionByRuleARN mocks base method
+func (m *MockCronService) TriggerExecutionByRuleARN(arg0 string) error {
+	ret := m.ctrl.Call(m, "TriggerExecutionByRuleARN", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// TriggerExecutionByRuleARN indicates an expected call of TriggerExecutionByRuleARN
+func (mr *MockCronServiceMockRecorder) TriggerExecutionByRuleARN(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TriggerExecutionByRuleARN", reflect.TypeOf((*MockCronService)(nil).TriggerExecutionByRuleARN), arg0)
 }
