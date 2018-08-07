@@ -27,7 +27,7 @@
 
 [[constraint]]
   name = "github.com/Jimdo/wonderland-validator"
-  version = "0.13.0"
+  version = "v0.14.0"
 
 [[constraint]]
   name = "github.com/Jimdo/wonderland-vault"
