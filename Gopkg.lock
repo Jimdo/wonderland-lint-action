@@ -27,15 +27,15 @@
   version = "v1.2.0"
 
 [[projects]]
-  digest = "1:f75cdf87771e79e35d2ccaf5245e069f2b403766ec93586f8b88355fd6c744da"
+  digest = "1:b828af499d3b5f6c0e274cc6702d15223dfb4b4db2059e58d82f77730c7cb3a7"
   name = "github.com/Jimdo/wonderland-validator"
   packages = [
     "docker/registry",
     "validator",
   ]
   pruneopts = "NUT"
-  revision = "e081285605f924b54c994f26e592898864411056"
-  version = "v0.14.0"
+  revision = "9936233bc70efac204f1b9cb5777b2a1bd2de29d"
+  version = "v0.14.1"
 
 [[projects]]
   digest = "1:ee6b8ecd8615c9bb544fbc38e03513e5faca6419dda6cc4960eb64353d09f6da"
@@ -157,12 +157,13 @@
   version = "v1.1.0"
 
 [[projects]]
-  digest = "1:50bb262c96a146916762db99021c393c0116a1a3580cdf43d224c45d26142a6d"
+  digest = "1:4fa938656e596188da9065bd3bcd33d57b4f8bcfafc1b86c8264e098442db33e"
   name = "github.com/docker/distribution"
   packages = [
     ".",
     "digestset",
     "manifest",
+    "manifest/manifestlist",
     "manifest/schema1",
     "manifest/schema2",
     "reference",
@@ -177,6 +178,43 @@
   ]
   pruneopts = "NUT"
   revision = "1bfbeca7269121e55d2b7a66853563aa25973790"
+
+[[projects]]
+  branch = "master"
+  digest = "1:01ad80cdc3f4fe61fe13b81302735ab38cdf6155935681a7176a399dc66592e5"
+  name = "github.com/docker/docker"
+  packages = [
+    "api/types",
+    "api/types/blkiodev",
+    "api/types/container",
+    "api/types/filters",
+    "api/types/mount",
+    "api/types/network",
+    "api/types/registry",
+    "api/types/strslice",
+    "api/types/swarm",
+    "api/types/swarm/runtime",
+    "api/types/versions",
+    "errdefs",
+  ]
+  pruneopts = "NUT"
+  revision = "b384467326e5b22c486e312f8232f3384dfdabb8"
+
+[[projects]]
+  digest = "1:ade935c55cd6d0367c843b109b09c9d748b1982952031414740750fdf94747eb"
+  name = "github.com/docker/go-connections"
+  packages = ["nat"]
+  pruneopts = "NUT"
+  revision = "7395e3f8aa162843a74ed6d48e79627d9792ac55"
+  version = "v0.4.0"
+
+[[projects]]
+  digest = "1:4340101f42556a9cb2f7a360a0e95a019bfef6247d92e6c4c46f2433cf86a482"
+  name = "github.com/docker/go-units"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "47565b4f722fb6ceae66b95f853feed578a4a51c"
+  version = "v0.3.3"
 
 [[projects]]
   branch = "master"
@@ -203,6 +241,14 @@
   pruneopts = "NUT"
   revision = "d1ed5c67e5794de818ea85e6b522fda02623a484"
   version = "v1.4.0"
+
+[[projects]]
+  digest = "1:fefb2b4c4243b163fb733217b312aee1bf66d7fed0857ae087af086176d3cee7"
+  name = "github.com/genuinetools/reg"
+  packages = ["registry"]
+  pruneopts = "NUT"
+  revision = "8c930c585418564a4ce472fbbfccb8c5741c2520"
+  version = "v0.15.4"
 
 [[projects]]
   digest = "1:0c0eac431b07bd0da31ef684aa15b5b5eeeda8a820f666e6523d2bfb8ce868c4"
@@ -302,6 +348,14 @@
   revision = "d509235108fcf6ab4913d2dcb3a2260c0db2108e"
 
 [[projects]]
+  digest = "1:38e684375ef5b55e812332266d63f9fc5b6329ab303067c4cdda051db6d29ca4"
+  name = "github.com/gogo/protobuf"
+  packages = ["proto"]
+  pruneopts = "NUT"
+  revision = "636bf0302bc95575d69441b25a2603156ffdddf1"
+  version = "v1.1.1"
+
+[[projects]]
   digest = "1:fb9a5e8b5c52b8ae7cfb246d110d6a8ae728aa009f9e8273428bf5683e41d3f1"
   name = "github.com/golang/mock"
   packages = ["gomock"]
@@ -391,14 +445,6 @@
   version = "v0.7.3"
 
 [[projects]]
-  branch = "master"
-  digest = "1:87824b198bccec9199afdaafc2ff6aec400a6d375165b6f822b61982927128bf"
-  name = "github.com/heroku/docker-registry-client"
-  packages = ["registry"]
-  pruneopts = "NUT"
-  revision = "fd2fe803496897db70c236ee244f41487ea92ec2"
-
-[[projects]]
   digest = "1:ac6d01547ec4f7f673311b4663909269bfb8249952de3279799289467837c3cc"
   name = "github.com/jmespath/go-jmespath"
   packages = ["."]
@@ -440,12 +486,31 @@
   revision = "ca63d7c062ee3c9f34db231e352b60012b4fd0c1"
 
 [[projects]]
-  digest = "1:e0cc8395ea893c898ff5eb0850f4d9851c1f57c78c232304a026379a47a552d0"
+  branch = "master"
+  digest = "1:55c0cfaa11248731dfb2070a4a5b81330117a6f3bc288bfedd9feff9946b907a"
   name = "github.com/opencontainers/go-digest"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "279bed98673dd5bef374d3b6e4b09e2af76183bf"
-  version = "v1.0.0-rc1"
+  revision = "c9281466c8b2f606084ac71339773efd177436e7"
+
+[[projects]]
+  digest = "1:11db38d694c130c800d0aefb502fb02519e514dc53d9804ce51d1ad25ec27db6"
+  name = "github.com/opencontainers/image-spec"
+  packages = [
+    "specs-go",
+    "specs-go/v1",
+  ]
+  pruneopts = "NUT"
+  revision = "d60099175f88c47cd379c4738d158884749ed235"
+  version = "v1.0.1"
+
+[[projects]]
+  digest = "1:014d3763649dd2f071fcf4acb03f3a2964c0c6dcf5581f4585fdd0d492235518"
+  name = "github.com/peterhellberg/link"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "d1cebc7ea14a5fc0de7cb4a45acae773161642c6"
+  version = "v1.0.0"
 
 [[projects]]
   digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
