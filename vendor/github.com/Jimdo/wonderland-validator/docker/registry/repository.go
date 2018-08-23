@@ -8,7 +8,8 @@ import (
 	"strings"
 
 	"github.com/docker/distribution/registry/client/auth"
-	"github.com/heroku/docker-registry-client/registry"
+	"github.com/docker/docker/api/types"
+	"github.com/genuinetools/reg/registry"
 
 	"golang.org/x/net/context"
 )
@@ -46,7 +47,13 @@ func NewRepository(registryName, repoName string, credentialStore auth.Credentia
 
 	username, password := credentialStore.Basic(endpointURL)
 
-	hub, err := registry.New(endpointURL.String(), username, password)
+	authConfig := types.AuthConfig{
+		Username:      username,
+		Password:      password,
+		ServerAddress: endpointURL.String(),
+	}
+
+	hub, err := registry.New(authConfig, registry.Opt{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get registry: %s", err)
 	}
