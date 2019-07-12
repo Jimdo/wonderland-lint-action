@@ -7,9 +7,9 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/Jimdo/reg/registry"
 	"github.com/docker/distribution/registry/client/auth"
 	"github.com/docker/docker/api/types"
-	"github.com/genuinetools/reg/registry"
 
 	"golang.org/x/net/context"
 )
