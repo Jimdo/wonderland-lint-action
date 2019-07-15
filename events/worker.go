@@ -76,7 +76,7 @@ func (w *Worker) Run(stop chan interface{}) error {
 		close(stopLeader)
 		close(leaderErrors)
 		acquireLeadership.Stop()
-		w.lockManager.Release(LeaderLockName)
+		w.lockManager.Release(LeaderLockName) // nolint: gosec
 	}()
 
 	for {
