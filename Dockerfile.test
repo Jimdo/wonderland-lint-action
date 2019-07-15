@@ -1,6 +1,8 @@
 # vim: set syntax=dockerfile:
 FROM golang:alpine
 
+ENV CGO_ENABLED 0
+
 WORKDIR /go/src/github.com/Jimdo/wonderland-crons
 
 CMD ["./script/test"]
