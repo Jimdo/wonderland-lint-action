@@ -1,5 +1,7 @@
 FROM golang:alpine
 
+ENV CGO_ENABLED 0
+
 RUN apk --update add ca-certificates
 
 ADD . /go/src/github.com/Jimdo/wonderland-crons

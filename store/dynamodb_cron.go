@@ -35,8 +35,8 @@ func NewDynamoDBCronStore(dynamoDBClient dynamodbiface.DynamoDBAPI, tableName st
 
 func (d *DynamoDBCronStore) Save(name, ruleARN, latestTaskDefARN, taskDefFamily string, desc *cron.Description, cmi string) error {
 	cron := &cron.Cron{
-		Name:    name,
-		RuleARN: ruleARN,
+		Name:                            name,
+		RuleARN:                         ruleARN,
 		LatestTaskDefinitionRevisionARN: latestTaskDefARN,
 		TaskDefinitionFamily:            taskDefFamily,
 		Description:                     desc,

@@ -57,7 +57,7 @@ func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription(t *testi
 	}
 
 	if *containerDesc.Image != cronDesc.Description.Image {
-		t.Fatalf("expected container image to be %q, but got %q", cronDesc.Description.Image, containerDesc.Image)
+		t.Fatalf("expected container image to be %q, but got %q", cronDesc.Description.Image, *containerDesc.Image)
 	}
 
 	if uint(*containerDesc.Cpu) != cronDesc.Description.Capacity.CPULimit() {

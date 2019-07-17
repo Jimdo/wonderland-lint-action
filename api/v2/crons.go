@@ -77,8 +77,13 @@ func (a *API) ExecutionTriggerHandler(w http.ResponseWriter, req *http.Request) 
 			return
 		}
 
-		req, _ := http.NewRequest(http.MethodGet, opt.SubscribeURL, nil)
-		resp, err := a.hc.Do(req)
+		r, err := http.NewRequest(http.MethodGet, opt.SubscribeURL, nil)
+		if err != nil {
+			sendServerError(req, w, newContextError(err).WithField("msg_type", msgType))
+			return
+		}
+
+		resp, err := a.hc.Do(r)
 		if err != nil {
 			sendServerError(req, w, newContextError(err).WithField("msg_type", msgType))
 			return

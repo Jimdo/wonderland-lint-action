@@ -16,6 +16,14 @@
   revision = "dda194b7c49fd86c09bfb1c825123f8de798d60d"
 
 [[projects]]
+  branch = "fix-token-transport-memory-leak"
+  digest = "1:8a1ea4b6ca7f42aab96ebf3d5b582614e3c6e3531c3ff902c2002aa246b5d14d"
+  name = "github.com/Jimdo/reg"
+  packages = ["registry"]
+  pruneopts = "NUT"
+  revision = "67585d1a6f7324e8395c0d13c68352e6a2d5a701"
+
+[[projects]]
   digest = "1:f123806d817f9af690dea4af93f25cc072dfbbac06c17b60c7c984e18b7c10c8"
   name = "github.com/Jimdo/wonderland-ecs-metadata"
   packages = [
@@ -27,15 +35,15 @@
   version = "v1.2.0"
 
 [[projects]]
-  digest = "1:b828af499d3b5f6c0e274cc6702d15223dfb4b4db2059e58d82f77730c7cb3a7"
+  digest = "1:19be15906dc0837691b8eb6330e0e1b52631c940602d5c8d4c46747f7a63ba72"
   name = "github.com/Jimdo/wonderland-validator"
   packages = [
     "docker/registry",
     "validator",
   ]
   pruneopts = "NUT"
-  revision = "9936233bc70efac204f1b9cb5777b2a1bd2de29d"
-  version = "v0.14.1"
+  revision = "eab2f4c3ad4c23f1e916789313323adc145a9163"
+  version = "v0.15.0"
 
 [[projects]]
   digest = "1:ee6b8ecd8615c9bb544fbc38e03513e5faca6419dda6cc4960eb64353d09f6da"
@@ -241,14 +249,6 @@
   pruneopts = "NUT"
   revision = "d1ed5c67e5794de818ea85e6b522fda02623a484"
   version = "v1.4.0"
-
-[[projects]]
-  digest = "1:fefb2b4c4243b163fb733217b312aee1bf66d7fed0857ae087af086176d3cee7"
-  name = "github.com/genuinetools/reg"
-  packages = ["registry"]
-  pruneopts = "NUT"
-  revision = "8c930c585418564a4ce472fbbfccb8c5741c2520"
-  version = "v0.15.4"
 
 [[projects]]
   digest = "1:0c0eac431b07bd0da31ef684aa15b5b5eeeda8a820f666e6523d2bfb8ce868c4"

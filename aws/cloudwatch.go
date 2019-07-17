@@ -2,9 +2,11 @@ package aws
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/Jimdo/wonderland-crons/cron"
 
+	"github.com/aws/aws-sdk-go/aws"
 	awssdk "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
@@ -122,7 +124,7 @@ func (cm *CloudwatchRuleCronManager) DeleteRule(ruleARN string) error {
 		Ids:  ids,
 	})
 	if err != nil {
-		return fmt.Errorf("could not remove targets %q of rule %q with error: %s", ids, ruleName, err)
+		return fmt.Errorf("could not remove targets %q of rule %q with error: %s", strings.Join(aws.StringValueSlice(ids), ", "), ruleName, err)
 	}
 
 	_, err = cm.cloudwatchEvents.DeleteRule(&cloudwatchevents.DeleteRuleInput{
