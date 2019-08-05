@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Jimdo/wonderland-crons/cron"
-
 	"github.com/aws/aws-sdk-go/aws"
 	awssdk "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -16,7 +14,6 @@ import (
 type RuleCronManager interface {
 	CreateRule(name, snsTopicARN, schedule string) (string, error)
 	DeleteRule(string) error
-	RunTaskDefinitionWithSchedule(string, string, string) (string, error)
 }
 
 type CloudwatchRuleCronManager struct {
@@ -51,39 +48,6 @@ func (cm *CloudwatchRuleCronManager) CreateRule(name, snsTopicARN, schedule stri
 			{
 				Arn: awssdk.String(snsTopicARN),
 				Id:  awssdk.String(ruleName),
-			},
-		},
-	})
-	if err != nil {
-		return "", fmt.Errorf("could not put target for cloudwatch rule %q with error: %s", ruleName, err)
-	}
-
-	return awssdk.StringValue(out.RuleArn), nil
-}
-
-func (cm *CloudwatchRuleCronManager) RunTaskDefinitionWithSchedule(name, taskDefinitionARN, schedule string) (string, error) {
-	ruleName := cron.GetResourceByName(name)
-
-	out, err := cm.cloudwatchEvents.PutRule(&cloudwatchevents.PutRuleInput{
-		Description:        awssdk.String("Foobar"),
-		Name:               awssdk.String(ruleName),
-		State:              awssdk.String(cloudwatchevents.RuleStateEnabled),
-		ScheduleExpression: awssdk.String(schedule),
-	})
-	if err != nil {
-		return "", fmt.Errorf("could not put cloudwatch rule %q with error: %s", ruleName, err)
-	}
-
-	_, err = cm.cloudwatchEvents.PutTargets(&cloudwatchevents.PutTargetsInput{
-		Rule: awssdk.String(ruleName),
-		Targets: []*cloudwatchevents.Target{
-			{
-				Arn:     awssdk.String(cm.ecsClusterARN),
-				Id:      awssdk.String(ruleName),
-				RoleArn: awssdk.String(cm.cronRoleARN),
-				EcsParameters: &cloudwatchevents.EcsParameters{
-					TaskDefinitionArn: awssdk.String(taskDefinitionARN),
-				},
 			},
 		},
 	})
