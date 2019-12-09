@@ -7,9 +7,9 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/Jimdo/reg/registry"
 	"github.com/docker/distribution/registry/client/auth"
 	"github.com/docker/docker/api/types"
+	"github.com/genuinetools/reg/registry"
 
 	"golang.org/x/net/context"
 )
@@ -53,11 +53,11 @@ func NewRepository(registryName, repoName string, credentialStore auth.Credentia
 		ServerAddress: endpointURL.String(),
 	}
 
-	hub, err := registry.New(authConfig, registry.Opt{})
+	ctx := context.Background()
+	hub, err := registry.New(ctx, authConfig, registry.Opt{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get registry: %s", err)
 	}
-	ctx := context.Background()
 	return &Repository{hub: hub, ctx: ctx, repository: repoName}, nil
 }
 
@@ -82,7 +82,7 @@ func getEndpointURL(registryName string) *url.URL {
 }
 
 func (r *Repository) Tags() ([]string, error) {
-	return r.hub.Tags(r.repository)
+	return r.hub.Tags(r.ctx, r.repository)
 }
 
 func (r *Repository) HasTag(tagName string) (bool, error) {

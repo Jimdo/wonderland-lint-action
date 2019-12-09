@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -51,7 +52,7 @@ type Opt struct {
 }
 
 // New creates a new Registry struct with the given URL and credentials.
-func New(auth types.AuthConfig, opt Opt) (*Registry, error) {
+func New(ctx context.Context, auth types.AuthConfig, opt Opt) (*Registry, error) {
 	transport := http.DefaultTransport
 
 	if opt.Insecure {
@@ -62,11 +63,11 @@ func New(auth types.AuthConfig, opt Opt) (*Registry, error) {
 		}
 	}
 
-	return newFromTransport(auth, transport, opt)
+	return newFromTransport(ctx, auth, transport, opt)
 }
 
-func newFromTransport(auth types.AuthConfig, transport http.RoundTripper, opt Opt) (*Registry, error) {
-	if len(opt.Domain) < 1 {
+func newFromTransport(ctx context.Context, auth types.AuthConfig, transport http.RoundTripper, opt Opt) (*Registry, error) {
+	if len(opt.Domain) < 1 || opt.Domain == "docker.io" {
 		opt.Domain = auth.ServerAddress
 	}
 	url := strings.TrimSuffix(opt.Domain, "/")
@@ -126,8 +127,8 @@ func newFromTransport(auth types.AuthConfig, transport http.RoundTripper, opt Op
 		Opt:      opt,
 	}
 
-	if !opt.SkipPing {
-		if err := registry.Ping(); err != nil {
+	if registry.Pingable() && !opt.SkipPing {
+		if err := registry.Ping(ctx); err != nil {
 			return nil, err
 		}
 	}
@@ -142,7 +143,7 @@ func (r *Registry) url(pathTemplate string, args ...interface{}) string {
 	return url
 }
 
-func (r *Registry) getJSON(url string, response interface{}) (http.Header, error) {
+func (r *Registry) getJSON(ctx context.Context, url string, response interface{}) (http.Header, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
@@ -150,12 +151,12 @@ func (r *Registry) getJSON(url string, response interface{}) (http.Header, error
 
 	switch response.(type) {
 	case *schema2.Manifest:
-		req.Header.Add("Accept", fmt.Sprintf("%s;q=0.9", schema2.MediaTypeManifest))
+		req.Header.Add("Accept", schema2.MediaTypeManifest)
 	case *manifestlist.ManifestList:
-		req.Header.Add("Accept", fmt.Sprintf("%s;q=0.9", manifestlist.MediaTypeManifestList))
+		req.Header.Add("Accept", manifestlist.MediaTypeManifestList)
 	}
 
-	resp, err := r.Client.Do(req)
+	resp, err := r.Client.Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
