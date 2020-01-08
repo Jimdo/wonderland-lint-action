@@ -91,13 +91,16 @@ func (c *Client) CreateOrUpdate(ctx context.Context, params CreateOrUpdateParams
 	}, c.authInfo)
 
 	if err != nil {
+		log.WithError(err).WithField("cron", params.Name).Debug("Got error while retrieving cronitor monitor. This is ok for new cron jobs ")
 		if _, ok := err.(*monitor.GetNotFound); ok {
+			log.WithField("cron", params.Name).Debug("Creating new cronitor monitor")
 			createRes, err := c.client.Monitor.Create(&monitor.CreateParams{
 				Context: ctx,
 				Payload: &payload,
 			}, c.authInfo)
 			return createRes.Payload.Code, err
 		}
+		log.WithError(err).WithField("cron", params.Name).Error("Fetching cronitor monitor failed.")
 		return "", err
 	}
 
@@ -108,6 +111,7 @@ func (c *Client) CreateOrUpdate(ctx context.Context, params CreateOrUpdateParams
 	}, c.authInfo)
 
 	if err != nil {
+		log.WithError(err).WithField("cron", params.Name).Error("Updating cronitor monitor failed.")
 		return "", err
 	}
 
