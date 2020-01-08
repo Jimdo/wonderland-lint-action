@@ -134,6 +134,7 @@ func (s *Service) Apply(name string, cronDescription *cron.Description) error {
 		}
 
 		if err := s.nc.DeleteNotificationChannel(name); err != nil {
+			log.WithError(err).WithField("cron", name).Error("Could not delete notification channel")
 			return err
 		}
 	}
