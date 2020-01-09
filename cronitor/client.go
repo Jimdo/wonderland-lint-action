@@ -105,15 +105,14 @@ func (c *Client) CreateOrUpdate(ctx context.Context, params CreateOrUpdateParams
 	}
 
 	_, err = c.client.Monitor.Update(&monitor.UpdateParams{
-		Code:    params.Name,
+		Code:    getRes.Payload.Code,
 		Context: ctx,
 		Payload: &payload,
 	}, c.authInfo)
 
 	if err != nil {
 		log.WithError(err).WithField("cron", params.Name).Error("Updating cronitor monitor failed.")
-		// TODO: remove comment once updating a monitor is fixed
-		//return "", err
+		return "", err
 	}
 
 	return getRes.Payload.Code, nil
