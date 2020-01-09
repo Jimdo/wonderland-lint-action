@@ -112,8 +112,7 @@ func (c *Client) CreateOrUpdate(ctx context.Context, params CreateOrUpdateParams
 
 	if err != nil {
 		log.WithError(err).WithField("cron", params.Name).Error("Updating cronitor monitor failed.")
-		// TODO: remove comment once updating a monitor is fixed
-		//return "", err
+		return "", err
 	}
 
 	return getRes.Payload.Code, nil
