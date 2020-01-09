@@ -105,7 +105,7 @@ func (c *Client) CreateOrUpdate(ctx context.Context, params CreateOrUpdateParams
 	}
 
 	_, err = c.client.Monitor.Update(&monitor.UpdateParams{
-		Code:    params.Name,
+		Code:    getRes.Payload.Code,
 		Context: ctx,
 		Payload: &payload,
 	}, c.authInfo)
