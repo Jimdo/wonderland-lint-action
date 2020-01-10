@@ -124,7 +124,8 @@ func TestGetTaskIDFromArnOldFormat(t *testing.T) {
 	expectedID := "8bb503dd-9f0d-4624-abb1-4565f85d5a08"
 	arn := fmt.Sprintf("arn:aws:ecs:eu-west-1:062052581233:task/%s", expectedID)
 
-	id := getTaskIDFromArn(arn)
+	id, err := getTaskIDFromArn(arn)
+	assert.NoError(t, err)
 	assert.Equal(t, expectedID, id)
 }
 
@@ -132,6 +133,7 @@ func TestGetTaskIDFromArnNewFormat(t *testing.T) {
 	expectedID := "8bb503dd9f0d4624abb14565f85d5a08"
 	arn := fmt.Sprintf("arn:aws:ecs:eu-west-1:062052581233:task/cluster-name/%s", expectedID)
 
-	id := getTaskIDFromArn(arn)
+	id, err := getTaskIDFromArn(arn)
+	assert.NoError(t, err)
 	assert.Equal(t, expectedID, id)
 }

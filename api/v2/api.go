@@ -1,9 +1,11 @@
 package v2
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws/arn"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/Jimdo/wonderland-crons/cron"
@@ -35,16 +37,26 @@ type CronV2Execution struct {
 	Status    string
 }
 
-func getTaskIDFromArn(arn string) string {
-	return arn[strings.LastIndex(arn, "/")+1:]
+func getTaskIDFromArn(taskArn string) (string, error) {
+	arnParts, err := arn.Parse(taskArn)
+	if err != nil {
+		return "", err
+	}
+	resourceParts := strings.Split(arnParts.Resource, "/")
+	if resourceParts[0] != "task" {
+		return "", fmt.Errorf("No valid task ARN found in %q", arnParts)
+	}
+
+	return taskArn[strings.LastIndex(taskArn, "/")+1:], nil
 }
 
 func MapToCronAPIExecution(e *cron.Execution) *CronV2Execution {
 	executionID := ""
 	if e.TaskArn != "" {
-		id := getTaskIDFromArn(e.TaskArn)
-		if id == "" {
+		id, err := getTaskIDFromArn(e.TaskArn)
+		if err != nil {
 			log.WithField("taskArn", e.TaskArn).
+				WithError(err).
 				Warn("could not parse ECS task ID from ARN")
 		}
 		executionID = id
