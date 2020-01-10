@@ -1,8 +1,7 @@
 package v2
 
 import (
-	"fmt"
-	"regexp"
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -36,23 +35,16 @@ type CronV2Execution struct {
 	Status    string
 }
 
-func getTaskIDFromArn(arn string) (string, error) {
-	re := regexp.MustCompile("^arn:aws:ecs:[a-z0-9-]+:[0-9]+:task/(|[a-z0-9-]+/)([a-z0-9-]+)$")
-	parts := re.FindStringSubmatch(arn)
-	if len(parts) != 2 && len(parts) != 3 {
-		return "", fmt.Errorf("ARN regex did not match")
-	}
-
-	return parts[len(parts)-1], nil
+func getTaskIDFromArn(arn string) string {
+	return arn[strings.LastIndex(arn, "/")+1:]
 }
 
 func MapToCronAPIExecution(e *cron.Execution) *CronV2Execution {
 	executionID := ""
 	if e.TaskArn != "" {
-		id, err := getTaskIDFromArn(e.TaskArn)
-		if err != nil {
+		id := getTaskIDFromArn(e.TaskArn)
+		if id == "" {
 			log.WithField("taskArn", e.TaskArn).
-				WithError(err).
 				Warn("could not parse ECS task ID from ARN")
 		}
 		executionID = id
