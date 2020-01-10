@@ -37,13 +37,13 @@ type CronV2Execution struct {
 }
 
 func getTaskIDFromArn(arn string) (string, error) {
-	re := regexp.MustCompile("^arn:aws:ecs:[a-z0-9-]+:[0-9]+:task/([a-z0-9-]+)$")
+	re := regexp.MustCompile("^arn:aws:ecs:[a-z0-9-]+:[0-9]+:task/(|[a-z0-9-]+/)([a-z0-9-]+)$")
 	parts := re.FindStringSubmatch(arn)
-	if len(parts) != 2 {
+	if len(parts) != 2 && len(parts) != 3 {
 		return "", fmt.Errorf("ARN regex did not match")
 	}
 
-	return parts[1], nil
+	return parts[len(parts)-1], nil
 }
 
 func MapToCronAPIExecution(e *cron.Execution) *CronV2Execution {
