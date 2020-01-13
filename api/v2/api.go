@@ -2,9 +2,10 @@ package v2
 
 import (
 	"fmt"
-	"regexp"
+	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws/arn"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/Jimdo/wonderland-crons/cron"
@@ -36,14 +37,17 @@ type CronV2Execution struct {
 	Status    string
 }
 
-func getTaskIDFromArn(arn string) (string, error) {
-	re := regexp.MustCompile("^arn:aws:ecs:[a-z0-9-]+:[0-9]+:task/([a-z0-9-]+)$")
-	parts := re.FindStringSubmatch(arn)
-	if len(parts) != 2 {
-		return "", fmt.Errorf("ARN regex did not match")
+func getTaskIDFromArn(taskArn string) (string, error) {
+	arnParts, err := arn.Parse(taskArn)
+	if err != nil {
+		return "", err
+	}
+	resourceParts := strings.Split(arnParts.Resource, "/")
+	if resourceParts[0] != "task" {
+		return "", fmt.Errorf("No valid task ARN found in %q", arnParts)
 	}
 
-	return parts[1], nil
+	return taskArn[strings.LastIndex(taskArn, "/")+1:], nil
 }
 
 func MapToCronAPIExecution(e *cron.Execution) *CronV2Execution {
