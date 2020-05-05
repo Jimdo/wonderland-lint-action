@@ -121,9 +121,6 @@ func TestService_Apply_NoNotifications(t *testing.T) {
 	mocks.nc.EXPECT().DeleteNotificationChannel(cronName)
 
 	err := service.Apply(cronName, cronDesc)
-	if err == nil {
-		t.Fatalf("expected warning for missing notification")
-	}
 	if err != nil {
 		if _, ok := err.(validation.Warning); !ok {
 			t.Fatalf("Creating cron failed: %s", err)

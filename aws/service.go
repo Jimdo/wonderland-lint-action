@@ -11,7 +11,6 @@ import (
 	"github.com/Jimdo/wonderland-crons/cronitor"
 	"github.com/Jimdo/wonderland-crons/metrics"
 	"github.com/Jimdo/wonderland-crons/store"
-	"github.com/Jimdo/wonderland-crons/validation"
 )
 
 type CronValidator interface {
@@ -132,10 +131,7 @@ func (s *Service) Apply(name string, cronDescription *cron.Description) error {
 			return err
 		}
 	} else {
-		result = validation.Warning{
-			Message: "No notifications configured. Please update your config, they will be mandatory soon.",
-		}
-
+		// As notifications are mandatory, this code can probably be deleted
 		if err := s.mn.Delete(context.Background(), name); err != nil {
 			log.WithError(err).WithField("cron", name).Error("Could not delete monitor at cronitor")
 			return err
