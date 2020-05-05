@@ -18,10 +18,6 @@ import (
 	"github.com/Jimdo/wonderland-crons/validation"
 )
 
-type cronServiceResponse struct {
-	Warnings []string `json:"warnings"`
-}
-
 func New(c *Config) *API {
 	return &API{
 		config: c,
@@ -153,17 +149,9 @@ func (a *API) PutHandler(ctx context.Context, w http.ResponseWriter, req *http.R
 		return
 	}
 
-	if result := a.config.Service.Apply(cronName, desc); result != nil {
-		if warning, ok := result.(validation.Warning); ok {
-			var warnings []string
-			warnings = append(warnings, warning.Error())
-			sendJSON(w, cronServiceResponse{
-				Warnings: warnings,
-			}, http.StatusOK)
-			return
-		}
+	if err := a.config.Service.Apply(cronName, desc); err != nil {
 		statusCode := http.StatusInternalServerError
-		if _, ok := result.(validation.Error); ok {
+		if _, ok := err.(validation.Error); ok {
 			statusCode = http.StatusBadRequest
 		}
 		sendError(w, fmt.Errorf("Unable to create or update cron: %s", err), statusCode)
