@@ -69,7 +69,7 @@ type Description struct {
 	Schedule      string                `json:"schedule"`
 	Description   *ContainerDescription `json:"description"`
 	Timeout       *int64                `json:"timeout"`
-	Notifications *Notification         `json:"notifications,omitempty"`
+	Notifications *Notification         `json:"notifications"`
 	Meta          MetaInformation       `json:"meta,omitempty"`
 }
 

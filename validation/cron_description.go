@@ -28,9 +28,14 @@ func (v *cronDescription) validate(desc *cron.Description) error {
 	if err := v.Container.validate(desc.Description); err != nil {
 		return err
 	}
-	if desc.Notifications != nil {
-		return v.CronNotification.validate(desc.Notifications)
+	if desc.Notifications == nil {
+		return Error{"Crons require notifications to be set."}
 	}
+
+	if err := v.CronNotification.validate(desc.Notifications); err != nil {
+		return err
+	}
+
 	if err := v.MetaInformation.ValidateDocumentationURI(desc.Meta.Documentation); err != nil {
 		return Error{err.Error()}
 	}
