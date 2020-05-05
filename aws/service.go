@@ -79,6 +79,7 @@ func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s 
 }
 
 func (s *Service) Apply(name string, cronDescription *cron.Description) error {
+	//This can be used to pass warnings back to the caller
 	var result error
 
 	if err := s.validator.ValidateCronName(name); err != nil {
