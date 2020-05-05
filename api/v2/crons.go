@@ -166,7 +166,7 @@ func (a *API) PutHandler(ctx context.Context, w http.ResponseWriter, req *http.R
 		if _, ok := result.(validation.Error); ok {
 			statusCode = http.StatusBadRequest
 		}
-		sendError(w, fmt.Errorf("Unable to create or update cron: %s", result), statusCode)
+		sendError(w, fmt.Errorf("Unable to create or update cron: %s", err), statusCode)
 		return
 	}
 }
