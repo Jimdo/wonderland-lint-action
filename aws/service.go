@@ -106,41 +106,27 @@ func (s *Service) Apply(name string, cronDescription *cron.Description) error {
 		return err
 	}
 
-	cronitorMonitorID := ""
-	if cronDescription.Notifications != nil {
-		notificationURI, _, err := s.nc.CreateOrUpdateNotificationChannel(name, cronDescription.Notifications)
-		if err != nil {
-			log.WithError(err).WithField("cron", name).Error("Could not create notification channel")
-			return err
-		}
+	notificationURI, _, err := s.nc.CreateOrUpdateNotificationChannel(name, cronDescription.Notifications)
+	if err != nil {
+		log.WithError(err).WithField("cron", name).Error("Could not create notification channel")
+		return err
+	}
 
-		webhookURL, err := s.ug.GenerateWebhookURL(notificationURI)
-		if err != nil {
-			log.WithError(err).WithField("cron", name).Error("Could not generate Webhool URL")
-			return err
-		}
+	webhookURL, err := s.ug.GenerateWebhookURL(notificationURI)
+	if err != nil {
+		log.WithError(err).WithField("cron", name).Error("Could not generate Webhool URL")
+		return err
+	}
 
-		cronitorMonitorID, err = s.mn.CreateOrUpdate(context.Background(), cronitor.CreateOrUpdateParams{
-			Name:                   name,
-			NoRunThreshold:         cronDescription.Notifications.NoRunThreshold,
-			RanLongerThanThreshold: cronDescription.Notifications.RanLongerThanThreshold,
-			Webhook:                webhookURL,
-		})
-		if err != nil {
-			log.WithError(err).WithField("cron", name).Error("Could not create monitor at cronitor")
-			return err
-		}
-	} else {
-		// As notifications are mandatory, this code can probably be deleted
-		if err := s.mn.Delete(context.Background(), name); err != nil {
-			log.WithError(err).WithField("cron", name).Error("Could not delete monitor at cronitor")
-			return err
-		}
-
-		if err := s.nc.DeleteNotificationChannel(name); err != nil {
-			log.WithError(err).WithField("cron", name).Error("Could not delete notification channel")
-			return err
-		}
+	cronitorMonitorID, err := s.mn.CreateOrUpdate(context.Background(), cronitor.CreateOrUpdateParams{
+		Name:                   name,
+		NoRunThreshold:         cronDescription.Notifications.NoRunThreshold,
+		RanLongerThanThreshold: cronDescription.Notifications.RanLongerThanThreshold,
+		Webhook:                webhookURL,
+	})
+	if err != nil {
+		log.WithError(err).WithField("cron", name).Error("Could not create monitor at cronitor")
+		return err
 	}
 
 	if err := s.cronStore.Save(name, ruleARN, latestTaskDefARN, taskDefFamily, cronDescription, cronitorMonitorID); err != nil {
