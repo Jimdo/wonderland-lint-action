@@ -106,26 +106,8 @@ func (s *Service) Apply(name string, cronDescription *cron.Description) error {
 		return err
 	}
 
-	notificationURI, _, err := s.nc.CreateOrUpdateNotificationChannel(name, cronDescription.Notifications)
+	cronitorMonitorID, err := s.configureNotifications(name, cronDescription)
 	if err != nil {
-		log.WithError(err).WithField("cron", name).Error("Could not create notification channel")
-		return err
-	}
-
-	webhookURL, err := s.ug.GenerateWebhookURL(notificationURI)
-	if err != nil {
-		log.WithError(err).WithField("cron", name).Error("Could not generate Webhool URL")
-		return err
-	}
-
-	cronitorMonitorID, err := s.mn.CreateOrUpdate(context.Background(), cronitor.CreateOrUpdateParams{
-		Name:                   name,
-		NoRunThreshold:         cronDescription.Notifications.NoRunThreshold,
-		RanLongerThanThreshold: cronDescription.Notifications.RanLongerThanThreshold,
-		Webhook:                webhookURL,
-	})
-	if err != nil {
-		log.WithError(err).WithField("cron", name).Error("Could not create monitor at cronitor")
 		return err
 	}
 
@@ -291,4 +273,31 @@ func (s *Service) triggerExecution(c *cron.Cron) error {
 		return fmt.Errorf("Multiple errors occurred: %q", errors)
 	}
 	return nil
+}
+
+func (s *Service) configureNotifications(name string, cronDescription *cron.Description) (string, error) {
+	notificationURI, _, err := s.nc.CreateOrUpdateNotificationChannel(name, cronDescription.Notifications)
+	if err != nil {
+		log.WithError(err).WithField("cron", name).Error("Could not create notification channel")
+		return "", err
+	}
+
+	webhookURL, err := s.ug.GenerateWebhookURL(notificationURI)
+	if err != nil {
+		log.WithError(err).WithField("cron", name).Error("Could not generate Webhool URL")
+		return "", err
+	}
+
+	cronitorMonitorID, err := s.mn.CreateOrUpdate(context.Background(), cronitor.CreateOrUpdateParams{
+		Name:                   name,
+		NoRunThreshold:         cronDescription.Notifications.NoRunThreshold,
+		RanLongerThanThreshold: cronDescription.Notifications.RanLongerThanThreshold,
+		Webhook:                webhookURL,
+	})
+	if err != nil {
+		log.WithError(err).WithField("cron", name).Error("Could not create monitor at cronitor")
+		return "", err
+	}
+
+	return cronitorMonitorID, nil
 }
