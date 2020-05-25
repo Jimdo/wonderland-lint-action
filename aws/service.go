@@ -11,7 +11,6 @@ import (
 	"github.com/Jimdo/wonderland-crons/cronitor"
 	"github.com/Jimdo/wonderland-crons/metrics"
 	"github.com/Jimdo/wonderland-crons/store"
-	"github.com/Jimdo/wonderland-crons/validation"
 )
 
 type CronValidator interface {
@@ -79,6 +78,7 @@ func NewService(v CronValidator, cm RuleCronManager, tds TaskDefinitionStore, s 
 }
 
 func (s *Service) Apply(name string, cronDescription *cron.Description) error {
+	//This can be used to pass warnings back to the caller
 	var result error
 
 	if err := s.validator.ValidateCronName(name); err != nil {
@@ -106,44 +106,9 @@ func (s *Service) Apply(name string, cronDescription *cron.Description) error {
 		return err
 	}
 
-	cronitorMonitorID := ""
-	if cronDescription.Notifications != nil {
-		notificationURI, _, err := s.nc.CreateOrUpdateNotificationChannel(name, cronDescription.Notifications)
-		if err != nil {
-			log.WithError(err).WithField("cron", name).Error("Could not create notification channel")
-			return err
-		}
-
-		webhookURL, err := s.ug.GenerateWebhookURL(notificationURI)
-		if err != nil {
-			log.WithError(err).WithField("cron", name).Error("Could not generate Webhool URL")
-			return err
-		}
-
-		cronitorMonitorID, err = s.mn.CreateOrUpdate(context.Background(), cronitor.CreateOrUpdateParams{
-			Name:                   name,
-			NoRunThreshold:         cronDescription.Notifications.NoRunThreshold,
-			RanLongerThanThreshold: cronDescription.Notifications.RanLongerThanThreshold,
-			Webhook:                webhookURL,
-		})
-		if err != nil {
-			log.WithError(err).WithField("cron", name).Error("Could not create monitor at cronitor")
-			return err
-		}
-	} else {
-		result = validation.Warning{
-			Message: "No notifications configured. Please update your config, they will be mandatory soon.",
-		}
-
-		if err := s.mn.Delete(context.Background(), name); err != nil {
-			log.WithError(err).WithField("cron", name).Error("Could not delete monitor at cronitor")
-			return err
-		}
-
-		if err := s.nc.DeleteNotificationChannel(name); err != nil {
-			log.WithError(err).WithField("cron", name).Error("Could not delete notification channel")
-			return err
-		}
+	cronitorMonitorID, err := s.configureNotifications(name, cronDescription)
+	if err != nil {
+		return err
 	}
 
 	if err := s.cronStore.Save(name, ruleARN, latestTaskDefARN, taskDefFamily, cronDescription, cronitorMonitorID); err != nil {
@@ -308,4 +273,31 @@ func (s *Service) triggerExecution(c *cron.Cron) error {
 		return fmt.Errorf("Multiple errors occurred: %q", errors)
 	}
 	return nil
+}
+
+func (s *Service) configureNotifications(name string, cronDescription *cron.Description) (string, error) {
+	notificationURI, _, err := s.nc.CreateOrUpdateNotificationChannel(name, cronDescription.Notifications)
+	if err != nil {
+		log.WithError(err).WithField("cron", name).Error("Could not create notification channel")
+		return "", err
+	}
+
+	webhookURL, err := s.ug.GenerateWebhookURL(notificationURI)
+	if err != nil {
+		log.WithError(err).WithField("cron", name).Error("Could not generate Webhool URL")
+		return "", err
+	}
+
+	cronitorMonitorID, err := s.mn.CreateOrUpdate(context.Background(), cronitor.CreateOrUpdateParams{
+		Name:                   name,
+		NoRunThreshold:         cronDescription.Notifications.NoRunThreshold,
+		RanLongerThanThreshold: cronDescription.Notifications.RanLongerThanThreshold,
+		Webhook:                webhookURL,
+	})
+	if err != nil {
+		log.WithError(err).WithField("cron", name).Error("Could not create monitor at cronitor")
+		return "", err
+	}
+
+	return cronitorMonitorID, nil
 }

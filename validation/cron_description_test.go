@@ -73,3 +73,33 @@ func TestValidateCronDescriptionName_Invalid(t *testing.T) {
 		t.Fatalf("Name %s should not be a valid cron name", name)
 	}
 }
+
+func TestValidateCronDescription_NotificationMissing(t *testing.T) {
+	desc := &cron.Description{
+		Schedule: "* * * * *",
+		Description: &cron.ContainerDescription{
+			Image:    "perl",
+			Capacity: &cron.CapacityDescription{},
+		},
+	}
+
+	v := &cronDescription{
+		Container: &containerDescription{
+			Image: &wonderlandValidator.DockerImage{
+				DockerImageService: registry.NewImageService(nil),
+			},
+			Capacity: &wonderlandValidator.ContainerCapacity{
+				CPUCapacitySpecifications: cron.CPUCapacitySpecifications,
+				CPUMinCapacity:            cron.MinCPUCapacity,
+				CPUMaxCapacity:            cron.MaxCPUCapacity,
+
+				MemoryCapacitySpecifications: cron.MemoryCapacitySpecifications,
+				MemoryMinCapacity:            cron.MinMemoryCapacity,
+				MemoryMaxCapacity:            cron.MaxMemoryCapacity,
+			},
+		},
+	}
+	if err := v.validate(desc); err == nil {
+		t.Errorf("%+v should not be a valid cron description. Notifications missing", desc)
+	}
+}
