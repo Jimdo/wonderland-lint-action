@@ -65,6 +65,8 @@ func TestWorker_runInLeaderMode(t *testing.T) {
 	}
 	done := make(chan struct{})
 	errChan := make(chan error)
+	// SA2002 This test does not produce any result as it won't be able to fail. Please consider reworking it or removing it.
+	// nolint:staticcheck
 	go func() {
 		go worker.runInLeaderMode(done, errChan)
 		select {
