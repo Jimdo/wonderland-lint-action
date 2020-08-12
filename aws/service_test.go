@@ -19,6 +19,7 @@ import (
 )
 
 const testTopicName = "fake-topic"
+const ruleARN = "test-rule-arn"
 
 func init() {
 	log.SetLevel(log.FatalLevel)
@@ -28,7 +29,6 @@ func TestService_Apply_Creation(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	cronName := "test-cron"
 	cronDesc := &cron.Description{
 		Schedule: "* * * * *",
 		Description: &cron.ContainerDescription{
@@ -54,7 +54,6 @@ func TestService_Apply_Creation(t *testing.T) {
 
 	taskDefARN := "task-definition-arn"
 	taskDefFamily := "task-definition-family"
-	ruleARN := "rule-arn"
 	cronitorMonitorID := "someid"
 	notificationURI := fmt.Sprintf("/v1/teams/werkzeugschmiede/channels/%s", cronName)
 	notificationUser := "some-notification-user"
@@ -86,8 +85,6 @@ func TestService_Apply_Error_InvalidCronName(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	cronName := "test-cron"
-
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.v.EXPECT().ValidateCronName(cronName).Return(errors.New("foo"))
 
@@ -101,7 +98,6 @@ func TestService_Apply_Error_InvalidCronDescription(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	cronName := "test-cron"
 	cronDesc := &cron.Description{}
 
 	service, mocks := createServiceWithMocks(ctrl)
@@ -118,7 +114,6 @@ func TestService_Apply_Error_AddTaskDefinitionRevision(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	cronName := "test-cron"
 	cronDesc := &cron.Description{}
 
 	service, mocks := createServiceWithMocks(ctrl)
@@ -136,7 +131,6 @@ func TestService_Apply_Error_CreateRule(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	cronName := "test-cron"
 	cronDesc := &cron.Description{}
 
 	taskDefARN := "task-definition-arn"
@@ -161,7 +155,6 @@ func TestService_Delete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	cronName := "test-cron"
 	cron := &cron.Cron{
 		RuleARN:              "rule-arn",
 		TaskDefinitionFamily: "task-definition-family",
@@ -186,7 +179,6 @@ func TestService_Delete_Error_OnRuleDeletionError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	cronName := "test-cron"
 	cron := &cron.Cron{
 		RuleARN:              "rule-arn",
 		TaskDefinitionFamily: "task-definition-family",
@@ -209,7 +201,6 @@ func TestService_Delete_Error_OnTaskDefinitionDeletionError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	cronName := "test-cron"
 	cron := &cron.Cron{
 		RuleARN:              "rule-arn",
 		TaskDefinitionFamily: "task-definition-family",
@@ -232,7 +223,6 @@ func TestService_Delete_Error_OnlyFirstErrorReturned(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	cronName := "test-cron"
 	cron := &cron.Cron{
 		RuleARN:              "rule-arn",
 		TaskDefinitionFamily: "task-definition-family",
@@ -258,7 +248,6 @@ func TestService_Delete_Error_OnStoreDelete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	cronName := "test-cron"
 	cron := &cron.Cron{
 		RuleARN:              "rule-arn",
 		TaskDefinitionFamily: "task-definition-family",
@@ -283,8 +272,6 @@ func TestService_Delete_NoError_CronNotFound(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	cronName := "test-cron"
-
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.cs.EXPECT().GetByName(cronName).Return(nil, store.ErrCronNotFound)
 
@@ -297,8 +284,6 @@ func TestService_Delete_NoError_CronNotFound(t *testing.T) {
 func TestService_Delete_Error_OnStoreGetByName(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-
-	cronName := "test-cron"
 
 	service, mocks := createServiceWithMocks(ctrl)
 	mocks.cs.EXPECT().GetByName(cronName).Return(nil, errors.New("foo"))
@@ -313,7 +298,6 @@ func TestService_Delete_Error_ExecutionDelete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	cronName := "test-cron"
 	cron := &cron.Cron{
 		RuleARN:              "rule-arn",
 		TaskDefinitionFamily: "task-definition-family",
@@ -337,7 +321,6 @@ func TestService_TriggerExecutionByRuleARN_FirstExecution(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	ruleARN := "test-rule-arn"
 	cronitorMonitorID := "some-id"
 	testCron := &cron.Cron{
 		Description: &cron.Description{
@@ -368,7 +351,6 @@ func TestService_TriggerExecutionByRuleARN_FirstExecutionWithoutNotifications(t 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	ruleARN := "test-rule-arn"
 	testCron := &cron.Cron{
 		Description: &cron.Description{},
 	}
@@ -391,7 +373,6 @@ func TestService_TriggerExecutionByRuleARN_SecondExecution(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	ruleARN := "test-rule-arn"
 	cronitorMonitorID := "some-id"
 	testCron := &cron.Cron{
 		Description: &cron.Description{
@@ -422,7 +403,6 @@ func TestService_TriggerExecutionByRuleARN_ExecutionRunning(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	ruleARN := "test-rule-arn"
 	testCron := &cron.Cron{}
 	runningTasks := []string{"ARN-1"}
 
@@ -443,9 +423,9 @@ func TestService_Exists_Success_ExistingService(t *testing.T) {
 	defer ctrl.Finish()
 
 	service, mocks := createServiceWithMocks(ctrl)
-	mocks.cs.EXPECT().GetByName("test-cron").Return(nil, nil)
+	mocks.cs.EXPECT().GetByName(cronName).Return(nil, nil)
 
-	exists, err := service.Exists("test-cron")
+	exists, err := service.Exists(cronName)
 	if err != nil {
 		t.Fatalf("expected no error when checking for an existing service, but got: %s", err)
 	}
@@ -460,9 +440,9 @@ func TestService_Exists_Success_NotExistingService(t *testing.T) {
 	defer ctrl.Finish()
 
 	service, mocks := createServiceWithMocks(ctrl)
-	mocks.cs.EXPECT().GetByName("test-cron").Return(nil, store.ErrCronNotFound)
+	mocks.cs.EXPECT().GetByName(cronName).Return(nil, store.ErrCronNotFound)
 
-	exists, err := service.Exists("test-cron")
+	exists, err := service.Exists(cronName)
 	if err != nil {
 		t.Fatalf("expected no error when checking for an existing service, but got: %s", err)
 	}
@@ -477,9 +457,9 @@ func TestService_Exists_Error_UnkownError(t *testing.T) {
 	defer ctrl.Finish()
 
 	service, mocks := createServiceWithMocks(ctrl)
-	mocks.cs.EXPECT().GetByName("test-cron").Return(nil, errors.New("some error that is unknown"))
+	mocks.cs.EXPECT().GetByName(cronName).Return(nil, errors.New("some error that is unknown"))
 
-	exists, err := service.Exists("test-cron")
+	exists, err := service.Exists(cronName)
 	if err == nil {
 		t.Fatal("expected error when checking for a service, but got none")
 	}
@@ -493,7 +473,6 @@ func TestService_StatusWithNoExecutions(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	ruleARN := "test-rule-arn"
 	testCron := &cron.Cron{}
 	testExecutions := []*cron.Execution{}
 
@@ -514,7 +493,6 @@ func TestService_StatusWithExecution(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	ruleARN := "test-rule-arn"
 	testCron := &cron.Cron{}
 	testExecutions := []*cron.Execution{
 		{

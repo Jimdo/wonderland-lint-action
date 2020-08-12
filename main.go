@@ -15,20 +15,20 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/gorilla/mux"
-	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	graceful "gopkg.in/tylerb/graceful.v1"
 
 	"github.com/Jimdo/wonderland-ecs-metadata/ecsmetadata"
 	"github.com/Jimdo/wonderland-validator/docker/registry"
 	wonderlandValidator "github.com/Jimdo/wonderland-validator/validator"
-	"github.com/Jimdo/wonderland-vault/lib/role-credential-manager"
+	rcm "github.com/Jimdo/wonderland-vault/lib/role-credential-manager"
 
 	"os/signal"
 	"syscall"
 
 	"github.com/Jimdo/wonderland-crons/api"
-	"github.com/Jimdo/wonderland-crons/api/v2"
+	v2 "github.com/Jimdo/wonderland-crons/api/v2"
 	"github.com/Jimdo/wonderland-crons/aws"
 	"github.com/Jimdo/wonderland-crons/cron"
 	"github.com/Jimdo/wonderland-crons/cronitor"
@@ -253,7 +253,7 @@ func main() {
 		}
 	}()
 
-	router.Handle("/metrics", prometheus.Handler())
+	router.Handle("/metrics", promhttp.Handler())
 	router.HandleFunc("/status", api.StatusHandler)
 
 	v2.New(&v2.Config{

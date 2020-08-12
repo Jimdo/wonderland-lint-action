@@ -13,9 +13,10 @@ import (
 	"github.com/Jimdo/wonderland-crons/mock"
 )
 
+const cronName = "test-cron"
+const containerName = "python-test"
+
 func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription(t *testing.T) {
-	cronName := "test-cron"
-	containerName := "python-test"
 	cronDesc := &cron.Description{
 		Schedule: "* * * * *",
 		Description: &cron.ContainerDescription{
@@ -112,8 +113,6 @@ func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription_WithVaul
 		"some_vault_value": "baz",
 	}
 
-	cronName := "test-cron"
-	containerName := "python-test"
 	cronDesc := &cron.Description{
 		Schedule: "* * * * *",
 		Description: &cron.ContainerDescription{
@@ -162,7 +161,6 @@ func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription_WithVaul
 func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription_ErrorInvalidVaultPath(t *testing.T) {
 	invalidVaultPath := "vault+secret://foo%32.com/some-value"
 
-	containerName := "python-test"
 	cronDesc := &cron.Description{
 		Schedule: "* * * * *",
 		Description: &cron.ContainerDescription{
@@ -184,7 +182,7 @@ func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription_ErrorInv
 	varp := mock.NewMockVaultAppRoleProvider(ctrl)
 
 	tdm := NewECSTaskDefinitionMapper(vsp, varp)
-	_, err := tdm.ContainerDefinitionFromCronDescription(containerName, cronDesc, "test-cron")
+	_, err := tdm.ContainerDefinitionFromCronDescription(containerName, cronDesc, cronName)
 
 	if err == nil {
 		t.Fatal("expected an error because of an invalid vault path, but got none")
@@ -195,8 +193,6 @@ func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription_WithVaul
 	vaultApproleID := "test-id"
 	vaultAddress := "vault.testserver.com"
 
-	cronName := "test-cron"
-	containerName := "python-test"
 	cronDesc := &cron.Description{
 		Schedule: "* * * * *",
 		Description: &cron.ContainerDescription{
@@ -237,7 +233,6 @@ func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription_WithVaul
 }
 
 func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription_ErrorGettingVaultApproleID(t *testing.T) {
-	containerName := "python-test"
 	cronDesc := &cron.Description{
 		Schedule: "* * * * *",
 		Description: &cron.ContainerDescription{
@@ -257,7 +252,7 @@ func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription_ErrorGet
 	varp.EXPECT().RoleID(gomock.Any()).Return("", errors.New("test error"))
 
 	tdm := NewECSTaskDefinitionMapper(vsp, varp)
-	_, err := tdm.ContainerDefinitionFromCronDescription(containerName, cronDesc, "test-cron")
+	_, err := tdm.ContainerDefinitionFromCronDescription(containerName, cronDesc, cronName)
 
 	if err == nil {
 		t.Fatal("expected an error because of an error when fetching vault approle ID, but got none")
@@ -267,7 +262,6 @@ func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription_ErrorGet
 func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription_ErrorGettingVaultValues(t *testing.T) {
 	vaultPath := "vault+secret://some.vault-instance.com/test-path"
 
-	containerName := "python-test"
 	cronDesc := &cron.Description{
 		Schedule: "* * * * *",
 		Description: &cron.ContainerDescription{
@@ -290,7 +284,7 @@ func TestECSTaskDefinitionMapper_ContainerDefinitionFromCronDescription_ErrorGet
 	varp := mock.NewMockVaultAppRoleProvider(ctrl)
 
 	tdm := NewECSTaskDefinitionMapper(vsp, varp)
-	_, err := tdm.ContainerDefinitionFromCronDescription(containerName, cronDesc, "test-cron")
+	_, err := tdm.ContainerDefinitionFromCronDescription(containerName, cronDesc, cronName)
 
 	if err == nil {
 		t.Fatal("expected an error because of an error when fetching vault values, but got none")
