@@ -2,6 +2,8 @@
 
 This service manages cron jobs in Wonderland
 
+See https://docs.jimdo-platform.net/How-To/Cron-Jobs/ for up-to-date documentation on how to use crons.
+
 Currently, the service supports to following API calls:
  
 | Verb   | URI                              | Description |
