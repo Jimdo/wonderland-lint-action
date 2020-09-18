@@ -5,42 +5,45 @@
 package mock
 
 import (
-	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
+
+	gomock "github.com/golang/mock/gomock"
 )
 
-// MockURLGenerator is a mock of URLGenerator interface
+// MockURLGenerator is a mock of URLGenerator interface.
 type MockURLGenerator struct {
 	ctrl     *gomock.Controller
 	recorder *MockURLGeneratorMockRecorder
 }
 
-// MockURLGeneratorMockRecorder is the mock recorder for MockURLGenerator
+// MockURLGeneratorMockRecorder is the mock recorder for MockURLGenerator.
 type MockURLGeneratorMockRecorder struct {
 	mock *MockURLGenerator
 }
 
-// NewMockURLGenerator creates a new mock instance
+// NewMockURLGenerator creates a new mock instance.
 func NewMockURLGenerator(ctrl *gomock.Controller) *MockURLGenerator {
 	mock := &MockURLGenerator{ctrl: ctrl}
 	mock.recorder = &MockURLGeneratorMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockURLGenerator) EXPECT() *MockURLGeneratorMockRecorder {
 	return m.recorder
 }
 
-// GenerateWebhookURL mocks base method
+// GenerateWebhookURL mocks base method.
 func (m *MockURLGenerator) GenerateWebhookURL(arg0 string) (string, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GenerateWebhookURL", arg0)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GenerateWebhookURL indicates an expected call of GenerateWebhookURL
+// GenerateWebhookURL indicates an expected call of GenerateWebhookURL.
 func (mr *MockURLGeneratorMockRecorder) GenerateWebhookURL(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateWebhookURL", reflect.TypeOf((*MockURLGenerator)(nil).GenerateWebhookURL), arg0)
 }

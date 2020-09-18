@@ -5,43 +5,46 @@
 package mock
 
 import (
-	gomock "github.com/golang/mock/gomock"
 	url "net/url"
 	reflect "reflect"
+
+	gomock "github.com/golang/mock/gomock"
 )
 
-// MockVaultSecretProvider is a mock of VaultSecretProvider interface
+// MockVaultSecretProvider is a mock of VaultSecretProvider interface.
 type MockVaultSecretProvider struct {
 	ctrl     *gomock.Controller
 	recorder *MockVaultSecretProviderMockRecorder
 }
 
-// MockVaultSecretProviderMockRecorder is the mock recorder for MockVaultSecretProvider
+// MockVaultSecretProviderMockRecorder is the mock recorder for MockVaultSecretProvider.
 type MockVaultSecretProviderMockRecorder struct {
 	mock *MockVaultSecretProvider
 }
 
-// NewMockVaultSecretProvider creates a new mock instance
+// NewMockVaultSecretProvider creates a new mock instance.
 func NewMockVaultSecretProvider(ctrl *gomock.Controller) *MockVaultSecretProvider {
 	mock := &MockVaultSecretProvider{ctrl: ctrl}
 	mock.recorder = &MockVaultSecretProviderMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockVaultSecretProvider) EXPECT() *MockVaultSecretProviderMockRecorder {
 	return m.recorder
 }
 
-// GetValues mocks base method
+// GetValues mocks base method.
 func (m *MockVaultSecretProvider) GetValues(arg0 *url.URL) (map[string]string, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetValues", arg0)
 	ret0, _ := ret[0].(map[string]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetValues indicates an expected call of GetValues
+// GetValues indicates an expected call of GetValues.
 func (mr *MockVaultSecretProviderMockRecorder) GetValues(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetValues", reflect.TypeOf((*MockVaultSecretProvider)(nil).GetValues), arg0)
 }

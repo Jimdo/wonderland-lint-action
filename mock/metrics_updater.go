@@ -5,70 +5,79 @@
 package mock
 
 import (
+	reflect "reflect"
+
 	cron "github.com/Jimdo/wonderland-crons/cron"
 	gomock "github.com/golang/mock/gomock"
-	reflect "reflect"
 )
 
-// MockUpdater is a mock of Updater interface
+// MockUpdater is a mock of Updater interface.
 type MockUpdater struct {
 	ctrl     *gomock.Controller
 	recorder *MockUpdaterMockRecorder
 }
 
-// MockUpdaterMockRecorder is the mock recorder for MockUpdater
+// MockUpdaterMockRecorder is the mock recorder for MockUpdater.
 type MockUpdaterMockRecorder struct {
 	mock *MockUpdater
 }
 
-// NewMockUpdater creates a new mock instance
+// NewMockUpdater creates a new mock instance.
 func NewMockUpdater(ctrl *gomock.Controller) *MockUpdater {
 	mock := &MockUpdater{ctrl: ctrl}
 	mock.recorder = &MockUpdaterMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockUpdater) EXPECT() *MockUpdaterMockRecorder {
 	return m.recorder
 }
 
-// IncECSEventsErrorsCounter mocks base method
+// IncECSEventsErrorsCounter mocks base method.
 func (m *MockUpdater) IncECSEventsErrorsCounter() {
+	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IncECSEventsErrorsCounter")
 }
 
-// IncECSEventsErrorsCounter indicates an expected call of IncECSEventsErrorsCounter
+// IncECSEventsErrorsCounter indicates an expected call of IncECSEventsErrorsCounter.
 func (mr *MockUpdaterMockRecorder) IncECSEventsErrorsCounter() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IncECSEventsErrorsCounter", reflect.TypeOf((*MockUpdater)(nil).IncECSEventsErrorsCounter))
 }
 
-// IncExecutionActivatedCounter mocks base method
+// IncExecutionActivatedCounter mocks base method.
 func (m *MockUpdater) IncExecutionActivatedCounter(arg0 *cron.Cron) {
+	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IncExecutionActivatedCounter", arg0)
 }
 
-// IncExecutionActivatedCounter indicates an expected call of IncExecutionActivatedCounter
+// IncExecutionActivatedCounter indicates an expected call of IncExecutionActivatedCounter.
 func (mr *MockUpdaterMockRecorder) IncExecutionActivatedCounter(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IncExecutionActivatedCounter", reflect.TypeOf((*MockUpdater)(nil).IncExecutionActivatedCounter), arg0)
 }
 
-// IncExecutionFinishedCounter mocks base method
+// IncExecutionFinishedCounter mocks base method.
 func (m *MockUpdater) IncExecutionFinishedCounter(arg0 *cron.Cron, arg1 string) {
+	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IncExecutionFinishedCounter", arg0, arg1)
 }
 
-// IncExecutionFinishedCounter indicates an expected call of IncExecutionFinishedCounter
+// IncExecutionFinishedCounter indicates an expected call of IncExecutionFinishedCounter.
 func (mr *MockUpdaterMockRecorder) IncExecutionFinishedCounter(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IncExecutionFinishedCounter", reflect.TypeOf((*MockUpdater)(nil).IncExecutionFinishedCounter), arg0, arg1)
 }
 
-// IncExecutionTriggeredCounter mocks base method
+// IncExecutionTriggeredCounter mocks base method.
 func (m *MockUpdater) IncExecutionTriggeredCounter(arg0 *cron.Cron, arg1 string) {
+	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IncExecutionTriggeredCounter", arg0, arg1)
 }
 
-// IncExecutionTriggeredCounter indicates an expected call of IncExecutionTriggeredCounter
+// IncExecutionTriggeredCounter indicates an expected call of IncExecutionTriggeredCounter.
 func (mr *MockUpdaterMockRecorder) IncExecutionTriggeredCounter(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IncExecutionTriggeredCounter", reflect.TypeOf((*MockUpdater)(nil).IncExecutionTriggeredCounter), arg0, arg1)
 }

@@ -53,6 +53,11 @@ func (a *Service) GetService(cluster, name string) (*ecs.Service, error) {
 	return out, a.get(&out, "/v1/cluster/%s/service/%s", cluster, name)
 }
 
+func (a *Service) GetTasksByService(cluster, service, status string) ([]*ecs.Task, error) {
+	var out []*ecs.Task
+	return out, a.get(&out, "/v1/cluster/%s/service/%s/tasks?status=%s", cluster, service, status)
+}
+
 func (a *Service) GetServices(cluster string) ([]*ecs.Service, error) {
 	var out []*ecs.Service
 	return out, a.get(&out, "/v1/cluster/%s/services", cluster)

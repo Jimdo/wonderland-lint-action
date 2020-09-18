@@ -27,6 +27,15 @@ import (
 // LoadHTTPTimeout the default timeout for load requests
 var LoadHTTPTimeout = 30 * time.Second
 
+// LoadHTTPBasicAuthUsername the username to use when load requests require basic auth
+var LoadHTTPBasicAuthUsername = ""
+
+// LoadHTTPBasicAuthPassword the password to use when load requests require basic auth
+var LoadHTTPBasicAuthPassword = ""
+
+// LoadHTTPCustomHeaders an optional collection of custom HTTP headers for load requests
+var LoadHTTPCustomHeaders = map[string]string{}
+
 // LoadFromFileOrHTTP loads the bytes from a file or a remote http server based on the path passed in
 func LoadFromFileOrHTTP(path string) ([]byte, error) {
 	return LoadStrategy(path, ioutil.ReadFile, loadHTTPBytes(LoadHTTPTimeout))(path)
@@ -43,7 +52,13 @@ func LoadStrategy(path string, local, remote func(string) ([]byte, error)) func(
 	if strings.HasPrefix(path, "http") {
 		return remote
 	}
-	return func(pth string) ([]byte, error) { return local(filepath.FromSlash(pth)) }
+	return func(pth string) ([]byte, error) {
+		upth, err := pathUnescape(pth)
+		if err != nil {
+			return nil, err
+		}
+		return local(filepath.FromSlash(upth))
+	}
 }
 
 func loadHTTPBytes(timeout time.Duration) func(path string) ([]byte, error) {
@@ -53,6 +68,15 @@ func loadHTTPBytes(timeout time.Duration) func(path string) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		if LoadHTTPBasicAuthUsername != "" && LoadHTTPBasicAuthPassword != "" {
+			req.SetBasicAuth(LoadHTTPBasicAuthUsername, LoadHTTPBasicAuthPassword)
+		}
+
+		for key, val := range LoadHTTPCustomHeaders {
+			req.Header.Set(key, val)
+		}
+
 		resp, err := client.Do(req)
 		defer func() {
 			if resp != nil {

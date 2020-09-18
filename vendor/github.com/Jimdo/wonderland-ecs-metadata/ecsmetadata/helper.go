@@ -13,6 +13,7 @@ import (
 
 var (
 	familyFromTaskDefinitionRegexp = regexp.MustCompile(`.*/(.*):\d+$`)
+	serviceFromGroupRegexp         = regexp.MustCompile(`service:(.+)$`)
 )
 
 func getFamilyFromECSTask(task *ecs.Task) (string, error) {
@@ -28,4 +29,13 @@ func getFamilyFromECSTask(task *ecs.Task) (string, error) {
 		"family": family,
 	}).Debugf("getFamily result")
 	return family, nil
+}
+
+func getServiceFromECSTask(task *ecs.Task) string {
+	taskGroup := aws.StringValue(task.Group)
+	groupMatch := serviceFromGroupRegexp.FindStringSubmatch(taskGroup)
+	if len(groupMatch) == 2 {
+		return groupMatch[1]
+	}
+	return ""
 }

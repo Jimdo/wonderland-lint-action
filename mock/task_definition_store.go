@@ -5,37 +5,39 @@
 package mock
 
 import (
+	reflect "reflect"
+
 	cron "github.com/Jimdo/wonderland-crons/cron"
 	ecs "github.com/aws/aws-sdk-go/service/ecs"
 	gomock "github.com/golang/mock/gomock"
-	reflect "reflect"
 )
 
-// MockTaskDefinitionStore is a mock of TaskDefinitionStore interface
+// MockTaskDefinitionStore is a mock of TaskDefinitionStore interface.
 type MockTaskDefinitionStore struct {
 	ctrl     *gomock.Controller
 	recorder *MockTaskDefinitionStoreMockRecorder
 }
 
-// MockTaskDefinitionStoreMockRecorder is the mock recorder for MockTaskDefinitionStore
+// MockTaskDefinitionStoreMockRecorder is the mock recorder for MockTaskDefinitionStore.
 type MockTaskDefinitionStoreMockRecorder struct {
 	mock *MockTaskDefinitionStore
 }
 
-// NewMockTaskDefinitionStore creates a new mock instance
+// NewMockTaskDefinitionStore creates a new mock instance.
 func NewMockTaskDefinitionStore(ctrl *gomock.Controller) *MockTaskDefinitionStore {
 	mock := &MockTaskDefinitionStore{ctrl: ctrl}
 	mock.recorder = &MockTaskDefinitionStoreMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockTaskDefinitionStore) EXPECT() *MockTaskDefinitionStoreMockRecorder {
 	return m.recorder
 }
 
-// AddRevisionFromCronDescription mocks base method
+// AddRevisionFromCronDescription mocks base method.
 func (m *MockTaskDefinitionStore) AddRevisionFromCronDescription(arg0 string, arg1 *cron.Description) (string, string, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddRevisionFromCronDescription", arg0, arg1)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(string)
@@ -43,45 +45,52 @@ func (m *MockTaskDefinitionStore) AddRevisionFromCronDescription(arg0 string, ar
 	return ret0, ret1, ret2
 }
 
-// AddRevisionFromCronDescription indicates an expected call of AddRevisionFromCronDescription
+// AddRevisionFromCronDescription indicates an expected call of AddRevisionFromCronDescription.
 func (mr *MockTaskDefinitionStoreMockRecorder) AddRevisionFromCronDescription(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddRevisionFromCronDescription", reflect.TypeOf((*MockTaskDefinitionStore)(nil).AddRevisionFromCronDescription), arg0, arg1)
 }
 
-// DeleteByFamily mocks base method
+// DeleteByFamily mocks base method.
 func (m *MockTaskDefinitionStore) DeleteByFamily(arg0 string) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteByFamily", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteByFamily indicates an expected call of DeleteByFamily
+// DeleteByFamily indicates an expected call of DeleteByFamily.
 func (mr *MockTaskDefinitionStoreMockRecorder) DeleteByFamily(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteByFamily", reflect.TypeOf((*MockTaskDefinitionStore)(nil).DeleteByFamily), arg0)
 }
 
-// GetRunningTasksByFamily mocks base method
+// GetRunningTasksByFamily mocks base method.
 func (m *MockTaskDefinitionStore) GetRunningTasksByFamily(arg0 string) ([]string, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetRunningTasksByFamily", arg0)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetRunningTasksByFamily indicates an expected call of GetRunningTasksByFamily
+// GetRunningTasksByFamily indicates an expected call of GetRunningTasksByFamily.
 func (mr *MockTaskDefinitionStoreMockRecorder) GetRunningTasksByFamily(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRunningTasksByFamily", reflect.TypeOf((*MockTaskDefinitionStore)(nil).GetRunningTasksByFamily), arg0)
 }
 
-// RunTaskDefinition mocks base method
+// RunTaskDefinition mocks base method.
 func (m *MockTaskDefinitionStore) RunTaskDefinition(arg0 string) (*ecs.Task, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RunTaskDefinition", arg0)
 	ret0, _ := ret[0].(*ecs.Task)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// RunTaskDefinition indicates an expected call of RunTaskDefinition
+// RunTaskDefinition indicates an expected call of RunTaskDefinition.
 func (mr *MockTaskDefinitionStoreMockRecorder) RunTaskDefinition(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunTaskDefinition", reflect.TypeOf((*MockTaskDefinitionStore)(nil).RunTaskDefinition), arg0)
 }

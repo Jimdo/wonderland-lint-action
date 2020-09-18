@@ -5,117 +5,132 @@
 package mock
 
 import (
+	reflect "reflect"
+
 	cron "github.com/Jimdo/wonderland-crons/cron"
 	gomock "github.com/golang/mock/gomock"
-	reflect "reflect"
 )
 
-// MockCronService is a mock of CronService interface
+// MockCronService is a mock of CronService interface.
 type MockCronService struct {
 	ctrl     *gomock.Controller
 	recorder *MockCronServiceMockRecorder
 }
 
-// MockCronServiceMockRecorder is the mock recorder for MockCronService
+// MockCronServiceMockRecorder is the mock recorder for MockCronService.
 type MockCronServiceMockRecorder struct {
 	mock *MockCronService
 }
 
-// NewMockCronService creates a new mock instance
+// NewMockCronService creates a new mock instance.
 func NewMockCronService(ctrl *gomock.Controller) *MockCronService {
 	mock := &MockCronService{ctrl: ctrl}
 	mock.recorder = &MockCronServiceMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockCronService) EXPECT() *MockCronServiceMockRecorder {
 	return m.recorder
 }
 
-// Apply mocks base method
+// Apply mocks base method.
 func (m *MockCronService) Apply(arg0 string, arg1 *cron.Description) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Apply", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Apply indicates an expected call of Apply
+// Apply indicates an expected call of Apply.
 func (mr *MockCronServiceMockRecorder) Apply(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Apply", reflect.TypeOf((*MockCronService)(nil).Apply), arg0, arg1)
 }
 
-// Delete mocks base method
+// Delete mocks base method.
 func (m *MockCronService) Delete(arg0 string) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Delete indicates an expected call of Delete
+// Delete indicates an expected call of Delete.
 func (mr *MockCronServiceMockRecorder) Delete(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockCronService)(nil).Delete), arg0)
 }
 
-// Exists mocks base method
+// Exists mocks base method.
 func (m *MockCronService) Exists(arg0 string) (bool, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Exists", arg0)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// Exists indicates an expected call of Exists
+// Exists indicates an expected call of Exists.
 func (mr *MockCronServiceMockRecorder) Exists(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Exists", reflect.TypeOf((*MockCronService)(nil).Exists), arg0)
 }
 
-// List mocks base method
+// List mocks base method.
 func (m *MockCronService) List() ([]string, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List")
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// List indicates an expected call of List
+// List indicates an expected call of List.
 func (mr *MockCronServiceMockRecorder) List() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockCronService)(nil).List))
 }
 
-// Status mocks base method
+// Status mocks base method.
 func (m *MockCronService) Status(arg0 string, arg1 int64) (*cron.Status, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Status", arg0, arg1)
 	ret0, _ := ret[0].(*cron.Status)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// Status indicates an expected call of Status
+// Status indicates an expected call of Status.
 func (mr *MockCronServiceMockRecorder) Status(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Status", reflect.TypeOf((*MockCronService)(nil).Status), arg0, arg1)
 }
 
-// TriggerExecutionByCronName mocks base method
+// TriggerExecutionByCronName mocks base method.
 func (m *MockCronService) TriggerExecutionByCronName(arg0 string) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "TriggerExecutionByCronName", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// TriggerExecutionByCronName indicates an expected call of TriggerExecutionByCronName
+// TriggerExecutionByCronName indicates an expected call of TriggerExecutionByCronName.
 func (mr *MockCronServiceMockRecorder) TriggerExecutionByCronName(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TriggerExecutionByCronName", reflect.TypeOf((*MockCronService)(nil).TriggerExecutionByCronName), arg0)
 }
 
-// TriggerExecutionByRuleARN mocks base method
+// TriggerExecutionByRuleARN mocks base method.
 func (m *MockCronService) TriggerExecutionByRuleARN(arg0 string) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "TriggerExecutionByRuleARN", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// TriggerExecutionByRuleARN indicates an expected call of TriggerExecutionByRuleARN
+// TriggerExecutionByRuleARN indicates an expected call of TriggerExecutionByRuleARN.
 func (mr *MockCronServiceMockRecorder) TriggerExecutionByRuleARN(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TriggerExecutionByRuleARN", reflect.TypeOf((*MockCronService)(nil).TriggerExecutionByRuleARN), arg0)
 }

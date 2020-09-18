@@ -16,18 +16,20 @@ import (
 
 const (
 	ContainerInstancesKey = "container-instances"
+	TasksByServiceKey     = "tasks-by-service"
+	TasksByFamilyKey      = "tasks-by-family"
 )
 
 type StatefulRedis struct {
 	RedisPool          *redis.Pool
-	TasksByFamilyMap   *TasksByFamilyMap
+	TasksMap           *TasksMap
 	FamilyByTaskArnMap *FamilyByTaskArnMap
 }
 
 func NewStatefulRedis(pool *redis.Pool) *StatefulRedis {
 	return &StatefulRedis{
 		RedisPool: pool,
-		TasksByFamilyMap: &TasksByFamilyMap{
+		TasksMap: &TasksMap{
 			RedisPool: pool,
 		},
 		FamilyByTaskArnMap: &FamilyByTaskArnMap{
@@ -116,7 +118,7 @@ func (s *StatefulRedis) GetTask(cluster, arn string) (*ecs.Task, error) {
 		return nil, err
 	}
 
-	return s.TasksByFamilyMap.Get(cluster, family, arn)
+	return s.TasksMap.Get(key, arn)
 }
 
 func (s *StatefulRedis) GetTaskDefinition(arn string) (*ecs.TaskDefinition, error) {
@@ -180,7 +182,7 @@ func (s *StatefulRedis) GetTasks(cluster, family, desiredStatus string) ([]*ecs.
 			"family":         family,
 		}).Debugf("Getting tasks by family")
 
-		tasksByFamily, err := s.TasksByFamilyMap.GetAll(cluster, family)
+		tasksByFamily, err := s.TasksMap.GetAll(buildKeyWithClusterName(cluster, TasksByFamilyKey, family))
 		if err != nil {
 			return nil, fmt.Errorf("could not load tasks from Redis: %s", err)
 		}
@@ -196,6 +198,32 @@ func (s *StatefulRedis) GetTasks(cluster, family, desiredStatus string) ([]*ecs.
 				"tasks_count": len(tasks),
 			}).Debugf("Task found for Family")
 		}
+	}
+
+	return tasks, nil
+}
+
+func (s *StatefulRedis) GetTasksByService(cluster string, service string, desiredStatus string) ([]*ecs.Task, error) {
+	c := s.RedisPool.Get()
+	defer c.Close()
+
+	key := buildKeyWithClusterName(cluster, TasksByServiceKey, service)
+
+	tasksByService, err := s.TasksMap.GetAll(key)
+	if err != nil {
+		return nil, err
+	}
+
+	tasks := []*ecs.Task{}
+	for _, task := range tasksByService {
+		if desiredStatus == "" || aws.StringValue(task.DesiredStatus) == desiredStatus {
+			logger.Task(cluster, task).Debugf("Task with matched status found")
+			tasks = append(tasks, task)
+		}
+		logger.Task(cluster, task).WithFields(logrus.Fields{
+			"service":     service,
+			"tasks_count": len(tasks),
+		}).Debugf("Task found for Service")
 	}
 
 	return tasks, nil
@@ -257,39 +285,55 @@ func (s *StatefulRedis) RemoveContainerInstance(cluster string, i *ecs.Container
 }
 
 func (s *StatefulRedis) UpdateTask(cluster string, t *ecs.Task) error {
-	c := s.RedisPool.Get()
-	defer c.Close()
-
-	arn := aws.StringValue(t.TaskArn)
-
 	family, err := getFamilyFromECSTask(t)
 	if err != nil {
 		return fmt.Errorf("Could not get family for task %q: %s", t, err)
 	}
 
-	old, err := s.TasksByFamilyMap.Get(cluster, family, arn)
+	key := buildKeyWithClusterName(cluster, TasksByFamilyKey, family)
+	changed, err := s.updateTasksMap(key, t)
 	if err != nil {
-		return fmt.Errorf("could not fetch existing task: %s", err)
+		return fmt.Errorf("failed to update task: %s", err)
 	}
 
-	if old == nil || aws.Int64Value(old.Version) < aws.Int64Value(t.Version) {
-		logger.Task(cluster, t).WithFields(logrus.Fields{
-			"family": family,
-		}).Debug("Updating task")
-
-		if err := s.TasksByFamilyMap.Set(cluster, family, arn, t); err != nil {
-			return fmt.Errorf("Setting task failed: %s", err)
-		}
-
+	if changed {
 		familyByTaskMap := &FamilyByTaskArnMap{
 			RedisPool: s.RedisPool,
 		}
+		arn := aws.StringValue(t.TaskArn)
 		// write arn to family matching
 		if err = familyByTaskMap.Set(cluster, arn, family); err != nil {
 			return fmt.Errorf("could not set family %q for task %q: %s", family, arn, err)
 		}
 	}
+
+	service := getServiceFromECSTask(t)
+	if service == "" {
+		return nil
+	}
+
+	serviceKey := buildKeyWithClusterName(cluster, TasksByServiceKey, service)
+	_, err = s.updateTasksMap(serviceKey, t)
+	if err != nil {
+		return fmt.Errorf("failed to update task: %s", err)
+	}
+
 	return nil
+}
+
+func (s *StatefulRedis) updateTasksMap(key string, current *ecs.Task) (bool, error) {
+	arn := aws.StringValue(current.TaskArn)
+	existing, err := s.TasksMap.Get(key, arn)
+	if err != nil {
+		return false, fmt.Errorf("could not fetch existing task: %s", err)
+	}
+	if existing == nil || aws.Int64Value(existing.Version) < aws.Int64Value(current.Version) {
+		if err := s.TasksMap.Set(key, aws.StringValue(current.TaskArn), current); err != nil {
+			return false, fmt.Errorf("Setting task failed: %s", err)
+		}
+		return true, nil
+	}
+	return false, nil
 }
 
 func (s *StatefulRedis) UpdateTasks(cluster string, t []*ecs.Task) error {
@@ -307,16 +351,24 @@ func (s *StatefulRedis) RemoveTask(cluster string, t *ecs.Task) error {
 		return fmt.Errorf("Could not get family for task %q: %s", t, err)
 	}
 
-	c := s.RedisPool.Get()
-	defer c.Close()
+	service := getServiceFromECSTask(t)
 
 	arn := aws.StringValue(t.TaskArn)
 
 	logger.Task(cluster, t).WithFields(logrus.Fields{
-		"family": family,
+		"family":  family,
+		"service": service,
 	}).Debugf("Removing Task")
 
-	s.TasksByFamilyMap.Del(cluster, family, arn)
+	key := buildKeyWithClusterName(cluster, TasksByFamilyKey, family)
+
+	s.TasksMap.Del(key, arn)
+
+	if service != "" {
+		key := buildKeyWithClusterName(cluster, TasksByServiceKey, service)
+
+		s.TasksMap.Del(key, arn)
+	}
 
 	if err := s.FamilyByTaskArnMap.Del(cluster, arn); err != nil {
 		return fmt.Errorf("RemoveTask: Deleting arn %q failed: %s", arn, err)
