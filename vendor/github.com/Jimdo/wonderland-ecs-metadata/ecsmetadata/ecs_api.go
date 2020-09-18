@@ -131,9 +131,6 @@ func (a *ECSAPI) GetTaskDefinition(arn string) (*ecs.TaskDefinition, error) {
 }
 
 func (a *ECSAPI) GetTasks(cluster, family, status string) ([]*ecs.Task, error) {
-	var tasks []*ecs.Task
-	var describeError error
-
 	input := &ecs.ListTasksInput{
 		Cluster:       aws.String(cluster),
 		DesiredStatus: aws.String(status),
@@ -143,12 +140,39 @@ func (a *ECSAPI) GetTasks(cluster, family, status string) ([]*ecs.Task, error) {
 		input.Family = aws.String(family)
 	}
 
+	tasks, err := a.getTasks(input)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get tasks: %s", err)
+	}
+
+	return tasks, nil
+}
+
+func (a *ECSAPI) GetTasksByService(cluster, service, status string) ([]*ecs.Task, error) {
+	input := &ecs.ListTasksInput{
+		Cluster:       aws.String(cluster),
+		ServiceName:   aws.String(service),
+		DesiredStatus: aws.String(status),
+	}
+
+	tasks, err := a.getTasks(input)
+	if err != nil {
+		return nil, fmt.Errorf("fetching tasks by service failed: %s", err)
+	}
+
+	return tasks, nil
+}
+
+func (a *ECSAPI) getTasks(input *ecs.ListTasksInput) ([]*ecs.Task, error) {
+	tasks := []*ecs.Task{}
+	var describeError error
+
 	err := a.ECS.ListTasksPages(input, func(listOut *ecs.ListTasksOutput, last bool) bool {
 		if len(listOut.TaskArns) == 0 {
 			return false
 		}
 		out, err := a.ECS.DescribeTasks(&ecs.DescribeTasksInput{
-			Cluster: aws.String(cluster),
+			Cluster: input.Cluster,
 			Tasks:   listOut.TaskArns,
 		})
 		if err != nil {
@@ -158,6 +182,7 @@ func (a *ECSAPI) GetTasks(cluster, family, status string) ([]*ecs.Task, error) {
 		tasks = append(tasks, out.Tasks...)
 		return !last
 	})
+
 	if err != nil {
 		return nil, err
 	}

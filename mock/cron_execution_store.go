@@ -5,80 +5,89 @@
 package mock
 
 import (
+	reflect "reflect"
+
 	cron "github.com/Jimdo/wonderland-crons/cron"
 	ecs "github.com/aws/aws-sdk-go/service/ecs"
 	gomock "github.com/golang/mock/gomock"
-	reflect "reflect"
 )
 
-// MockCronExecutionStore is a mock of CronExecutionStore interface
+// MockCronExecutionStore is a mock of CronExecutionStore interface.
 type MockCronExecutionStore struct {
 	ctrl     *gomock.Controller
 	recorder *MockCronExecutionStoreMockRecorder
 }
 
-// MockCronExecutionStoreMockRecorder is the mock recorder for MockCronExecutionStore
+// MockCronExecutionStoreMockRecorder is the mock recorder for MockCronExecutionStore.
 type MockCronExecutionStoreMockRecorder struct {
 	mock *MockCronExecutionStore
 }
 
-// NewMockCronExecutionStore creates a new mock instance
+// NewMockCronExecutionStore creates a new mock instance.
 func NewMockCronExecutionStore(ctrl *gomock.Controller) *MockCronExecutionStore {
 	mock := &MockCronExecutionStore{ctrl: ctrl}
 	mock.recorder = &MockCronExecutionStoreMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockCronExecutionStore) EXPECT() *MockCronExecutionStoreMockRecorder {
 	return m.recorder
 }
 
-// CreateSkippedExecution mocks base method
+// CreateSkippedExecution mocks base method.
 func (m *MockCronExecutionStore) CreateSkippedExecution(arg0 string) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateSkippedExecution", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// CreateSkippedExecution indicates an expected call of CreateSkippedExecution
+// CreateSkippedExecution indicates an expected call of CreateSkippedExecution.
 func (mr *MockCronExecutionStoreMockRecorder) CreateSkippedExecution(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSkippedExecution", reflect.TypeOf((*MockCronExecutionStore)(nil).CreateSkippedExecution), arg0)
 }
 
-// Delete mocks base method
+// Delete mocks base method.
 func (m *MockCronExecutionStore) Delete(arg0 string) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Delete indicates an expected call of Delete
+// Delete indicates an expected call of Delete.
 func (mr *MockCronExecutionStoreMockRecorder) Delete(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockCronExecutionStore)(nil).Delete), arg0)
 }
 
-// GetLastNExecutions mocks base method
+// GetLastNExecutions mocks base method.
 func (m *MockCronExecutionStore) GetLastNExecutions(arg0 string, arg1 int64) ([]*cron.Execution, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetLastNExecutions", arg0, arg1)
 	ret0, _ := ret[0].([]*cron.Execution)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetLastNExecutions indicates an expected call of GetLastNExecutions
+// GetLastNExecutions indicates an expected call of GetLastNExecutions.
 func (mr *MockCronExecutionStoreMockRecorder) GetLastNExecutions(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLastNExecutions", reflect.TypeOf((*MockCronExecutionStore)(nil).GetLastNExecutions), arg0, arg1)
 }
 
-// Update mocks base method
+// Update mocks base method.
 func (m *MockCronExecutionStore) Update(arg0 string, arg1 *ecs.Task) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Update indicates an expected call of Update
+// Update indicates an expected call of Update.
 func (mr *MockCronExecutionStoreMockRecorder) Update(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockCronExecutionStore)(nil).Update), arg0, arg1)
 }

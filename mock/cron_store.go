@@ -5,93 +5,104 @@
 package mock
 
 import (
+	reflect "reflect"
+
 	cron "github.com/Jimdo/wonderland-crons/cron"
 	gomock "github.com/golang/mock/gomock"
-	reflect "reflect"
 )
 
-// MockCronStore is a mock of CronStore interface
+// MockCronStore is a mock of CronStore interface.
 type MockCronStore struct {
 	ctrl     *gomock.Controller
 	recorder *MockCronStoreMockRecorder
 }
 
-// MockCronStoreMockRecorder is the mock recorder for MockCronStore
+// MockCronStoreMockRecorder is the mock recorder for MockCronStore.
 type MockCronStoreMockRecorder struct {
 	mock *MockCronStore
 }
 
-// NewMockCronStore creates a new mock instance
+// NewMockCronStore creates a new mock instance.
 func NewMockCronStore(ctrl *gomock.Controller) *MockCronStore {
 	mock := &MockCronStore{ctrl: ctrl}
 	mock.recorder = &MockCronStoreMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockCronStore) EXPECT() *MockCronStoreMockRecorder {
 	return m.recorder
 }
 
-// Delete mocks base method
+// Delete mocks base method.
 func (m *MockCronStore) Delete(arg0 string) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Delete indicates an expected call of Delete
+// Delete indicates an expected call of Delete.
 func (mr *MockCronStoreMockRecorder) Delete(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockCronStore)(nil).Delete), arg0)
 }
 
-// GetByName mocks base method
+// GetByName mocks base method.
 func (m *MockCronStore) GetByName(arg0 string) (*cron.Cron, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByName", arg0)
 	ret0, _ := ret[0].(*cron.Cron)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetByName indicates an expected call of GetByName
+// GetByName indicates an expected call of GetByName.
 func (mr *MockCronStoreMockRecorder) GetByName(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByName", reflect.TypeOf((*MockCronStore)(nil).GetByName), arg0)
 }
 
-// GetByRuleARN mocks base method
+// GetByRuleARN mocks base method.
 func (m *MockCronStore) GetByRuleARN(arg0 string) (*cron.Cron, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByRuleARN", arg0)
 	ret0, _ := ret[0].(*cron.Cron)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetByRuleARN indicates an expected call of GetByRuleARN
+// GetByRuleARN indicates an expected call of GetByRuleARN.
 func (mr *MockCronStoreMockRecorder) GetByRuleARN(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByRuleARN", reflect.TypeOf((*MockCronStore)(nil).GetByRuleARN), arg0)
 }
 
-// List mocks base method
+// List mocks base method.
 func (m *MockCronStore) List() ([]string, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List")
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// List indicates an expected call of List
+// List indicates an expected call of List.
 func (mr *MockCronStoreMockRecorder) List() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockCronStore)(nil).List))
 }
 
-// Save mocks base method
+// Save mocks base method.
 func (m *MockCronStore) Save(arg0, arg1, arg2, arg3 string, arg4 *cron.Description, arg5 string) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Save", arg0, arg1, arg2, arg3, arg4, arg5)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Save indicates an expected call of Save
+// Save indicates an expected call of Save.
 func (mr *MockCronStoreMockRecorder) Save(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockCronStore)(nil).Save), arg0, arg1, arg2, arg3, arg4, arg5)
 }

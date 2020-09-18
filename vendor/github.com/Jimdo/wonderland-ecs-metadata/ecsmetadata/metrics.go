@@ -11,7 +11,7 @@ const (
 	responseGenericError = "OtherError"
 )
 
-func AddMetrics(metadataKey string, metadata Metadata) Metadata {
+func AddMetrics(metadataKey string, metadata Metadata) *Metrics {
 	requestsCounter := prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: "wonderland",
 		Subsystem: "ecs_metadata",
@@ -23,100 +23,80 @@ func AddMetrics(metadataKey string, metadata Metadata) Metadata {
 	}, []string{"type", "status"})
 	prometheus.MustRegister(requestsCounter)
 
-	return &metrics{
+	return &Metrics{
 		Metadata:        metadata,
 		requestsCounter: requestsCounter,
 	}
 }
 
-type metrics struct {
+type Metrics struct {
 	Metadata Metadata
 
 	requestsCounter *prometheus.CounterVec
 }
 
-func (m *metrics) GetContainerInstance(cluster, arn string) (*ecs.ContainerInstance, error) {
-	responseStatus := responseSuccess
-
+func (m *Metrics) GetContainerInstance(cluster, arn string) (*ecs.ContainerInstance, error) {
 	res, err := m.Metadata.GetContainerInstance(cluster, arn)
-	if err != nil {
-		responseStatus = responseCodeFromError(err)
-	}
-	m.requestsCounter.WithLabelValues("GetContainerInstance", responseStatus).Inc()
+	m.recordResponseMetric("GetContainerInstance", err)
 
 	return res, err
 }
 
-func (m *metrics) GetContainerInstances(cluster string) ([]*ecs.ContainerInstance, error) {
-	responseStatus := responseSuccess
-
+func (m *Metrics) GetContainerInstances(cluster string) ([]*ecs.ContainerInstance, error) {
 	res, err := m.Metadata.GetContainerInstances(cluster)
-	if err != nil {
-		responseStatus = responseCodeFromError(err)
-	}
-	m.requestsCounter.WithLabelValues("GetContainerInstances", responseStatus).Inc()
+	m.recordResponseMetric("GetContainerInstances", err)
 
 	return res, err
 }
 
-func (m *metrics) GetService(cluster, service string) (*ecs.Service, error) {
-	responseStatus := responseSuccess
-
+func (m *Metrics) GetService(cluster, service string) (*ecs.Service, error) {
 	res, err := m.Metadata.GetService(cluster, service)
-	if err != nil {
-		responseStatus = responseCodeFromError(err)
-	}
-	m.requestsCounter.WithLabelValues("GetService", responseStatus).Inc()
+	m.recordResponseMetric("GetService", err)
 
 	return res, err
 }
 
-func (m *metrics) GetServices(cluster string) ([]*ecs.Service, error) {
-	responseStatus := responseSuccess
-
+func (m *Metrics) GetServices(cluster string) ([]*ecs.Service, error) {
 	res, err := m.Metadata.GetServices(cluster)
-	if err != nil {
-		responseStatus = responseCodeFromError(err)
-	}
-	m.requestsCounter.WithLabelValues("GetServices", responseStatus).Inc()
+	m.recordResponseMetric("GetServices", err)
 
 	return res, err
 }
 
-func (m *metrics) GetTask(cluster, arn string) (*ecs.Task, error) {
-	responseStatus := responseSuccess
-
+func (m *Metrics) GetTask(cluster, arn string) (*ecs.Task, error) {
 	res, err := m.Metadata.GetTask(cluster, arn)
-	if err != nil {
-		responseStatus = responseCodeFromError(err)
-	}
-	m.requestsCounter.WithLabelValues("GetTask", responseStatus).Inc()
+	m.recordResponseMetric("GetTask", err)
 
 	return res, err
 }
 
-func (m *metrics) GetTaskDefinition(arn string) (*ecs.TaskDefinition, error) {
-	responseStatus := responseSuccess
-
+func (m *Metrics) GetTaskDefinition(arn string) (*ecs.TaskDefinition, error) {
 	res, err := m.Metadata.GetTaskDefinition(arn)
-	if err != nil {
-		responseStatus = responseCodeFromError(err)
-	}
-	m.requestsCounter.WithLabelValues("GetTaskDefinition", responseStatus).Inc()
+	m.recordResponseMetric("GetTaskDefinition", err)
 
 	return res, err
 }
 
-func (m *metrics) GetTasks(cluster, family, status string) ([]*ecs.Task, error) {
-	responseStatus := responseSuccess
-
+func (m *Metrics) GetTasks(cluster, family, status string) ([]*ecs.Task, error) {
 	res, err := m.Metadata.GetTasks(cluster, family, status)
+	m.recordResponseMetric("GetTasks", err)
+
+	return res, err
+}
+
+func (m *Metrics) GetTasksByService(cluster, service, status string) ([]*ecs.Task, error) {
+	res, err := m.Metadata.GetTasksByService(cluster, service, status)
+	m.recordResponseMetric("GetTasksByService", err)
+
+	return res, err
+}
+
+func (m *Metrics) recordResponseMetric(name string, err error) {
+	responseStatus := responseSuccess
 	if err != nil {
 		responseStatus = responseCodeFromError(err)
 	}
-	m.requestsCounter.WithLabelValues("GetTasks", responseStatus).Inc()
-
-	return res, err
+	m.requestsCounter.WithLabelValues(name, responseStatus).Inc()
 }
 
 func responseCodeFromError(err error) string {

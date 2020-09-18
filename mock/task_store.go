@@ -5,42 +5,45 @@
 package mock
 
 import (
+	reflect "reflect"
+
 	ecs "github.com/aws/aws-sdk-go/service/ecs"
 	gomock "github.com/golang/mock/gomock"
-	reflect "reflect"
 )
 
-// MockTaskStore is a mock of TaskStore interface
+// MockTaskStore is a mock of TaskStore interface.
 type MockTaskStore struct {
 	ctrl     *gomock.Controller
 	recorder *MockTaskStoreMockRecorder
 }
 
-// MockTaskStoreMockRecorder is the mock recorder for MockTaskStore
+// MockTaskStoreMockRecorder is the mock recorder for MockTaskStore.
 type MockTaskStoreMockRecorder struct {
 	mock *MockTaskStore
 }
 
-// NewMockTaskStore creates a new mock instance
+// NewMockTaskStore creates a new mock instance.
 func NewMockTaskStore(ctrl *gomock.Controller) *MockTaskStore {
 	mock := &MockTaskStore{ctrl: ctrl}
 	mock.recorder = &MockTaskStoreMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockTaskStore) EXPECT() *MockTaskStoreMockRecorder {
 	return m.recorder
 }
 
-// Update mocks base method
+// Update mocks base method.
 func (m *MockTaskStore) Update(arg0 string, arg1 *ecs.Task) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Update indicates an expected call of Update
+// Update indicates an expected call of Update.
 func (mr *MockTaskStoreMockRecorder) Update(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockTaskStore)(nil).Update), arg0, arg1)
 }

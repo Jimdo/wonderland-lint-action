@@ -19,4 +19,6 @@ type Metadata interface {
 	GetTaskDefinition(arn string) (*ecs.TaskDefinition, error)
 	// GetTasks returns a list of all tasks of a family that are in the given status
 	GetTasks(cluster, family, desiredStatus string) ([]*ecs.Task, error)
+	// GetTasksByService returns a list of all tasks of a service that are in the given status
+	GetTasksByService(cluster, service, desiredStatus string) ([]*ecs.Task, error)
 }

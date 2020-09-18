@@ -5,54 +5,59 @@
 package mock
 
 import (
-	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
+
+	gomock "github.com/golang/mock/gomock"
 )
 
-// MockVaultAppRoleProvider is a mock of VaultAppRoleProvider interface
+// MockVaultAppRoleProvider is a mock of VaultAppRoleProvider interface.
 type MockVaultAppRoleProvider struct {
 	ctrl     *gomock.Controller
 	recorder *MockVaultAppRoleProviderMockRecorder
 }
 
-// MockVaultAppRoleProviderMockRecorder is the mock recorder for MockVaultAppRoleProvider
+// MockVaultAppRoleProviderMockRecorder is the mock recorder for MockVaultAppRoleProvider.
 type MockVaultAppRoleProviderMockRecorder struct {
 	mock *MockVaultAppRoleProvider
 }
 
-// NewMockVaultAppRoleProvider creates a new mock instance
+// NewMockVaultAppRoleProvider creates a new mock instance.
 func NewMockVaultAppRoleProvider(ctrl *gomock.Controller) *MockVaultAppRoleProvider {
 	mock := &MockVaultAppRoleProvider{ctrl: ctrl}
 	mock.recorder = &MockVaultAppRoleProviderMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockVaultAppRoleProvider) EXPECT() *MockVaultAppRoleProviderMockRecorder {
 	return m.recorder
 }
 
-// RoleID mocks base method
+// RoleID mocks base method.
 func (m *MockVaultAppRoleProvider) RoleID(arg0 string) (string, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RoleID", arg0)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// RoleID indicates an expected call of RoleID
+// RoleID indicates an expected call of RoleID.
 func (mr *MockVaultAppRoleProviderMockRecorder) RoleID(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RoleID", reflect.TypeOf((*MockVaultAppRoleProvider)(nil).RoleID), arg0)
 }
 
-// VaultAddress mocks base method
+// VaultAddress mocks base method.
 func (m *MockVaultAppRoleProvider) VaultAddress() string {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "VaultAddress")
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
-// VaultAddress indicates an expected call of VaultAddress
+// VaultAddress indicates an expected call of VaultAddress.
 func (mr *MockVaultAppRoleProviderMockRecorder) VaultAddress() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VaultAddress", reflect.TypeOf((*MockVaultAppRoleProvider)(nil).VaultAddress))
 }

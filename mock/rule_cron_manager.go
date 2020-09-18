@@ -5,67 +5,59 @@
 package mock
 
 import (
-	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
+
+	gomock "github.com/golang/mock/gomock"
 )
 
-// MockRuleCronManager is a mock of RuleCronManager interface
+// MockRuleCronManager is a mock of RuleCronManager interface.
 type MockRuleCronManager struct {
 	ctrl     *gomock.Controller
 	recorder *MockRuleCronManagerMockRecorder
 }
 
-// MockRuleCronManagerMockRecorder is the mock recorder for MockRuleCronManager
+// MockRuleCronManagerMockRecorder is the mock recorder for MockRuleCronManager.
 type MockRuleCronManagerMockRecorder struct {
 	mock *MockRuleCronManager
 }
 
-// NewMockRuleCronManager creates a new mock instance
+// NewMockRuleCronManager creates a new mock instance.
 func NewMockRuleCronManager(ctrl *gomock.Controller) *MockRuleCronManager {
 	mock := &MockRuleCronManager{ctrl: ctrl}
 	mock.recorder = &MockRuleCronManagerMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockRuleCronManager) EXPECT() *MockRuleCronManagerMockRecorder {
 	return m.recorder
 }
 
-// CreateRule mocks base method
+// CreateRule mocks base method.
 func (m *MockRuleCronManager) CreateRule(arg0, arg1, arg2 string) (string, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateRule", arg0, arg1, arg2)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// CreateRule indicates an expected call of CreateRule
+// CreateRule indicates an expected call of CreateRule.
 func (mr *MockRuleCronManagerMockRecorder) CreateRule(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateRule", reflect.TypeOf((*MockRuleCronManager)(nil).CreateRule), arg0, arg1, arg2)
 }
 
-// DeleteRule mocks base method
+// DeleteRule mocks base method.
 func (m *MockRuleCronManager) DeleteRule(arg0 string) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteRule", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteRule indicates an expected call of DeleteRule
+// DeleteRule indicates an expected call of DeleteRule.
 func (mr *MockRuleCronManagerMockRecorder) DeleteRule(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteRule", reflect.TypeOf((*MockRuleCronManager)(nil).DeleteRule), arg0)
-}
-
-// RunTaskDefinitionWithSchedule mocks base method
-func (m *MockRuleCronManager) RunTaskDefinitionWithSchedule(arg0, arg1, arg2 string) (string, error) {
-	ret := m.ctrl.Call(m, "RunTaskDefinitionWithSchedule", arg0, arg1, arg2)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// RunTaskDefinitionWithSchedule indicates an expected call of RunTaskDefinitionWithSchedule
-func (mr *MockRuleCronManagerMockRecorder) RunTaskDefinitionWithSchedule(arg0, arg1, arg2 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunTaskDefinitionWithSchedule", reflect.TypeOf((*MockRuleCronManager)(nil).RunTaskDefinitionWithSchedule), arg0, arg1, arg2)
 }

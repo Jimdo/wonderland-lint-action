@@ -16,6 +16,8 @@ package runtime
 
 import (
 	"io"
+	"io/ioutil"
+	"net/http"
 	"net/url"
 	"time"
 
@@ -40,6 +42,8 @@ type ClientRequestWriter interface {
 type ClientRequest interface {
 	SetHeaderParam(string, ...string) error
 
+	GetHeaderParams() http.Header
+
 	SetQueryParam(string, ...string) error
 
 	SetFormParam(string, ...string) error
@@ -59,10 +63,41 @@ type ClientRequest interface {
 	GetPath() string
 
 	GetBody() []byte
+
+	GetBodyParam() interface{}
+
+	GetFileParam() map[string][]NamedReadCloser
 }
 
 // NamedReadCloser represents a named ReadCloser interface
 type NamedReadCloser interface {
 	io.ReadCloser
 	Name() string
+}
+
+// NamedReader creates a NamedReadCloser for use as file upload
+func NamedReader(name string, rdr io.Reader) NamedReadCloser {
+	rc, ok := rdr.(io.ReadCloser)
+	if !ok {
+		rc = ioutil.NopCloser(rdr)
+	}
+	return &namedReadCloser{
+		name: name,
+		cr:   rc,
+	}
+}
+
+type namedReadCloser struct {
+	name string
+	cr   io.ReadCloser
+}
+
+func (n *namedReadCloser) Close() error {
+	return n.cr.Close()
+}
+func (n *namedReadCloser) Read(p []byte) (int, error) {
+	return n.cr.Read(p)
+}
+func (n *namedReadCloser) Name() string {
+	return n.name
 }

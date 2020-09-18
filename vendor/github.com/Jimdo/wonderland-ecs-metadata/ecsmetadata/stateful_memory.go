@@ -117,6 +117,10 @@ func (s StatefulInMemory) GetTasks(cluster, family, status string) ([]*ecs.Task,
 	return tasks, nil
 }
 
+func (s StatefulInMemory) GetTasksByService(cluster, service, desiredStatus string) ([]*ecs.Task, error) {
+	return nil, errors.New("not implemented")
+}
+
 func (s StatefulInMemory) UpdateContainerInstance(cluster string, instance *ecs.ContainerInstance) error {
 	err := s.mustBeInitialized(cluster)
 	if err != nil {
@@ -125,7 +129,7 @@ func (s StatefulInMemory) UpdateContainerInstance(cluster string, instance *ecs.
 
 	arn := aws.StringValue(instance.ContainerInstanceArn)
 	if oldInstance, ok := s[cluster].instances[arn]; !ok || aws.Int64Value(oldInstance.Version) < aws.Int64Value(instance.Version) {
-		logrus.Debug("updating container instance %s", arn)
+		logrus.Debugf("updating container instance %s", arn)
 		s[cluster].instances[arn] = instance
 	}
 	return nil

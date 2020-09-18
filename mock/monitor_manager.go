@@ -6,67 +6,74 @@ package mock
 
 import (
 	context "context"
+	reflect "reflect"
+
 	cronitor "github.com/Jimdo/wonderland-crons/cronitor"
 	gomock "github.com/golang/mock/gomock"
-	reflect "reflect"
 )
 
-// MockMonitorManager is a mock of MonitorManager interface
+// MockMonitorManager is a mock of MonitorManager interface.
 type MockMonitorManager struct {
 	ctrl     *gomock.Controller
 	recorder *MockMonitorManagerMockRecorder
 }
 
-// MockMonitorManagerMockRecorder is the mock recorder for MockMonitorManager
+// MockMonitorManagerMockRecorder is the mock recorder for MockMonitorManager.
 type MockMonitorManagerMockRecorder struct {
 	mock *MockMonitorManager
 }
 
-// NewMockMonitorManager creates a new mock instance
+// NewMockMonitorManager creates a new mock instance.
 func NewMockMonitorManager(ctrl *gomock.Controller) *MockMonitorManager {
 	mock := &MockMonitorManager{ctrl: ctrl}
 	mock.recorder = &MockMonitorManagerMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockMonitorManager) EXPECT() *MockMonitorManagerMockRecorder {
 	return m.recorder
 }
 
-// CreateOrUpdate mocks base method
+// CreateOrUpdate mocks base method.
 func (m *MockMonitorManager) CreateOrUpdate(arg0 context.Context, arg1 cronitor.CreateOrUpdateParams) (string, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateOrUpdate", arg0, arg1)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// CreateOrUpdate indicates an expected call of CreateOrUpdate
+// CreateOrUpdate indicates an expected call of CreateOrUpdate.
 func (mr *MockMonitorManagerMockRecorder) CreateOrUpdate(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdate", reflect.TypeOf((*MockMonitorManager)(nil).CreateOrUpdate), arg0, arg1)
 }
 
-// Delete mocks base method
+// Delete mocks base method.
 func (m *MockMonitorManager) Delete(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Delete indicates an expected call of Delete
+// Delete indicates an expected call of Delete.
 func (mr *MockMonitorManagerMockRecorder) Delete(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockMonitorManager)(nil).Delete), arg0, arg1)
 }
 
-// ReportRun mocks base method
+// ReportRun mocks base method.
 func (m *MockMonitorManager) ReportRun(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ReportRun", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// ReportRun indicates an expected call of ReportRun
+// ReportRun indicates an expected call of ReportRun.
 func (mr *MockMonitorManagerMockRecorder) ReportRun(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReportRun", reflect.TypeOf((*MockMonitorManager)(nil).ReportRun), arg0, arg1)
 }

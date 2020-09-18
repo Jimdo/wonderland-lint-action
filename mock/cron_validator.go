@@ -5,54 +5,59 @@
 package mock
 
 import (
+	reflect "reflect"
+
 	cron "github.com/Jimdo/wonderland-crons/cron"
 	gomock "github.com/golang/mock/gomock"
-	reflect "reflect"
 )
 
-// MockCronValidator is a mock of CronValidator interface
+// MockCronValidator is a mock of CronValidator interface.
 type MockCronValidator struct {
 	ctrl     *gomock.Controller
 	recorder *MockCronValidatorMockRecorder
 }
 
-// MockCronValidatorMockRecorder is the mock recorder for MockCronValidator
+// MockCronValidatorMockRecorder is the mock recorder for MockCronValidator.
 type MockCronValidatorMockRecorder struct {
 	mock *MockCronValidator
 }
 
-// NewMockCronValidator creates a new mock instance
+// NewMockCronValidator creates a new mock instance.
 func NewMockCronValidator(ctrl *gomock.Controller) *MockCronValidator {
 	mock := &MockCronValidator{ctrl: ctrl}
 	mock.recorder = &MockCronValidatorMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockCronValidator) EXPECT() *MockCronValidatorMockRecorder {
 	return m.recorder
 }
 
-// ValidateCronDescription mocks base method
+// ValidateCronDescription mocks base method.
 func (m *MockCronValidator) ValidateCronDescription(arg0 *cron.Description) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidateCronDescription", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// ValidateCronDescription indicates an expected call of ValidateCronDescription
+// ValidateCronDescription indicates an expected call of ValidateCronDescription.
 func (mr *MockCronValidatorMockRecorder) ValidateCronDescription(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateCronDescription", reflect.TypeOf((*MockCronValidator)(nil).ValidateCronDescription), arg0)
 }
 
-// ValidateCronName mocks base method
+// ValidateCronName mocks base method.
 func (m *MockCronValidator) ValidateCronName(arg0 string) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidateCronName", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// ValidateCronName indicates an expected call of ValidateCronName
+// ValidateCronName indicates an expected call of ValidateCronName.
 func (mr *MockCronValidatorMockRecorder) ValidateCronName(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateCronName", reflect.TypeOf((*MockCronValidator)(nil).ValidateCronName), arg0)
 }

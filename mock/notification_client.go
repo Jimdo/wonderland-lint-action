@@ -5,36 +5,38 @@
 package mock
 
 import (
+	reflect "reflect"
+
 	cron "github.com/Jimdo/wonderland-crons/cron"
 	gomock "github.com/golang/mock/gomock"
-	reflect "reflect"
 )
 
-// MockNotificationClient is a mock of NotificationClient interface
+// MockNotificationClient is a mock of NotificationClient interface.
 type MockNotificationClient struct {
 	ctrl     *gomock.Controller
 	recorder *MockNotificationClientMockRecorder
 }
 
-// MockNotificationClientMockRecorder is the mock recorder for MockNotificationClient
+// MockNotificationClientMockRecorder is the mock recorder for MockNotificationClient.
 type MockNotificationClientMockRecorder struct {
 	mock *MockNotificationClient
 }
 
-// NewMockNotificationClient creates a new mock instance
+// NewMockNotificationClient creates a new mock instance.
 func NewMockNotificationClient(ctrl *gomock.Controller) *MockNotificationClient {
 	mock := &MockNotificationClient{ctrl: ctrl}
 	mock.recorder = &MockNotificationClientMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockNotificationClient) EXPECT() *MockNotificationClientMockRecorder {
 	return m.recorder
 }
 
-// CreateOrUpdateNotificationChannel mocks base method
+// CreateOrUpdateNotificationChannel mocks base method.
 func (m *MockNotificationClient) CreateOrUpdateNotificationChannel(arg0 string, arg1 *cron.Notification) (string, string, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateOrUpdateNotificationChannel", arg0, arg1)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(string)
@@ -42,19 +44,22 @@ func (m *MockNotificationClient) CreateOrUpdateNotificationChannel(arg0 string, 
 	return ret0, ret1, ret2
 }
 
-// CreateOrUpdateNotificationChannel indicates an expected call of CreateOrUpdateNotificationChannel
+// CreateOrUpdateNotificationChannel indicates an expected call of CreateOrUpdateNotificationChannel.
 func (mr *MockNotificationClientMockRecorder) CreateOrUpdateNotificationChannel(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdateNotificationChannel", reflect.TypeOf((*MockNotificationClient)(nil).CreateOrUpdateNotificationChannel), arg0, arg1)
 }
 
-// DeleteNotificationChannel mocks base method
+// DeleteNotificationChannel mocks base method.
 func (m *MockNotificationClient) DeleteNotificationChannel(arg0 string) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteNotificationChannel", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteNotificationChannel indicates an expected call of DeleteNotificationChannel
+// DeleteNotificationChannel indicates an expected call of DeleteNotificationChannel.
 func (mr *MockNotificationClientMockRecorder) DeleteNotificationChannel(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteNotificationChannel", reflect.TypeOf((*MockNotificationClient)(nil).DeleteNotificationChannel), arg0)
 }
