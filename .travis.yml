@@ -7,8 +7,12 @@ env:
   - TEST_COMMAND="lint"
   - TEST_COMMAND="test push"
 
-before_script: docker login -u "$QUAY_USER_PROD" -p "$QUAY_PASS_PROD" quay.io
-
+before_script: 
+  - test "$QUAY_USER_PROD" -a "$QUAY_PASS_PROD"
+  - docker login -u "$QUAY_USER_PROD" -p "$QUAY_PASS_PROD" quay.io
+  - test "$DOCKER_USER" -a "$DOCKER_USER"
+  - docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD" docker.io
+  
 script: make $TEST_COMMAND BRANCH=$TRAVIS_BRANCH
 
 deploy:
