@@ -105,7 +105,9 @@ notify-jenkins: dinah
 
 dinah:
 	# Install dinah
-	@curl -sSL https://gist.github.com/white--rabbit/bca70b3215991e9e45905a1195388d09/raw | bash
+	curl -sSL https://gist.github.com/white--rabbit/bca70b3215991e9e45905a1195388d09/raw > install_dinah.sh
+	chmod +x install_dinah.sh
+	sudo --preserve-env ./install_dinah.sh
 
 gen-mocks:
 	mockgen -package mock github.com/Jimdo/wonderland-crons/api/v2 CronService > mock/cron_service.go
