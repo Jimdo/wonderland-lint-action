@@ -98,7 +98,10 @@ func (c *Client) CreateOrUpdate(ctx context.Context, params CreateOrUpdateParams
 				Context: ctx,
 				Payload: &payload,
 			}, c.authInfo)
-			return createRes.Payload.Code, err
+			if err != nil {
+				return "", err
+			}
+			return createRes.Payload.Code, nil
 		}
 		log.WithError(err).WithField("cron", params.Name).Error("Fetching cronitor monitor failed.")
 		return "", err
