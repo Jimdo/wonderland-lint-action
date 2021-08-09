@@ -14,9 +14,6 @@ ZONE=jimdo-platform-stage.net
 
 WONDERLAND_REGISTRY=registry.jimdo-platform-stage.net
 
-AUTH_USER=$(WONDERLAND_USER)
-AUTH_PASS=$(WONDERLAND_PASS)
-
 NOTIFICATIONS_API=https://notifications.jimdo-platform-stage.net
 
 prod: JIMDO_ENVIRONMENT=prod
@@ -47,8 +44,8 @@ set-credentials:
 
 	WONDERLAND_ENV=$(JIMDO_ENVIRONMENT) \
 		wl vault write secret/wonderland/crons/proxy \
-			HTTP_USER="$(AUTH_USER)" \
-			HTTP_PASSWORD="$(AUTH_PASS)"
+			HTTP_CREDENTIALS="$(HTTP_CREDENTIALS)" \
+			--merge=false
 
 deploy: set-credentials dinah
 	AUTH_PROXY_IMAGE=$(shell dinah docker image $(AUTH_PROXY_IMAGE)) \
