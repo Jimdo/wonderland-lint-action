@@ -3,6 +3,7 @@ PROJECT_NAME=wonderland-crons
 TEST_TAGS=integration
 
 BRANCH ?= master
+DOCKER_TAG = $(subst /,_,$(BRANCH))
 
 CRONS_IMAGE = $(PROJECT_NAME)
 CRONS_TEST_IMAGE = $(CRONS_IMAGE).test
@@ -48,11 +49,11 @@ set-credentials:
 
 deploy: set-credentials dinah
 	AUTH_PROXY_IMAGE=$(shell dinah docker image $(AUTH_PROXY_IMAGE)) \
-	CRONS_IMAGE=$(shell dinah docker image --branch $(BRANCH) $(CRONS_IMAGE)) \
+	CRONS_IMAGE=$(shell dinah docker image --branch $(DOCKER_TAG) $(CRONS_IMAGE)) \
 	WONDERLAND_REGISTRY=$(WONDERLAND_REGISTRY) \
 	WONDERLAND_ENV=$(JIMDO_ENVIRONMENT) \
 	AWS_REGION=$(AWS_REGION) \
-	TIMEOUT_IMAGE=$(shell dinah docker image --branch $(BRANCH) $(CRONS_TIMEOUT_IMAGE)) \
+	TIMEOUT_IMAGE=$(shell dinah docker image --branch $(DOCKER_TAG) $(CRONS_TIMEOUT_IMAGE)) \
 	NOTIFICATIONS_API=$(NOTIFICATIONS_API) \
 	ZONE=$(ZONE) \
 		wl deploy $(PROJECT_NAME) -f wonderland.yaml
@@ -91,13 +92,13 @@ timeout-container:
 
 push: container timeout-container dinah
 	# Push Docker images
-	@dinah docker push --user $(QUAY_USER_PROD) --pass $(QUAY_PASS_PROD) --branch $(BRANCH) $(CRONS_IMAGE)
-	@dinah docker push --user $(QUAY_USER_PROD) --pass $(QUAY_PASS_PROD) --branch $(BRANCH) $(CRONS_TIMEOUT_IMAGE)
+	@dinah docker push --user $(QUAY_USER_PROD) --pass $(QUAY_PASS_PROD) --branch $(DOCKER_TAG) $(CRONS_IMAGE)
+	@dinah docker push --user $(QUAY_USER_PROD) --pass $(QUAY_PASS_PROD) --branch $(DOCKER_TAG) $(CRONS_TIMEOUT_IMAGE)
 
 notify-jenkins: dinah
 	# Notify Jenkins
-	-@dinah jenkins build --stage --user $(JENKINS_USER_STAGE) --pass $(JENKINS_PASS_STAGE) --parameter BRANCH=$(BRANCH) Crons-Deploy
-	@dinah jenkins build --user $(JENKINS_USER_PROD) --pass $(JENKINS_PASS_PROD) --parameter BRANCH=$(BRANCH) Crons-Deploy
+	-@dinah jenkins build --stage --user $(JENKINS_USER_STAGE) --pass $(JENKINS_PASS_STAGE) --parameter BRANCH=$(DOCKER_TAG) Crons-Deploy
+	@dinah jenkins build --user $(JENKINS_USER_PROD) --pass $(JENKINS_PASS_PROD) --parameter BRANCH=$(DOCKER_TAG) Crons-Deploy
 
 dinah:
 	# Install dinah
