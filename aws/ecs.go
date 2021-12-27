@@ -56,6 +56,10 @@ func (tds *ECSTaskDefinitionStore) AddRevisionFromCronDescription(cronName strin
 		Family:               awssdk.String(tdFamilyName),
 	}
 
+	if desc.Iam != nil {
+		rtdInput.TaskRoleArn = &desc.Iam.MirrorRoleArn
+	}
+
 	if tds.noScheduleMarkerAttribute != "" {
 		rtdInput.PlacementConstraints = []*ecs.TaskDefinitionPlacementConstraint{
 			{
