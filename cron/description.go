@@ -66,11 +66,12 @@ func (d *Description) Init() {
 }
 
 type Description struct {
-	Schedule      string                `json:"schedule"`
 	Description   *ContainerDescription `json:"description"`
-	Timeout       *int64                `json:"timeout"`
-	Notifications *Notification         `json:"notifications"`
+	Iam           *IamDescription       `json:"iam,omitempty"`
 	Meta          MetaInformation       `json:"meta,omitempty"`
+	Notifications *Notification         `json:"notifications"`
+	Schedule      string                `json:"schedule"`
+	Timeout       *int64                `json:"timeout"`
 }
 
 type ContainerDescription struct {
@@ -79,6 +80,10 @@ type ContainerDescription struct {
 	Environment map[string]string    `json:"env,omitempty"`
 	Capacity    *CapacityDescription `json:"capacity,omitempty"`
 	Logging     *LogDescription      `json:"logging,omitempty"`
+}
+
+type IamDescription struct {
+	MirrorRoleArn string `json:"mirror-role-arn"`
 }
 
 type Notification struct {

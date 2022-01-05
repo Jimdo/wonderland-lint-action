@@ -13,7 +13,47 @@ import (
 )
 
 func TestValidateCronDescription_Valid(t *testing.T) {
-	desc := &cron.Description{
+	testCases := []struct {
+		testName string
+		desc     *cron.Description
+	}{
+		{"cronDescription without iamDescription",
+			cronDescriptionFixture(nil),
+		},
+		{"cronDescription with iamDescription",
+			cronDescriptionFixture(&cron.IamDescription{MirrorRoleArn: "arn:aws:iam::123456789012:user/Jimdo"}),
+		},
+	}
+
+	for _, testCase := range testCases {
+		desc := testCase.desc
+
+		v := &cronDescription{
+			Container: &containerDescription{
+				Image: &wonderlandValidator.DockerImage{
+					DockerImageService: registry.NewImageService(nil),
+				},
+				Capacity: &wonderlandValidator.ContainerCapacity{
+					CPUCapacitySpecifications: cron.CPUCapacitySpecifications,
+					CPUMinCapacity:            cron.MinCPUCapacity,
+					CPUMaxCapacity:            cron.MaxCPUCapacity,
+
+					MemoryCapacitySpecifications: cron.MemoryCapacitySpecifications,
+					MemoryMinCapacity:            cron.MinMemoryCapacity,
+					MemoryMaxCapacity:            cron.MaxMemoryCapacity,
+				},
+			},
+			CronNotification: &cronNotification{},
+		}
+		if err := v.validate(desc); err != nil {
+			t.Errorf("%+v should be a valid cron description, err = %s", desc, err)
+		}
+	}
+
+}
+
+func cronDescriptionFixture(iamDescription *cron.IamDescription) *cron.Description {
+	return &cron.Description{
 		Schedule: "* * * * *",
 		Description: &cron.ContainerDescription{
 			Image: "perl",
@@ -28,30 +68,9 @@ func TestValidateCronDescription_Valid(t *testing.T) {
 			SlackChannel:           "#test",
 			PagerdutyURI:           "ae46ed7a7fdbeca0e7e4bd3f6a",
 		},
-	}
-
-	v := &cronDescription{
-		Container: &containerDescription{
-			Image: &wonderlandValidator.DockerImage{
-				DockerImageService: registry.NewImageService(nil),
-			},
-			Capacity: &wonderlandValidator.ContainerCapacity{
-				CPUCapacitySpecifications: cron.CPUCapacitySpecifications,
-				CPUMinCapacity:            cron.MinCPUCapacity,
-				CPUMaxCapacity:            cron.MaxCPUCapacity,
-
-				MemoryCapacitySpecifications: cron.MemoryCapacitySpecifications,
-				MemoryMinCapacity:            cron.MinMemoryCapacity,
-				MemoryMaxCapacity:            cron.MaxMemoryCapacity,
-			},
-		},
-		CronNotification: &cronNotification{},
-	}
-	if err := v.validate(desc); err != nil {
-		t.Errorf("%+v should be a valid cron description, err = %s", desc, err)
+		Iam: iamDescription,
 	}
 }
-
 func TestValidateCronDescriptionName_Valid(t *testing.T) {
 	v := &cronDescription{
 		Name: &wonderlandValidator.WonderlandName{},
@@ -101,5 +120,21 @@ func TestValidateCronDescription_NotificationMissing(t *testing.T) {
 	}
 	if err := v.validate(desc); err == nil {
 		t.Errorf("%+v should not be a valid cron description. Notifications missing", desc)
+	}
+}
+
+func TestValidateIamRole_Invalid(t *testing.T) {
+	arn := "invalid:arn"
+
+	desc := &cron.Description{
+		Iam: &cron.IamDescription{
+			MirrorRoleArn: arn,
+		},
+	}
+
+	v := &cronDescription{}
+
+	if err := v.Iam.validate(desc.Iam); err == nil {
+		t.Errorf("%s should be a invalid arn", arn)
 	}
 }
