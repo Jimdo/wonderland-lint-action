@@ -37,6 +37,13 @@ jobs:
         username: ${{ env.DOCKER_USER }}
         password: ${{ env.DOCKER_PASSWORD }}
 
+    - name: Login to Quay.io registry
+      uses: docker/login-action@v1
+      with:
+        registry: quay.io
+        username: ${{ env.QUAY_USER_PROD }}
+        password: ${{ env.QUAY_PASS_PROD }}
+
     - uses: actions/checkout@v2
     
     - name: Lint
