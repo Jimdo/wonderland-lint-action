@@ -30,6 +30,8 @@ jobs:
           secret/wonderland/travis-config/jenkins-prod JENKINS_PASS_PROD ;
           secret/wonderland/travis-config/jenkins-stage JENKINS_USER_STAGE ;
           secret/wonderland/travis-config/jenkins-stage JENKINS_PASS_STAGE ;
+          secret/wonderland/travis-config/cronitor CRONITOR_API_KEY;
+          secret/wonderland/travis-config/cronitor CRONITOR_AUTH_KEY;
     - name: Login to DockerHub registry
       uses: docker/login-action@v1
       with:
