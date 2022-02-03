@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+  schedule:
+  - cron: '15 0 * * 3'
+
+jobs:
+  build:
+    permissions:
+      id-token: write
+      contents: read
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Get credentials
+      uses: hashicorp/vault-action@v2.4.0
+      with:
+        url: https://vault.jimdo-platform.net
+        method: jwt
+        role: wonderland_travis_migration
+        secrets: |
+          secret/wonderland/travis-config/dockerhub DOCKER_USER ;
+          secret/wonderland/travis-config/dockerhub DOCKER_PASSWORD ;
+          secret/wonderland/travis-config/quay QUAY_PASS_PROD ;
+          secret/wonderland/travis-config/quay QUAY_USER_PROD ;
+          secret/wonderland/travis-config/dinah DINAH_DOWNLOAD_TOKEN;
+          secret/wonderland/travis-config/jenkins-prod JENKINS_USER_PROD ;
+          secret/wonderland/travis-config/jenkins-prod JENKINS_PASS_PROD ;
+          secret/wonderland/travis-config/jenkins-stage JENKINS_USER_STAGE ;
+          secret/wonderland/travis-config/jenkins-stage JENKINS_PASS_STAGE ;
+          secret/wonderland/travis-config/cronitor CRONITOR_API_KEY;
+          secret/wonderland/travis-config/cronitor CRONITOR_AUTH_KEY;
+    - name: Login to DockerHub registry
+      uses: docker/login-action@v1
+      with:
+        registry: docker.io
+        username: ${{ env.DOCKER_USER }}
+        password: ${{ env.DOCKER_PASSWORD }}
+
+    - uses: actions/checkout@v2
+    
+    - name: Test
+      run: make test
+
+    - name: Push
+      run: make push BRANCH=${{ github.ref_name }}
+
+    - name: Notify Jenkins
+      if: github.ref == 'refs/heads/master'
+      run: make notify-jenkins BRANCH=${{ github.ref_name }}
+
+  lint:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Get credentials
+        uses: hashicorp/vault-action@v2.4.0
+        with:
+          url: https://vault.jimdo-platform.net
+          method: jwt
+          role: wonderland_travis_migration
+          secrets: |
+            secret/wonderland/travis-config/quay QUAY_PASS_PROD ;
+            secret/wonderland/travis-config/quay QUAY_USER_PROD ;
+
+      - name: Login to Quay.io registry
+        uses: docker/login-action@v1
+        with:
+          registry: quay.io
+          username: ${{ env.QUAY_USER_PROD }}
+          password: ${{ env.QUAY_PASS_PROD }}
+
+      - uses: actions/checkout@v2
+
+      - name: Lint
+        run: make lint
