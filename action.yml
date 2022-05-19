@@ -1,0 +1,10 @@
+name: "WL golangci lint"
+description: "Lint Golang code with Wonderland's chosen set of linters"
+runs:
+  using: composite
+  steps:
+    - name: golangci-lint
+      uses: golangci/golangci-lint-action@v3
+      with:
+        version: v1.37
+        args: --disable-all -E deadcode -E goconst -E gofmt -E goimports -E golint -E gosec -E govet -E ineffassign -E interfacer -E maligned -E megacheck -E misspell -E structcheck -E unparam -E varcheck --timeout=5m
